@@ -286,11 +286,13 @@ func (c *Connection) sendRequestSize(rm *Request) (err error) {
 
 func (c *Connection) sendRequestMethodAndUid(rm *Request) (err error) {
 	switch rm.Method {
-	case MethodShowText:
-		break
-	case MethodShowBinary:
-		break
-	case MethodCloseConnection:
+	case MethodShowText,
+		MethodShowBinary,
+		MethodForgetTextRecord,
+		MethodForgetBinaryRecord,
+		MethodResetTextCache,
+		MethodResetBinaryCache,
+		MethodCloseConnection:
 		break
 	default:
 		return fmt.Errorf(ErrUnsupportedMethodValue, rm.Method)

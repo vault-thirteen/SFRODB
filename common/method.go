@@ -10,22 +10,32 @@ const (
 	MethodNameSpacer      = " "
 	MethodNameLengthLimit = 3
 
-	MethodNameCloseConnection   = "CLC"
-	MethodNameClosingConnection = "BYE"
-	MethodNameShowText          = "ST"
-	MethodNameShowingText       = "TT"
-	MethodNameShowBinary        = "SB"
-	MethodNameShowingBinary     = "BB"
+	MethodNameCloseConnection    = "CLC"
+	MethodNameClosingConnection  = "BYE"
+	MethodNameShowText           = "ST"
+	MethodNameShowingText        = "TT"
+	MethodNameShowBinary         = "SB"
+	MethodNameShowingBinary      = "BB"
+	MethodNameForgetTextRecord   = "RRT"
+	MethodNameForgetBinaryRecord = "RRB"
+	MethodNameResetTextCache     = "RST"
+	MethodNameResetBinaryCache   = "RSB"
+	MethodNameOK                 = "OK"
 )
 
 // Methods.
 const (
-	MethodCloseConnection   = Method(1)
-	MethodClosingConnection = Method(2)
-	MethodShowText          = Method(4)
-	MethodShowingText       = Method(8)
-	MethodShowBinary        = Method(16)
-	MethodShowingBinary     = Method(32)
+	MethodCloseConnection    = Method(1)
+	MethodClosingConnection  = Method(2)
+	MethodShowText           = Method(4)
+	MethodShowingText        = Method(8)
+	MethodShowBinary         = Method(16)
+	MethodShowingBinary      = Method(32)
+	MethodForgetTextRecord   = Method(64 + 1)
+	MethodForgetBinaryRecord = Method(64 + 2)
+	MethodResetTextCache     = Method(128 + 1)
+	MethodResetBinaryCache   = Method(128 + 2)
+	MethodOK                 = Method(255)
 )
 
 type Method byte
@@ -58,6 +68,11 @@ func MethodNames() []string {
 		MethodNameShowingText,
 		MethodNameShowBinary,
 		MethodNameShowingBinary,
+		MethodNameForgetTextRecord,
+		MethodNameForgetBinaryRecord,
+		MethodNameResetTextCache,
+		MethodNameResetBinaryCache,
+		MethodNameOK,
 	}
 }
 
@@ -69,6 +84,11 @@ func MethodValues() []Method {
 		MethodShowingText,
 		MethodShowBinary,
 		MethodShowingBinary,
+		MethodForgetTextRecord,
+		MethodForgetBinaryRecord,
+		MethodResetTextCache,
+		MethodResetBinaryCache,
+		MethodOK,
 	}
 }
 

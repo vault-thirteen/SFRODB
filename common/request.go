@@ -96,6 +96,78 @@ func NewRequest_ShowBinary(uid string) (req *Request, err error) {
 	return req, nil
 }
 
+func NewRequest_RemoveText(uid string) (req *Request, err error) {
+	if !IsUidValid(uid) {
+		return nil, fmt.Errorf(ErrUid)
+	}
+
+	req = &Request{
+		SRS:          0, // Will be automatically calculated.
+		RequestSizeA: 0, // Will be automatically calculated.
+		RequestSizeB: 0, // Will be automatically calculated.
+		Method:       MethodForgetTextRecord,
+		UID:          uid,
+	}
+
+	err = req.calculateSRS(uid)
+	if err != nil {
+		return nil, err
+	}
+
+	err = req.calculateRequestSize()
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+func NewRequest_RemoveBinary(uid string) (req *Request, err error) {
+	if !IsUidValid(uid) {
+		return nil, fmt.Errorf(ErrUid)
+	}
+
+	req = &Request{
+		SRS:          0, // Will be automatically calculated.
+		RequestSizeA: 0, // Will be automatically calculated.
+		RequestSizeB: 0, // Will be automatically calculated.
+		Method:       MethodForgetBinaryRecord,
+		UID:          uid,
+	}
+
+	err = req.calculateSRS(uid)
+	if err != nil {
+		return nil, err
+	}
+
+	err = req.calculateRequestSize()
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+func NewRequest_ClearTextCache() (req *Request, err error) {
+	req = &Request{
+		SRS:          SRS_A,
+		RequestSizeA: MethodNameLengthLimit,
+		Method:       MethodResetTextCache,
+	}
+
+	return req, nil
+}
+
+func NewRequest_ClearBinaryCache() (req *Request, err error) {
+	req = &Request{
+		SRS:          SRS_A,
+		RequestSizeA: MethodNameLengthLimit,
+		Method:       MethodResetBinaryCache,
+	}
+
+	return req, nil
+}
+
 func (r *Request) calculateSRS(uid string) (err error) {
 	uidLen := len(uid)
 
@@ -117,7 +189,8 @@ func (r *Request) calculateSRS(uid string) (err error) {
 }
 
 func (r *Request) calculateRequestSize() (err error) {
-	if (r.Method == MethodShowText) || (r.Method == MethodShowBinary) {
+	if (r.Method == MethodShowText) || (r.Method == MethodShowBinary) ||
+		(r.Method == MethodForgetTextRecord) || (r.Method == MethodForgetBinaryRecord) {
 		if r.SRS == SRS_A {
 			r.RequestSizeA = MethodNameLengthLimit + uint8(len(r.UID))
 		} else if r.SRS == SRS_B {

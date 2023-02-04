@@ -14,16 +14,21 @@ import (
 
 const (
 	ErrConnectionAccepting = "error accepting a connection: "
+	MsgResettingCache      = "Resetting the Cache ..."
 )
 
 type Server struct {
 	settings *settings.Settings
-	dsn      string
+
+	mainDsn string
+	auxDsn  string
+
+	mainListener net.Listener
+	auxListener  net.Listener
 
 	cacheT *cache.Cache[string, string]
 	cacheB *cache.Cache[string, []byte]
 
-	listener          net.Listener
 	methodNameBuffers map[common.Method][]byte
 	methodValues      map[string]common.Method
 
@@ -37,11 +42,10 @@ func NewServer(stn *settings.Settings) (srv *Server, err error) {
 		return nil, err
 	}
 
-	dsn := fmt.Sprintf("%s:%d", stn.ServerHost, stn.ServerPort)
-
 	srv = &Server{
 		settings: stn,
-		dsn:      dsn,
+		mainDsn:  fmt.Sprintf("%s:%d", stn.ServerHost, stn.MainPort),
+		auxDsn:   fmt.Sprintf("%s:%d", stn.ServerHost, stn.AuxPort),
 	}
 
 	srv.cacheT = cache.NewCache[string, string](
@@ -77,34 +81,60 @@ func NewServer(stn *settings.Settings) (srv *Server, err error) {
 	return srv, nil
 }
 
-func (srv *Server) GetDsn() (dsn string) {
-	return srv.dsn
+func (srv *Server) GetMainDsn() (dsn string) {
+	return srv.mainDsn
+}
+
+func (srv *Server) GetAuxDsn() (dsn string) {
+	return srv.auxDsn
 }
 
 func (srv *Server) Start() (err error) {
-	srv.listener, err = net.Listen(common.LowLevelProtocol, srv.dsn)
+	srv.mainListener, err = net.Listen(common.LowLevelProtocol, srv.mainDsn)
 	if err != nil {
 		return err
 	}
 
-	go srv.run()
+	srv.auxListener, err = net.Listen(common.LowLevelProtocol, srv.auxDsn)
+	if err != nil {
+		return err
+	}
+
+	go srv.runMainLoop()
+	go srv.runAuxLoop()
 
 	return nil
 }
 
-func (srv *Server) run() {
+func (srv *Server) runMainLoop() {
 	for {
-		conn, err := srv.listener.Accept()
+		conn, err := srv.mainListener.Accept()
 		if err != nil {
 			log.Println(ErrConnectionAccepting, err.Error())
 		}
 
-		go srv.handleConnection(conn)
+		go srv.handleMainConnection(conn)
+	}
+}
+
+func (srv *Server) runAuxLoop() {
+	for {
+		conn, err := srv.auxListener.Accept()
+		if err != nil {
+			log.Println(ErrConnectionAccepting, err.Error())
+		}
+
+		go srv.handleAuxConnection(conn)
 	}
 }
 
 func (srv *Server) Stop() (err error) {
-	err = srv.listener.Close()
+	err = srv.mainListener.Close()
+	if err != nil {
+		return err
+	}
+
+	err = srv.auxListener.Close()
 	if err != nil {
 		return err
 	}
@@ -112,7 +142,7 @@ func (srv *Server) Stop() (err error) {
 	return nil
 }
 
-func (srv *Server) handleConnection(conn net.Conn) {
+func (srv *Server) handleMainConnection(conn net.Conn) {
 	c, err := common.NewConnection(
 		conn,
 		&srv.methodNameBuffers,
@@ -149,6 +179,59 @@ func (srv *Server) handleConnection(conn net.Conn) {
 			err = srv.showText(c, req)
 		case common.MethodShowBinary:
 			err = srv.showBinary(c, req)
+		default:
+			return
+		}
+		if err != nil {
+			log.Println(err)
+			return
+		}
+	}
+}
+
+func (srv *Server) handleAuxConnection(conn net.Conn) {
+	c, err := common.NewConnection(
+		conn,
+		&srv.methodNameBuffers,
+		&srv.methodValues,
+		0,
+	)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	defer func() {
+		derr := c.Finalize()
+		if derr != nil {
+			log.Println(derr)
+		}
+	}()
+
+	var req *common.Request
+
+	for {
+		req, err = c.GetNextRequest()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		if req.IsCloseConnection() {
+			return
+		}
+
+		switch req.Method {
+		case common.MethodForgetTextRecord:
+			err = srv.forgetRecord(c, req)
+		case common.MethodForgetBinaryRecord:
+			err = srv.forgetRecord(c, req)
+		case common.MethodResetTextCache:
+			err = srv.resetCache(c, req)
+		case common.MethodResetBinaryCache:
+			err = srv.resetCache(c, req)
+		default:
+			return
 		}
 		if err != nil {
 			log.Println(err)
@@ -257,4 +340,77 @@ func (srv *Server) getBinary(uid string) (data []byte, err error) {
 	}
 
 	return data, nil
+}
+
+func (srv *Server) forgetRecord(c *common.Connection, r *common.Request) (err error) {
+	// Check the UID.
+	if !common.IsUidValid(r.UID) {
+		return fmt.Errorf(common.ErrUid)
+	}
+
+	// Remove the record from the cache.
+	switch r.Method {
+	case common.MethodForgetTextRecord:
+		err = srv.cacheT.RemoveRecord(r.UID)
+		if err != nil {
+			return err
+		}
+
+	case common.MethodForgetBinaryRecord:
+		err = srv.cacheB.RemoveRecord(r.UID)
+		if err != nil {
+			return err
+		}
+
+	default:
+		return fmt.Errorf(common.ErrUnsupportedMethodValue, r.Method)
+	}
+
+	var rm *common.Response
+	rm, err = common.NewResponse_OK()
+	if err != nil {
+		return err
+	}
+
+	err = c.SendResponseMessage(rm)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (srv *Server) resetCache(c *common.Connection, r *common.Request) (err error) {
+	log.Println(MsgResettingCache)
+
+	// Clear the cache.
+	switch r.Method {
+	case common.MethodResetTextCache:
+		err = srv.cacheT.Clear()
+		if err != nil {
+			return err
+		}
+
+	case common.MethodResetBinaryCache:
+		err = srv.cacheB.Clear()
+		if err != nil {
+			return err
+		}
+
+	default:
+		return fmt.Errorf(common.ErrUnsupportedMethodValue, r.Method)
+	}
+
+	var rm *common.Response
+	rm, err = common.NewResponse_OK()
+	if err != nil {
+		return err
+	}
+
+	err = c.SendResponseMessage(rm)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

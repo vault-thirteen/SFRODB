@@ -10,12 +10,13 @@ import (
 const ErrSyntax = "syntax error"
 
 type CommandLineArguments struct {
-	Host string
-	Port uint16
+	Host     string
+	MainPort uint16
+	AuxPort  uint16
 }
 
 func readCLA() (cla *CommandLineArguments, err error) {
-	if len(os.Args) != 3 {
+	if len(os.Args) != 4 {
 		return nil, errors.New(ErrSyntax)
 	}
 
@@ -23,7 +24,12 @@ func readCLA() (cla *CommandLineArguments, err error) {
 		Host: os.Args[1],
 	}
 
-	cla.Port, err = common.ParseUint16(os.Args[2])
+	cla.MainPort, err = common.ParseUint16(os.Args[2])
+	if err != nil {
+		return nil, err
+	}
+
+	cla.AuxPort, err = common.ParseUint16(os.Args[3])
 	if err != nil {
 		return nil, err
 	}

@@ -10,16 +10,22 @@ import (
 	"github.com/vault-thirteen/reader"
 )
 
+// Settings is Server's settings.
 type Settings struct {
 	// Path to the settings file.
 	// Settings are positional for simplicity.
 	File string
 
-	// This server's host name.
+	// Host name.
 	ServerHost string
 
-	// This server's port.
-	ServerPort uint16
+	// Main port.
+	// A port which is used for read-only operations.
+	MainPort uint16
+
+	// Auxiliary port.
+	// A port which is used for non-read operations.
+	AuxPort uint16
 
 	// Textual and binary data use separate caches.
 	TextData   *DataSettings
@@ -44,7 +50,7 @@ func NewSettingsFromFile(filePath string) (stn *Settings, err error) {
 	}()
 
 	rdr := reader.NewReader(file)
-	var buf = make([][]byte, 6)
+	var buf = make([][]byte, 7)
 
 	for i := range buf {
 		buf[i], err = rdr.ReadLineEndingWithCRLF()
@@ -55,17 +61,25 @@ func NewSettingsFromFile(filePath string) (stn *Settings, err error) {
 
 	// Server Host & Port.
 	stn.ServerHost = strings.TrimSpace(string(buf[0]))
-	stn.ServerPort, err = common.ParseUint16(strings.TrimSpace(string(buf[1])))
+
+	stn.MainPort, err = common.ParseUint16(strings.TrimSpace(string(buf[1])))
 	if err != nil {
 		return stn, err
 	}
 
-	stn.TextData, err = ParseDataSettings(string(buf[2]), string(buf[3]))
+	stn.AuxPort, err = common.ParseUint16(strings.TrimSpace(string(buf[2])))
 	if err != nil {
 		return stn, err
 	}
 
-	stn.BinaryData, err = ParseDataSettings(string(buf[4]), string(buf[5]))
+	// Text Cache Settings.
+	stn.TextData, err = ParseDataSettings(string(buf[3]), string(buf[4]))
+	if err != nil {
+		return stn, err
+	}
+
+	// Binary Cache Settings.
+	stn.BinaryData, err = ParseDataSettings(string(buf[5]), string(buf[6]))
 	if err != nil {
 		return stn, err
 	}
@@ -82,7 +96,11 @@ func (stn *Settings) Check() (err error) {
 		return errors.New(common.ErrServerHostIsNotSet)
 	}
 
-	if stn.ServerPort == 0 {
+	if stn.MainPort == 0 {
+		return errors.New(common.ErrServerPortIsNotSet)
+	}
+
+	if stn.AuxPort == 0 {
 		return errors.New(common.ErrServerPortIsNotSet)
 	}
 

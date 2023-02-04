@@ -133,3 +133,13 @@ func (r *Response) calculateResponseSize() (err error) {
 
 	return nil
 }
+
+func NewResponse_OK() (resp *Response, err error) {
+	resp = &Response{
+		SRS:           SRS_A,
+		ResponseSizeA: MethodNameLengthLimit,
+		Method:        MethodOK,
+	}
+
+	return resp, nil
+}

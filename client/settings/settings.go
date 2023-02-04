@@ -6,25 +6,33 @@ import (
 	"github.com/vault-thirteen/SFRODB/common"
 )
 
-const ResponseMessageLengthLimitDefault = 1000000 // 1 MB.
+const ResponseMessageLengthLimitDefault = 1_000_000 // 1 MB.
 
+// Settings is Client's settings.
 type Settings struct {
-	// Client's host name.
-	ClientHost string
+	// Server's host name.
+	Host string
 
-	// Client's port.
-	ClientPort uint16
+	// Main port.
+	MainPort uint16
+
+	// Auxiliary port.
+	AuxPort uint16
 
 	// Maximum size for server's messages.
 	ResponseMessageLengthLimit uint
 }
 
 func (stn *Settings) Check() (err error) {
-	if len(stn.ClientHost) == 0 {
+	if len(stn.Host) == 0 {
 		return errors.New(common.ErrClientHostIsNotSet)
 	}
 
-	if stn.ClientPort == 0 {
+	if stn.MainPort == 0 {
+		return errors.New(common.ErrClientPortIsNotSet)
+	}
+
+	if stn.AuxPort == 0 {
 		return errors.New(common.ErrClientPortIsNotSet)
 	}
 
@@ -37,13 +45,15 @@ func (stn *Settings) Check() (err error) {
 
 func NewSettings(
 	host string,
-	port uint16,
+	mainPort uint16,
+	auxPort uint16,
 	responseMessageLengthLimit uint,
 ) (stn *Settings, err error) {
 
 	stn = &Settings{
-		ClientHost: host,
-		ClientPort: port,
+		Host:     host,
+		MainPort: mainPort,
+		AuxPort:  auxPort,
 	}
 
 	if responseMessageLengthLimit == 0 {

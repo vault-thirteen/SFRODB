@@ -25,7 +25,8 @@ func main() {
 
 	err = srv.Start()
 	mustBeNoError(err)
-	fmt.Println("Listening on " + srv.GetDsn())
+	fmt.Println("Main Listener: " + srv.GetMainDsn())
+	fmt.Println("Auxiliary Listener: " + srv.GetAuxDsn())
 
 	appMustBeStopped := make(chan bool, 1)
 	waitForQuitSignalFromOS(&appMustBeStopped)

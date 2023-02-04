@@ -16,7 +16,7 @@ func main() {
 	mustBeNoError(err)
 
 	var stn *settings.Settings
-	stn, err = settings.NewSettings(cla.Host, cla.Port, 0)
+	stn, err = settings.NewSettings(cla.Host, cla.MainPort, cla.AuxPort, 0)
 	mustBeNoError(err)
 	log.Println("Settings:", stn)
 
@@ -26,7 +26,8 @@ func main() {
 
 	err = cli.Start()
 	mustBeNoError(err)
-	fmt.Println("Connected to " + cli.GetDsn())
+	fmt.Println("Connected to " + cli.GetMainDsn())
+	fmt.Println("Connected to " + cli.GetAuxDsn())
 
 	appMustBeStopped := make(chan bool, 1)
 	go makeSomeActions(cli, &appMustBeStopped)
