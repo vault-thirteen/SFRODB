@@ -14,6 +14,19 @@ suitable for sharing of static content.
 
 An example of a client can be found in the `example\client` folder.
 
+## Caching
+
+Retrieved items automatically get into the cache to avoid future reads from a 
+file storage. If for some reason a user wants to update the data file in the 
+storage, the cached data must be removed from the cache, the API provides such 
+functionality.  
+
+## Dual Port Architecture
+To provide additional protection, database uses separate ports for read 
+operations and for non-read operations. By non-read operations we mean methods 
+for removing a single item from cache and methods for cache cleaning, i.e. 
+resetting the cache to an empty state.
+
 ## Building
 Use the `build.bat` script included with the source code.
 
@@ -25,12 +38,11 @@ Use the `build.bat` script included with the source code.
 Example:  
 `server.exe "settings.dat"`
 
-
 ### Sample Client
-`client.exe <server's host name> <server's port number>`
+`client.exe <server's host name> <server's main port> <server's aux port>`
 
 Example:  
-`client.exe localhost 12345`
+`client.exe localhost 12345 12346`
 
 ## Settings
 Format of the settings' file can be learned by studying the source code.
