@@ -35,3 +35,45 @@ const (
 	//	3.	An internal server error has occurred.
 	ErrSomethingWentWrong = "something went wrong"
 )
+
+type Error struct {
+	// Hey you, Go language developers !
+	// You wanted Go language to be a replacement for the good old C language.
+	// Do you know why C has a "typedef" ? They are smart enough to let all the
+	// users use the "type" word in their programs. Shame on you.
+	type_  ErrorType
+	text   string
+	method Method
+}
+
+func newError(et ErrorType, msg string, method Method) (err error) {
+	return &Error{
+		type_:  et,
+		text:   msg,
+		method: method,
+	}
+}
+
+func NewServerError(msg string, method Method) (err error) {
+	return newError(ErrorTypeServer, msg, method)
+}
+
+func NewClientError(msg string, method Method) (err error) {
+	return newError(ErrorTypeClient, msg, method)
+}
+
+func (e *Error) Error() string {
+	return e.text
+}
+
+func (e *Error) GetMethod() Method {
+	return e.method
+}
+
+func (e *Error) IsServerError() bool {
+	return e.type_ == ErrorTypeServer
+}
+
+func (e *Error) IsClientError() bool {
+	return e.type_ == ErrorTypeClient
+}

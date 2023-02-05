@@ -34,6 +34,8 @@ func NewConnection(
 }
 
 // Finalize is a method used by a Server to finalize the client's connection.
+// This method is used either when the client requested to stop the
+// communication or when an internal error happened on the server.
 func (c *Connection) Finalize() (err error) {
 	var rm *Response
 	rm, err = NewResponse_ClosingConnection()
@@ -47,6 +49,23 @@ func (c *Connection) Finalize() (err error) {
 	}
 
 	return c.close()
+}
+
+// Warn is a method used by a Server to warn the client about its (client's)
+// error.
+func (c *Connection) Warn() (err error) {
+	var rm *Response
+	rm, err = NewResponse_ClientErrorWarning()
+	if err != nil {
+		return err
+	}
+
+	err = c.SendResponseMessage(rm)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Break is a method used by a Client to finalize its connection.

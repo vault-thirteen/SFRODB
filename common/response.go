@@ -42,6 +42,14 @@ func NewResponse_ClosingConnection() (resp *Response, err error) {
 	}, nil
 }
 
+func NewResponse_ClientErrorWarning() (resp *Response, err error) {
+	return &Response{
+		SRS:           SRS_A,
+		ResponseSizeA: MethodNameLengthLimit,
+		Method:        MethodClientError,
+	}, nil
+}
+
 func NewResponse_ShowingText(text string) (resp *Response, err error) {
 	resp = &Response{
 		SRS:           0, // Will be automatically calculated.

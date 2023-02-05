@@ -38,19 +38,18 @@ func NewFilesFolder(baseFolder string) (ff *FilesFolder, err error) {
 	return ff, nil
 }
 
-func (ff *FilesFolder) GetFileContents(relPath string) (data []byte, err error) {
+func (ff *FilesFolder) GetFileContents(relPath string) (fileExists bool, data []byte, err error) {
 	filePath := filepath.Join(ff.folder, relPath)
 
-	var ok bool
-	ok, err = file.Exists(filePath)
-	if !ok {
-		return nil, errors.New(ErrFileDoesNotExist + filePath)
+	fileExists, err = file.Exists(filePath)
+	if !fileExists {
+		return fileExists, nil, errors.New(ErrFileDoesNotExist + filePath)
 	}
 
 	var f *os.File
 	f, err = os.Open(filePath)
 	if err != nil {
-		return nil, err
+		return fileExists, nil, err
 	}
 
 	defer func() {
@@ -62,10 +61,10 @@ func (ff *FilesFolder) GetFileContents(relPath string) (data []byte, err error) 
 
 	data, err = io.ReadAll(f)
 	if err != nil {
-		return nil, err
+		return fileExists, nil, err
 	}
 
-	return data, nil
+	return fileExists, data, nil
 }
 
 func DoesFolderExist(folderPath string) (ok bool, err error) {

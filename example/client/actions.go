@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/vault-thirteen/SFRODB/client"
+	"github.com/vault-thirteen/SFRODB/common"
 )
 
 const (
@@ -36,16 +37,44 @@ func makeSomeActions(cli *client.Client, appMustBeStopped *chan bool) {
 			(ch == 't') || (ch == 'T') {
 			err = processBTKeys(cli, ch)
 			if err != nil {
-				log.Println(err.Error())
-				break
+				de := getDetailedError(err)
+				if de != nil {
+					if de.IsServerError() {
+						log.Println("Server Error: " + err.Error())
+						break
+					} else if de.IsClientError() {
+						log.Println("Client Error: " + err.Error())
+						continue
+					} else {
+						log.Println("Anomaly: " + err.Error())
+						break
+					}
+				} else {
+					log.Println(err.Error())
+					continue
+				}
 			}
 		}
 
 		if (ch == 'x') || (ch == 'X') {
 			err = processXKeys(cli)
 			if err != nil {
-				log.Println(err.Error())
-				break
+				de := getDetailedError(err)
+				if de != nil {
+					if de.IsServerError() {
+						log.Println("Server Error: " + err.Error())
+						break
+					} else if de.IsClientError() {
+						log.Println("Client Error: " + err.Error())
+						continue
+					} else {
+						log.Println("Anomaly: " + err.Error())
+						break
+					}
+				} else {
+					log.Println(err.Error())
+					continue
+				}
 			}
 		}
 	}
@@ -192,4 +221,13 @@ func clearCache(cli *client.Client, action byte) (err error) {
 	}
 
 	return errors.New(ErrUnknownAction + string(action))
+}
+
+func getDetailedError(err error) (de *common.Error) {
+	detailedError, ok := err.(*common.Error)
+	if !ok {
+		return nil
+	}
+
+	return detailedError
 }

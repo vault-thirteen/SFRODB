@@ -5,11 +5,15 @@ import (
 	"strings"
 )
 
+// As opposed to the HTTP protocol, here
+// Method is a hybrid of action type and status code.
+
 // Method name settings.
 const (
 	MethodNameSpacer      = " "
 	MethodNameLengthLimit = 3
 
+	MethodNameClientError        = "EEE"
 	MethodNameCloseConnection    = "CLC"
 	MethodNameClosingConnection  = "BYE"
 	MethodNameShowText           = "ST"
@@ -25,6 +29,7 @@ const (
 
 // Methods.
 const (
+	MethodClientError        = Method(0)
 	MethodCloseConnection    = Method(1)
 	MethodClosingConnection  = Method(2)
 	MethodShowText           = Method(4)
@@ -62,6 +67,7 @@ func (c *Connection) NewMethodFromString(s string) (m Method, err error) {
 
 func MethodNames() []string {
 	return []string{
+		MethodNameClientError,
 		MethodNameCloseConnection,
 		MethodNameClosingConnection,
 		MethodNameShowText,
@@ -78,6 +84,7 @@ func MethodNames() []string {
 
 func MethodValues() []Method {
 	return []Method{
+		MethodClientError,
 		MethodCloseConnection,
 		MethodClosingConnection,
 		MethodShowText,
