@@ -35,13 +35,11 @@ func (r *Response) IsShowingBinary() bool {
 }
 
 func NewResponse_ClosingConnection() (resp *Response, err error) {
-	resp = &Response{
+	return &Response{
 		SRS:           SRS_A,
 		ResponseSizeA: MethodNameLengthLimit,
 		Method:        MethodClosingConnection,
-	}
-
-	return resp, nil
+	}, nil
 }
 
 func NewResponse_ShowingText(text string) (resp *Response, err error) {
@@ -135,11 +133,9 @@ func (r *Response) calculateResponseSize() (err error) {
 }
 
 func NewResponse_OK() (resp *Response, err error) {
-	resp = &Response{
+	return &Response{
 		SRS:           SRS_A,
 		ResponseSizeA: MethodNameLengthLimit,
 		Method:        MethodOK,
-	}
-
-	return resp, nil
+	}, nil
 }

@@ -76,7 +76,7 @@ func (cli *Client) Start() (err error) {
 	)
 	if err != nil {
 		log.Println(err)
-		return
+		return err
 	}
 
 	var auxConn net.Conn
@@ -93,7 +93,7 @@ func (cli *Client) Start() (err error) {
 	)
 	if err != nil {
 		log.Println(err)
-		return
+		return err
 	}
 
 	return nil

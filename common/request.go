@@ -35,13 +35,11 @@ func (r *Request) IsShowBinary() bool {
 }
 
 func NewRequest_CloseConnection() (req *Request, err error) {
-	req = &Request{
+	return &Request{
 		SRS:          SRS_A,
 		RequestSizeA: MethodNameLengthLimit,
 		Method:       MethodCloseConnection,
-	}
-
-	return req, nil
+	}, nil
 }
 
 func NewRequest_ShowText(uid string) (req *Request, err error) {
@@ -149,23 +147,19 @@ func NewRequest_RemoveBinary(uid string) (req *Request, err error) {
 }
 
 func NewRequest_ClearTextCache() (req *Request, err error) {
-	req = &Request{
+	return &Request{
 		SRS:          SRS_A,
 		RequestSizeA: MethodNameLengthLimit,
 		Method:       MethodResetTextCache,
-	}
-
-	return req, nil
+	}, nil
 }
 
 func NewRequest_ClearBinaryCache() (req *Request, err error) {
-	req = &Request{
+	return &Request{
 		SRS:          SRS_A,
 		RequestSizeA: MethodNameLengthLimit,
 		Method:       MethodResetBinaryCache,
-	}
-
-	return req, nil
+	}, nil
 }
 
 func (r *Request) calculateSRS(uid string) (err error) {
