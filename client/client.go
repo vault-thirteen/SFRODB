@@ -129,13 +129,13 @@ func (cli *Client) GetText(uid string) (text string, err error) {
 
 	err = cli.mainConnection.SendRequestMessage(rm)
 	if err != nil {
-		return "", common.NewClientError(err.Error(), 0)
+		return "", common.NewServerError(err.Error(), 0)
 	}
 
 	var resp *common.Response
 	resp, err = cli.mainConnection.GetResponseMessage()
 	if err != nil {
-		return "", common.NewClientError(err.Error(), 0)
+		return "", common.NewServerError(err.Error(), 0)
 	}
 
 	switch resp.Method {
@@ -159,13 +159,13 @@ func (cli *Client) GetBinary(uid string) (data []byte, err error) {
 
 	err = cli.mainConnection.SendRequestMessage(rm)
 	if err != nil {
-		return nil, common.NewClientError(err.Error(), 0)
+		return nil, common.NewServerError(err.Error(), 0)
 	}
 
 	var resp *common.Response
 	resp, err = cli.mainConnection.GetResponseMessage()
 	if err != nil {
-		return nil, common.NewClientError(err.Error(), 0)
+		return nil, common.NewServerError(err.Error(), 0)
 	}
 
 	switch resp.Method {
@@ -189,13 +189,13 @@ func (cli *Client) RemoveText(uid string) (err error) {
 
 	err = cli.auxConnection.SendRequestMessage(rm)
 	if err != nil {
-		return common.NewClientError(err.Error(), 0)
+		return common.NewServerError(err.Error(), 0)
 	}
 
 	var resp *common.Response
 	resp, err = cli.auxConnection.GetResponseMessage()
 	if err != nil {
-		return common.NewClientError(err.Error(), 0)
+		return common.NewServerError(err.Error(), 0)
 	}
 
 	if resp.Method == common.MethodOK {
@@ -223,13 +223,13 @@ func (cli *Client) RemoveBinary(uid string) (err error) {
 
 	err = cli.auxConnection.SendRequestMessage(rm)
 	if err != nil {
-		return common.NewClientError(err.Error(), 0)
+		return common.NewServerError(err.Error(), 0)
 	}
 
 	var resp *common.Response
 	resp, err = cli.auxConnection.GetResponseMessage()
 	if err != nil {
-		return common.NewClientError(err.Error(), 0)
+		return common.NewServerError(err.Error(), 0)
 	}
 
 	if resp.Method == common.MethodOK {
@@ -257,13 +257,13 @@ func (cli *Client) ClearTextCache() (err error) {
 
 	err = cli.auxConnection.SendRequestMessage(rm)
 	if err != nil {
-		return common.NewClientError(err.Error(), 0)
+		return common.NewServerError(err.Error(), 0)
 	}
 
 	var resp *common.Response
 	resp, err = cli.auxConnection.GetResponseMessage()
 	if err != nil {
-		return common.NewClientError(err.Error(), 0)
+		return common.NewServerError(err.Error(), 0)
 	}
 
 	if resp.Method == common.MethodOK {
@@ -291,13 +291,13 @@ func (cli *Client) ClearBinaryCache() (err error) {
 
 	err = cli.auxConnection.SendRequestMessage(rm)
 	if err != nil {
-		return common.NewClientError(err.Error(), 0)
+		return common.NewServerError(err.Error(), 0)
 	}
 
 	var resp *common.Response
 	resp, err = cli.auxConnection.GetResponseMessage()
 	if err != nil {
-		return common.NewClientError(err.Error(), 0)
+		return common.NewServerError(err.Error(), 0)
 	}
 
 	if resp.Method == common.MethodOK {
@@ -341,7 +341,7 @@ func (cli *Client) sayGoodbye(useMainConnection bool, normalExit bool) (err erro
 		err = cli.auxConnection.SendRequestMessage(rm)
 	}
 	if err != nil {
-		return common.NewClientError(err.Error(), 0)
+		return common.NewServerError(err.Error(), 0)
 	}
 
 	// If we are closing connection due to an error, we do not wait for the
@@ -357,7 +357,7 @@ func (cli *Client) sayGoodbye(useMainConnection bool, normalExit bool) (err erro
 		resp, err = cli.auxConnection.GetResponseMessage()
 	}
 	if err != nil {
-		return common.NewClientError(err.Error(), 0)
+		return common.NewServerError(err.Error(), 0)
 	}
 
 	if resp.Method == common.MethodClosingConnection {
