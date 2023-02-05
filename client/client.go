@@ -118,6 +118,20 @@ func (cli *Client) Stop() (err error) {
 	return nil
 }
 
+// Restart re-starts the client.
+func (cli *Client) Restart(forcibly bool) (err error) {
+	if forcibly {
+		_ = cli.Stop()
+	} else {
+		err = cli.Stop()
+		if err != nil {
+			return err
+		}
+	}
+
+	return cli.Start()
+}
+
 // GetText requests a text from server and returns it.
 // Returns a detailed error.
 func (cli *Client) GetText(uid string) (text string, err error) {
