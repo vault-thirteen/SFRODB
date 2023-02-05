@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/vault-thirteen/SFRODB/server"
 	"github.com/vault-thirteen/SFRODB/server/settings"
@@ -34,6 +35,7 @@ func main() {
 
 	err = srv.Stop()
 	mustBeNoError(err)
+	time.Sleep(time.Second)
 }
 
 func mustBeNoError(err error) {

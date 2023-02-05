@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"path/filepath"
+	"sync/atomic"
 
 	"github.com/vault-thirteen/Cache"
 	"github.com/vault-thirteen/SFRODB/common"
@@ -35,6 +36,8 @@ type Server struct {
 
 	filesT *ff.FilesFolder
 	filesB *ff.FilesFolder
+
+	isRunning *atomic.Bool
 }
 
 // NewServer creates a server.
@@ -49,6 +52,9 @@ func NewServer(stn *settings.Settings) (srv *Server, err error) {
 		mainDsn:  fmt.Sprintf("%s:%d", stn.ServerHost, stn.MainPort),
 		auxDsn:   fmt.Sprintf("%s:%d", stn.ServerHost, stn.AuxPort),
 	}
+
+	srv.isRunning = new(atomic.Bool)
+	srv.isRunning.Store(false)
 
 	srv.cacheT = cache.NewCache[string, string](
 		0,
@@ -105,6 +111,7 @@ func (srv *Server) Start() (err error) {
 		return err
 	}
 
+	srv.isRunning.Store(true)
 	go srv.runMainLoop()
 	go srv.runAuxLoop()
 
@@ -113,24 +120,36 @@ func (srv *Server) Start() (err error) {
 
 func (srv *Server) runMainLoop() {
 	for {
+		if !srv.isRunning.Load() {
+			break
+		}
+
 		conn, err := srv.mainListener.Accept()
 		if err != nil {
 			log.Println(ErrConnectionAccepting, err.Error())
+		} else {
+			go srv.handleMainConnection(conn)
 		}
-
-		go srv.handleMainConnection(conn)
 	}
+
+	log.Println("Main loop has stopped.")
 }
 
 func (srv *Server) runAuxLoop() {
 	for {
+		if !srv.isRunning.Load() {
+			break
+		}
+
 		conn, err := srv.auxListener.Accept()
 		if err != nil {
 			log.Println(ErrConnectionAccepting, err.Error())
+		} else {
+			go srv.handleAuxConnection(conn)
 		}
-
-		go srv.handleAuxConnection(conn)
 	}
+
+	log.Println("Auxiliary loop has stopped.")
 }
 
 // Stop stops the server.
@@ -144,6 +163,9 @@ func (srv *Server) Stop() (err error) {
 	if err != nil {
 		return err
 	}
+
+	srv.isRunning.Store(false)
+	// Main and Aux Loops will stop automatically.
 
 	return nil
 }

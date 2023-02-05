@@ -7,6 +7,7 @@ SET client_dir=client
 SET server_dir=server
 SET settings_file=settings.dat
 SET server_starter_script=start-server.bat
+SET client_starter_script=start-client.bat
 
 MKDIR "%build_dir%"
 
@@ -25,3 +26,6 @@ CD "%examples_dir%\%client_dir%"
 go build
 MOVE "%client_dir%.exe" ".\..\..\%build_dir%\"
 CD ".\..\..\"
+
+:: Copy some additional files for the client.
+COPY "%examples_dir%\%client_dir%\%client_starter_script%" "%build_dir%\"
