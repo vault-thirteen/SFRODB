@@ -22,128 +22,111 @@ type Response struct {
 	Data []byte
 }
 
-func (r *Response) IsClosingConnection() bool {
-	return r.Method == MethodClosingConnection
-}
-
-func (r *Response) IsShowingText() bool {
-	return r.Method == MethodShowingText
-}
-
-func (r *Response) IsShowingBinary() bool {
-	return r.Method == MethodShowingBinary
-}
-
-func NewResponse_ClosingConnection() (resp *Response, err error) {
+func newSimpleResponse(method Method) (resp *Response, err error) {
 	return &Response{
 		SRS:           SRS_A,
 		ResponseSizeA: MethodNameLengthLimit,
-		Method:        MethodClosingConnection,
+		Method:        method,
 	}, nil
 }
 
-func NewResponse_ClientErrorWarning() (resp *Response, err error) {
-	return &Response{
-		SRS:           SRS_A,
-		ResponseSizeA: MethodNameLengthLimit,
-		Method:        MethodClientError,
-	}, nil
-}
-
-func NewResponse_ShowingText(text string) (resp *Response, err error) {
-	resp = &Response{
-		SRS:           0, // Will be automatically calculated.
-		ResponseSizeC: 0, // Will be automatically calculated.
-		Method:        MethodShowingText,
-		Text:          text,
-	}
-
-	if len(text) > ResponseMessageLengthC-MethodNameLengthLimit {
-		err = fmt.Errorf(ErrTextIsTooLong, ResponseMessageLengthC-MethodNameLengthLimit, len(text))
-		return nil, err
-	} else if len(text) > ResponseMessageLengthB-MethodNameLengthLimit {
-		resp.SRS = SRS_C
-	} else if len(text) > ResponseMessageLengthA-MethodNameLengthLimit {
-		resp.SRS = SRS_B
-	} else {
-		resp.SRS = SRS_A
-	}
-
-	err = resp.calculateResponseSize()
-	if err != nil {
-		return nil, err
-	}
-
-	return resp, nil
-}
-
-func NewResponse_ShowingBinary(data []byte) (resp *Response, err error) {
-	resp = &Response{
-		SRS:           0, // Will be automatically calculated.
-		ResponseSizeC: 0, // Will be automatically calculated.
-		Method:        MethodShowingBinary,
-		Data:          data,
-	}
-
-	if len(data) > ResponseMessageLengthC-MethodNameLengthLimit {
-		err = fmt.Errorf(ErrTextIsTooLong, ResponseMessageLengthC-MethodNameLengthLimit, len(data))
-		return nil, err
-	} else if len(data) > ResponseMessageLengthB-MethodNameLengthLimit {
-		resp.SRS = SRS_C
-	} else if len(data) > ResponseMessageLengthA-MethodNameLengthLimit {
-		resp.SRS = SRS_B
-	} else {
-		resp.SRS = SRS_A
-	}
-
-	err = resp.calculateResponseSize()
-	if err != nil {
-		return nil, err
-	}
-
-	return resp, nil
-}
-
-func (r *Response) calculateResponseSize() (err error) {
-	switch r.Method {
-	case MethodClosingConnection:
-		r.ResponseSizeA = MethodNameLengthLimit
-
-	case MethodShowingText:
-		switch r.SRS {
-		case SRS_A:
-			r.ResponseSizeA = MethodNameLengthLimit + uint8(len(r.Text))
-		case SRS_B:
-			r.ResponseSizeB = MethodNameLengthLimit + uint16(len(r.Text))
-		case SRS_C:
-			r.ResponseSizeC = MethodNameLengthLimit + uint32(len(r.Text))
-		default:
-			return fmt.Errorf(ErrSrsIsNotSupported, r.SRS)
-		}
-
-	case MethodShowingBinary:
-		switch r.SRS {
-		case SRS_A:
-			r.ResponseSizeA = MethodNameLengthLimit + uint8(len(r.Data))
-		case SRS_B:
-			r.ResponseSizeB = MethodNameLengthLimit + uint16(len(r.Data))
-		case SRS_C:
-			r.ResponseSizeC = MethodNameLengthLimit + uint32(len(r.Data))
-		default:
-			return fmt.Errorf(ErrSrsIsNotSupported, r.SRS)
-		}
-
-	default:
-		return fmt.Errorf(ErrUnsupportedMethodValue, r.Method)
-	}
-
-	return nil
+func NewResponse_ClientError() (resp *Response, err error) {
+	return newSimpleResponse(MethodClientError)
 }
 
 func NewResponse_OK() (resp *Response, err error) {
-	return &Response{
-		SRS:           SRS_A,
-		ResponseSizeA: MethodNameLengthLimit,
-		Method:        MethodOK,
-	}, nil
+	return newSimpleResponse(MethodOK)
+}
+
+func NewResponse_ClosingConnection() (resp *Response, err error) {
+	return newSimpleResponse(MethodClosingConnection)
+}
+
+func NewResponse_TextRecordExists() (resp *Response, err error) {
+	return newSimpleResponse(MethodTextRecordExists)
+}
+
+func NewResponse_BinaryRecordExists() (resp *Response, err error) {
+	return newSimpleResponse(MethodBinaryRecordExists)
+}
+
+func NewResponse_TextRecordDoesNotExist() (resp *Response, err error) {
+	return newSimpleResponse(MethodTextRecordDoesNotExist)
+}
+
+func NewResponse_BinaryRecordDoesNotExist() (resp *Response, err error) {
+	return newSimpleResponse(MethodBinaryRecordDoesNotExist)
+}
+
+func NewResponse_TextFileExists() (resp *Response, err error) {
+	return newSimpleResponse(MethodTextFileExists)
+}
+
+func NewResponse_BinaryFileExists() (resp *Response, err error) {
+	return newSimpleResponse(MethodBinaryFileExists)
+}
+
+func NewResponse_TextFileDoesNotExist() (resp *Response, err error) {
+	return newSimpleResponse(MethodTextFileDoesNotExist)
+}
+
+func NewResponse_BinaryFileDoesNotExist() (resp *Response, err error) {
+	return newSimpleResponse(MethodBinaryFileDoesNotExist)
+}
+
+func newNormalResponse(
+	text string,
+	data []byte,
+	useBinary bool,
+	method Method,
+) (resp *Response, err error) {
+	resp = &Response{
+		SRS:           0, // Will be automatically calculated.
+		ResponseSizeC: 0, // Will be automatically calculated.
+		Method:        method,
+	}
+
+	// Content.
+	var contentLen int
+	if useBinary {
+		resp.Data = data
+		contentLen = len(data)
+	} else {
+		resp.Text = text
+		contentLen = len(text)
+	}
+
+	// SRS.
+	if contentLen > ResponseMessageLengthC-MethodNameLengthLimit {
+		err = fmt.Errorf(ErrTextIsTooLong, ResponseMessageLengthC-MethodNameLengthLimit, contentLen)
+		return nil, err
+	} else if contentLen > ResponseMessageLengthB-MethodNameLengthLimit {
+		resp.SRS = SRS_C
+	} else if contentLen > ResponseMessageLengthA-MethodNameLengthLimit {
+		resp.SRS = SRS_B
+	} else {
+		resp.SRS = SRS_A
+	}
+
+	// RS.
+	switch resp.SRS {
+	case SRS_A:
+		resp.ResponseSizeA = MethodNameLengthLimit + uint8(contentLen)
+	case SRS_B:
+		resp.ResponseSizeB = MethodNameLengthLimit + uint16(contentLen)
+	case SRS_C:
+		resp.ResponseSizeC = MethodNameLengthLimit + uint32(contentLen)
+	default:
+		return nil, fmt.Errorf(ErrSrsIsNotSupported, resp.SRS)
+	}
+
+	return resp, nil
+}
+
+func NewResponse_ShowingText(text string) (resp *Response, err error) {
+	return newNormalResponse(text, nil, false, MethodShowingText)
+}
+
+func NewResponse_ShowingBinary(data []byte) (resp *Response, err error) {
+	return newNormalResponse("", data, true, MethodShowingBinary)
 }

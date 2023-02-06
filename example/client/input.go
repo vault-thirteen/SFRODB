@@ -8,13 +8,16 @@ import (
 )
 
 const (
-	HintGet      = "To get a textual item – enter T, B – for binary item, X - extras, Q – to quit.\r\n>"
-	HintUid      = "Enter the UID.\r\n>"
-	HintDataSize = `"Data is quite large. Do you want to see it ?
-Enter 'Y' for Yes, otherwise – No.
->`
-	HintExtra  = "To remove a textual item – enter T, B – for binary item, C - to clear all the cache.\r\n>"
-	HintExtraC = "To clear the textual cache – enter T, B – for binary cache.\r\n>"
+	HintMain = "\r\n" +
+		"[G] = Get/Show a Record;\r\n" +
+		"[E] = Check Record's Existence;\r\n" +
+		"[S] = Check File's Existence;\r\n" +
+		"[F] = Forget/Remove a Record from Cache;\r\n" +
+		"[R] = Reset/Clear the Cache;\r\n" +
+		"[Q] = Quit/Exit.\r\n> "
+	HintTB       = "[T] = Text; [B] = Binary; [C] = Cancel/Quit. \r\n> "
+	HintUid      = "Enter the UID > "
+	HintDataSize = "Data is quite large. Do you want to see it ? [Y] = Yes; [N] = No. > "
 )
 
 func getUserInputChar(hint string) (char byte, err error) {

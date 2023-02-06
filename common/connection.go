@@ -33,41 +33,6 @@ func NewConnection(
 	}, nil
 }
 
-// Finalize is a method used by a Server to finalize the client's connection.
-// This method is used either when the client requested to stop the
-// communication or when an internal error happened on the server.
-func (c *Connection) Finalize() (err error) {
-	var rm *Response
-	rm, err = NewResponse_ClosingConnection()
-	if err != nil {
-		return err
-	}
-
-	err = c.SendResponseMessage(rm)
-	if err != nil {
-		return err
-	}
-
-	return c.close()
-}
-
-// Warn is a method used by a Server to warn the client about its (client's)
-// error.
-func (c *Connection) Warn() (err error) {
-	var rm *Response
-	rm, err = NewResponse_ClientErrorWarning()
-	if err != nil {
-		return err
-	}
-
-	err = c.SendResponseMessage(rm)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // Break is a method used by a Client to finalize its connection.
 func (c *Connection) Break() (err error) {
 	return c.close()
@@ -185,7 +150,7 @@ func (c *Connection) getRequestMethodAndUID(r *Request) (err error) {
 
 // SendResponseMessage is a method used by a Server to send a response to the
 // client.
-func (c *Connection) SendResponseMessage(rm *Response) (err error) {
+func (c *Connection) SendResponseMessage(rm *Response, useBinary bool) (err error) {
 	err = c.sendSRS(rm.SRS)
 	if err != nil {
 		return err
@@ -196,7 +161,7 @@ func (c *Connection) SendResponseMessage(rm *Response) (err error) {
 		return err
 	}
 
-	err = c.sendResponseMethodAndData(rm)
+	err = c.sendResponseMethodAndData(rm, useBinary)
 	if err != nil {
 		return err
 	}
@@ -240,17 +205,16 @@ func (c *Connection) sendResponseSize(rm *Response) (err error) {
 	return nil
 }
 
-func (c *Connection) sendResponseMethodAndData(rm *Response) (err error) {
+func (c *Connection) sendResponseMethodAndData(rm *Response, useBinary bool) (err error) {
 	_, err = c.netConn.Write((*c.methodNameBuffers)[rm.Method])
 	if err != nil {
 		return err
 	}
 
-	switch rm.Method {
-	case MethodShowingText:
-		_, err = c.netConn.Write([]byte(rm.Text))
-	case MethodShowingBinary:
+	if useBinary {
 		_, err = c.netConn.Write(rm.Data)
+	} else {
+		_, err = c.netConn.Write([]byte(rm.Text))
 	}
 	if err != nil {
 		return err
@@ -304,19 +268,6 @@ func (c *Connection) sendRequestSize(rm *Request) (err error) {
 }
 
 func (c *Connection) sendRequestMethodAndUid(rm *Request) (err error) {
-	switch rm.Method {
-	case MethodShowText,
-		MethodShowBinary,
-		MethodForgetTextRecord,
-		MethodForgetBinaryRecord,
-		MethodResetTextCache,
-		MethodResetBinaryCache,
-		MethodCloseConnection:
-		break
-	default:
-		return fmt.Errorf(ErrUnsupportedMethodValue, rm.Method)
-	}
-
 	_, err = c.netConn.Write((*c.methodNameBuffers)[rm.Method])
 	if err != nil {
 		return err
@@ -332,7 +283,7 @@ func (c *Connection) sendRequestMethodAndUid(rm *Request) (err error) {
 
 // GetResponseMessage is a method used by a Client to read a response from the
 // server.
-func (c *Connection) GetResponseMessage() (resp *Response, err error) {
+func (c *Connection) GetResponseMessage(useBinary bool) (resp *Response, err error) {
 	resp = &Response{}
 
 	resp.SRS, err = c.getSRS()
@@ -345,7 +296,7 @@ func (c *Connection) GetResponseMessage() (resp *Response, err error) {
 		return nil, errors.New(ErrRsReading + err.Error())
 	}
 
-	err = c.getResponseMethodAndData(resp)
+	err = c.getResponseMethodAndData(resp, useBinary)
 	if err != nil {
 		return nil, errors.New(ErrReadingMethodAndData + err.Error())
 	}
@@ -402,7 +353,7 @@ func (c *Connection) getResponseSizeC(resp *Response) (err error) {
 	return nil
 }
 
-func (c *Connection) getResponseMethodAndData(resp *Response) (err error) {
+func (c *Connection) getResponseMethodAndData(resp *Response, useBinary bool) (err error) {
 	var respMsgLen uint
 	switch resp.SRS {
 	case SRS_A:
@@ -430,11 +381,10 @@ func (c *Connection) getResponseMethodAndData(resp *Response) (err error) {
 		return err
 	}
 
-	switch resp.Method {
-	case MethodShowingText:
-		resp.Text = strings.TrimSpace(string(data[3:respMsgLen]))
-	case MethodShowingBinary:
+	if useBinary {
 		resp.Data = data[3:respMsgLen]
+	} else {
+		resp.Text = strings.TrimSpace(string(data[3:respMsgLen]))
 	}
 
 	return nil

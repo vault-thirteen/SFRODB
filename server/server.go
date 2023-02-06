@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"path/filepath"
 	"sync/atomic"
 
 	"github.com/vault-thirteen/Cache"
@@ -183,7 +182,7 @@ func (srv *Server) handleMainConnection(conn net.Conn) {
 	}
 
 	defer func() {
-		derr := c.Finalize()
+		derr := srv.finalize(c)
 		if derr != nil {
 			log.Println(derr)
 		}
@@ -204,10 +203,18 @@ func (srv *Server) handleMainConnection(conn net.Conn) {
 		}
 
 		switch req.Method {
-		case common.MethodShowText:
-			err = srv.showText(c, req)
-		case common.MethodShowBinary:
-			err = srv.showBinary(c, req)
+		case common.MethodShowText,
+			common.MethodShowBinary:
+			err = srv.showRecord(c, req)
+
+		case common.MethodSearchTextRecord,
+			common.MethodSearchBinaryRecord:
+			err = srv.searchRecord(c, req)
+
+		case common.MethodSearchTextFile,
+			common.MethodSearchBinaryFile:
+			err = srv.searchFile(c, req)
+
 		default:
 			msg := fmt.Sprintf(common.ErrUnsupportedMethodValue, req.Method)
 			err = common.NewClientError(msg, 0)
@@ -217,7 +224,7 @@ func (srv *Server) handleMainConnection(conn net.Conn) {
 			if isServerError {
 				break
 			} else {
-				err = srv.warnClient(c)
+				err = srv.clientError(c)
 				if err != nil {
 					break
 				}
@@ -240,7 +247,7 @@ func (srv *Server) handleAuxConnection(conn net.Conn) {
 	}
 
 	defer func() {
-		derr := c.Finalize()
+		derr := srv.finalize(c)
 		if derr != nil {
 			log.Println(derr)
 		}
@@ -261,14 +268,14 @@ func (srv *Server) handleAuxConnection(conn net.Conn) {
 		}
 
 		switch req.Method {
-		case common.MethodForgetTextRecord:
+		case common.MethodForgetTextRecord,
+			common.MethodForgetBinaryRecord:
 			err = srv.forgetRecord(c, req)
-		case common.MethodForgetBinaryRecord:
-			err = srv.forgetRecord(c, req)
-		case common.MethodResetTextCache:
+
+		case common.MethodResetTextCache,
+			common.MethodResetBinaryCache:
 			err = srv.resetCache(c, req)
-		case common.MethodResetBinaryCache:
-			err = srv.resetCache(c, req)
+
 		default:
 			msg := fmt.Sprintf(common.ErrUnsupportedMethodValue, req.Method)
 			err = common.NewClientError(msg, 0)
@@ -278,7 +285,7 @@ func (srv *Server) handleAuxConnection(conn net.Conn) {
 			if isServerError {
 				break
 			} else {
-				err = srv.warnClient(c)
+				err = srv.clientError(c)
 				if err != nil {
 					break
 				}
@@ -288,224 +295,14 @@ func (srv *Server) handleAuxConnection(conn net.Conn) {
 	}
 }
 
-// showText gets the text and returns it.
-// Returns a detailed error.
-func (srv *Server) showText(c *common.Connection, r *common.Request) (err error) {
-	var text string
-	text, err = srv.getText(r.UID)
+// finalize is a method used by a Server to finalize the client's connection.
+// This method is used either when the client requested to stop the
+// communication or when an internal error happened on the server.
+func (srv *Server) finalize(c *common.Connection) (err error) {
+	err = srv.closingConnection(c)
 	if err != nil {
 		return err
 	}
 
-	var rm *common.Response
-	rm, err = common.NewResponse_ShowingText(text)
-	if err != nil {
-		return common.NewServerError(err.Error(), 0)
-	}
-
-	err = c.SendResponseMessage(rm)
-	if err != nil {
-		return common.NewServerError(err.Error(), 0)
-	}
-
-	return nil
-}
-
-// getText gets the text either from cache or from file storage.
-// Returns a detailed error.
-func (srv *Server) getText(uid string) (text string, err error) {
-	// Check the UID.
-	if !common.IsUidValid(uid) {
-		return "", common.NewClientError(common.ErrUid, 0)
-	}
-
-	// Try to find the text in cache.
-	text, err = srv.cacheT.GetRecord(uid)
-	if err == nil {
-		return text, nil
-	}
-
-	// Try the file storage.
-	// Add an extension and convert path to the style of a current OS.
-	relPath := filepath.Join(uid+srv.settings.TextData.FileExtension, "")
-	var data []byte
-	var fileExists bool
-	fileExists, data, err = srv.filesT.GetFileContents(relPath)
-	if !fileExists {
-		return "", common.NewClientError(err.Error(), 0)
-	}
-	if err != nil {
-		return "", common.NewServerError(err.Error(), 0)
-	}
-	text = string(data)
-
-	// Save data in the cache.
-	err = srv.cacheT.AddRecord(uid, text)
-	if err != nil {
-		return "", common.NewServerError(err.Error(), 0)
-	}
-
-	return text, nil
-}
-
-// showBinary gets the binary data and returns it.
-// Returns a detailed error.
-func (srv *Server) showBinary(c *common.Connection, r *common.Request) (err error) {
-	var data []byte
-	data, err = srv.getBinary(r.UID)
-	if err != nil {
-		return err
-	}
-
-	var rm *common.Response
-	rm, err = common.NewResponse_ShowingBinary(data)
-	if err != nil {
-		return common.NewServerError(err.Error(), 0)
-	}
-
-	err = c.SendResponseMessage(rm)
-	if err != nil {
-		return common.NewServerError(err.Error(), 0)
-	}
-
-	return nil
-}
-
-// getBinary gets the binary data either from cache or from file storage.
-// Returns a detailed error.
-func (srv *Server) getBinary(uid string) (data []byte, err error) {
-	// Check the UID.
-	if !common.IsUidValid(uid) {
-		return nil, common.NewClientError(common.ErrUid, 0)
-	}
-
-	// Try to find the data in cache.
-	data, err = srv.cacheB.GetRecord(uid)
-	if err == nil {
-		return data, nil
-	}
-
-	// Try the file storage.
-	// Add an extension and convert path to the style of a current OS.
-	relPath := filepath.Join(uid+srv.settings.BinaryData.FileExtension, "")
-	var fileExists bool
-	fileExists, data, err = srv.filesB.GetFileContents(relPath)
-	if !fileExists {
-		return nil, common.NewClientError(err.Error(), 0)
-	}
-	if err != nil {
-		return nil, common.NewServerError(err.Error(), 0)
-	}
-
-	// Save data in the cache.
-	err = srv.cacheB.AddRecord(uid, data)
-	if err != nil {
-		return nil, common.NewServerError(err.Error(), 0)
-	}
-
-	return data, nil
-}
-
-// forgetRecord removes a record from cache.
-// Returns a detailed error.
-func (srv *Server) forgetRecord(c *common.Connection, r *common.Request) (err error) {
-	// Check the UID.
-	if !common.IsUidValid(r.UID) {
-		return common.NewClientError(common.ErrUid, 0)
-	}
-
-	// Remove the record from the cache.
-	var recExists bool
-	switch r.Method {
-	case common.MethodForgetTextRecord:
-		recExists, err = srv.cacheT.RemoveRecord(r.UID)
-		if !recExists {
-			return common.NewClientError(err.Error(), 0)
-		}
-		if err != nil {
-			return common.NewServerError(err.Error(), 0)
-		}
-
-	case common.MethodForgetBinaryRecord:
-		recExists, err = srv.cacheB.RemoveRecord(r.UID)
-		if !recExists {
-			return common.NewClientError(err.Error(), 0)
-		}
-		if err != nil {
-			return common.NewServerError(err.Error(), 0)
-		}
-
-	default:
-		return common.NewServerError(fmt.Sprintf(common.ErrUnsupportedMethodValue, r.Method), 0)
-	}
-
-	var rm *common.Response
-	rm, err = common.NewResponse_OK()
-	if err != nil {
-		return common.NewServerError(err.Error(), 0)
-	}
-
-	err = c.SendResponseMessage(rm)
-	if err != nil {
-		return common.NewServerError(err.Error(), 0)
-	}
-
-	return nil
-}
-
-// resetCache removes all records from cache.
-// Returns a detailed error.
-func (srv *Server) resetCache(c *common.Connection, r *common.Request) (err error) {
-	log.Println(MsgResettingCache)
-
-	// Clear the cache.
-	switch r.Method {
-	case common.MethodResetTextCache:
-		err = srv.cacheT.Clear()
-		if err != nil {
-			return common.NewServerError(err.Error(), 0)
-		}
-
-	case common.MethodResetBinaryCache:
-		err = srv.cacheB.Clear()
-		if err != nil {
-			return common.NewServerError(err.Error(), 0)
-		}
-
-	default:
-		return common.NewServerError(fmt.Sprintf(common.ErrUnsupportedMethodValue, r.Method), 0)
-	}
-
-	var rm *common.Response
-	rm, err = common.NewResponse_OK()
-	if err != nil {
-		return common.NewServerError(err.Error(), 0)
-	}
-
-	err = c.SendResponseMessage(rm)
-	if err != nil {
-		return common.NewServerError(err.Error(), 0)
-	}
-
-	return nil
-}
-
-// processError processes a detailed error.
-func (srv *Server) processError(err error) (isServerError bool) {
-	detailedError, ok := err.(*common.Error)
-	if !ok {
-		return false
-	}
-
-	if detailedError.IsServerError() {
-		log.Println(err)
-		return true
-	}
-
-	return false
-}
-
-// warnClient tells the client about its (client's) error.
-func (srv *Server) warnClient(c *common.Connection) (err error) {
-	return c.Warn()
+	return c.Break()
 }

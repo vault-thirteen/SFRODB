@@ -11,81 +11,103 @@ import (
 )
 
 const (
-	ErrUnknownAction = "unknown action: "
-	HorizontalLine   = "------------------------------------------------------------"
-	ItemLenLimit     = 60
+	ErrUnsupportedKey = "unsupported key: "
+	HorizontalLine    = "------------------------------------------------------------"
+	ItemLenLimit      = 60
 )
 
 func makeSomeActions(cli *client.Client, appMustBeStopped *chan bool) {
-	var ch byte
+	var action byte
+	var tbc byte
+	var uid string
 	var err error
 	var normalExit = false
 
 	for {
-		ch, err = getUserInputChar(HintGet)
+		action, err = getUserInputChar(HintMain)
 		if err != nil {
 			log.Println(err.Error())
 			continue
 		}
 
-		if (ch == 'q') || (ch == 'Q') {
+		if (action == 'q') || (action == 'Q') {
 			normalExit = true
 			break
 		}
 
-		if (ch == 'b') || (ch == 'B') ||
-			(ch == 't') || (ch == 'T') {
-			err = processBTKeys(cli, ch)
-			if err != nil {
-				de := getDetailedError(err)
-				if de != nil {
-					if de.IsServerError() {
-						log.Println("Server Error: " + err.Error())
-						break
-					} else if de.IsClientError() {
-						log.Println("Client Error: " + err.Error())
-						continue
-					} else {
-						log.Println("Anomaly: " + err.Error())
-						break
-					}
-				} else {
-					log.Println(err.Error())
-					continue
-				}
-			}
+		switch action {
+		case 'g', 'G', 'e', 'E', 's', 'S', 'f', 'F', 'r', 'R':
+		default:
+			continue
 		}
 
-		if (ch == 'x') || (ch == 'X') {
-			err = processXKeys(cli)
+		tbc, err = getUserInputChar(HintTB)
+		if err != nil {
+			log.Println(err.Error())
+			continue
+		}
+
+		switch tbc {
+		case 't', 'T', 'b', 'B':
+		case 'c', 'C':
+			continue
+		default:
+			continue
+		}
+
+		switch action {
+		case 'r', 'R':
+		case 'g', 'G', 'e', 'E', 's', 'S', 'f', 'F':
+			uid, err = getUserInputString(HintUid)
 			if err != nil {
-				de := getDetailedError(err)
-				if de != nil {
-					if de.IsServerError() {
-						log.Println("Server Error: " + err.Error())
-						break
-					} else if de.IsClientError() {
-						log.Println("Client Error: " + err.Error())
-						continue
-					} else {
-						log.Println("Anomaly: " + err.Error())
-						break
-					}
-				} else {
-					log.Println(err.Error())
+				log.Println(err.Error())
+				continue
+			}
+		default:
+			continue
+		}
+
+		switch action {
+		case 'g', 'G':
+			err = processGKeys(cli, tbc, uid)
+		case 'e', 'E':
+			err = processEKeys(cli, tbc, uid)
+		case 's', 'S':
+			err = processSKeys(cli, tbc, uid)
+		case 'f', 'F':
+			err = processFKeys(cli, tbc, uid)
+		case 'r', 'R':
+			err = processRKeys(cli, tbc)
+		default:
+			continue
+		}
+		if err != nil {
+			de := getDetailedError(err)
+			if de != nil {
+				if de.IsServerError() {
+					log.Println("Server Error: " + err.Error())
+					break
+				} else if de.IsClientError() {
+					log.Println("Client Error: " + err.Error())
 					continue
+				} else {
+					log.Println("Anomaly: " + err.Error())
+					break
 				}
+			} else {
+				log.Println(err.Error())
+				continue
 			}
 		}
 	}
 
 	// Send the 'Close' Request.
-	err = cli.SayGoodbyeOnMain(normalExit)
+	err = cli.CloseConnection_Main(normalExit)
 	if err != nil {
 		log.Println(err.Error())
 	}
 
-	err = cli.SayGoodbyeOnAux(normalExit)
+	err = cli.CloseConnection_Aux(normalExit)
 	if err != nil {
 		log.Println(err.Error())
 	}
@@ -93,16 +115,19 @@ func makeSomeActions(cli *client.Client, appMustBeStopped *chan bool) {
 	*appMustBeStopped <- true
 }
 
-func processBTKeys(cli *client.Client, ch byte) (err error) {
-	var s string
-	s, err = getUserInputString(HintUid)
-	if err != nil {
-		return err
+func getDetailedError(err error) (de *common.Error) {
+	detailedError, ok := err.(*common.Error)
+	if !ok {
+		return nil
 	}
 
+	return detailedError
+}
+
+func processGKeys(cli *client.Client, bt byte, uid string) (err error) {
 	var item any
 	t1 := time.Now()
-	item, err = getItem(cli, ch, s)
+	item, err = getRecord(cli, bt, uid)
 	if err != nil {
 		return err
 	}
@@ -120,6 +145,7 @@ func processBTKeys(cli *client.Client, ch byte) (err error) {
 		t1e.Microseconds(), itemLen)
 
 	var mustShowData = false
+	var ch byte
 	if itemLen > ItemLenLimit {
 		ch, err = getUserInputChar(HintDataSize)
 		if err != nil {
@@ -143,91 +169,102 @@ func processBTKeys(cli *client.Client, ch byte) (err error) {
 	return nil
 }
 
-func processXKeys(cli *client.Client) (err error) {
-	var ch byte
-	ch, err = getUserInputChar(HintExtra)
+func getRecord(cli *client.Client, bt byte, uid string) (item any, err error) {
+	if (bt == 't') || (bt == 'T') {
+		return cli.ShowText(uid)
+	}
+
+	if (bt == 'b') || (bt == 'B') {
+		return cli.ShowBinary(uid)
+	}
+
+	return nil, errors.New(ErrUnsupportedKey + string(bt))
+}
+
+func processEKeys(cli *client.Client, bt byte, uid string) (err error) {
+	var recExists bool
+	recExists, err = searchRecord(cli, bt, uid)
 	if err != nil {
 		return err
 	}
 
-	if (ch == 'b') || (ch == 'B') ||
-		(ch == 't') || (ch == 'T') {
-		return processXBTKeys(cli, ch)
-	}
-
-	if (ch == 'c') || (ch == 'C') {
-		return processXCKeys(cli)
+	if recExists {
+		fmt.Println("Record exists.")
+	} else {
+		fmt.Println("Record does not exist.")
 	}
 
 	return nil
 }
 
-func processXBTKeys(cli *client.Client, ch byte) (err error) {
-	var s string
-	s, err = getUserInputString(HintUid)
-	if err != nil {
-		return err
+func searchRecord(cli *client.Client, bt byte, uid string) (exists bool, err error) {
+	if (bt == 't') || (bt == 'T') {
+		return cli.SearchTextRecord(uid)
 	}
 
-	return removeItem(cli, ch, s)
+	if (bt == 'b') || (bt == 'B') {
+		return cli.SearchBinaryRecord(uid)
+	}
+
+	return false, errors.New(ErrUnsupportedKey + string(bt))
 }
 
-func processXCKeys(cli *client.Client) (err error) {
-	var ch byte
-	ch, err = getUserInputChar(HintExtraC)
+func processSKeys(cli *client.Client, bt byte, uid string) (err error) {
+	var fileExists bool
+	fileExists, err = searchFile(cli, bt, uid)
 	if err != nil {
 		return err
 	}
 
-	if (ch == 'b') || (ch == 'B') ||
-		(ch == 't') || (ch == 'T') {
-		return clearCache(cli, ch)
+	if fileExists {
+		fmt.Println("File exists.")
+	} else {
+		fmt.Println("File does not exist.")
 	}
 
 	return nil
 }
 
-func getItem(cli *client.Client, action byte, uid string) (item any, err error) {
-	if (action == 't') || (action == 'T') {
-		return cli.GetText(uid)
+func searchFile(cli *client.Client, bt byte, uid string) (exists bool, err error) {
+	if (bt == 't') || (bt == 'T') {
+		return cli.SearchTextFile(uid)
 	}
 
-	if (action == 'b') || (action == 'B') {
-		return cli.GetBinary(uid)
+	if (bt == 'b') || (bt == 'B') {
+		return cli.SearchBinaryFile(uid)
 	}
 
-	return nil, errors.New(ErrUnknownAction + string(action))
+	return false, errors.New(ErrUnsupportedKey + string(bt))
 }
 
-func removeItem(cli *client.Client, action byte, uid string) (err error) {
-	if (action == 't') || (action == 'T') {
-		return cli.RemoveText(uid)
-	}
-
-	if (action == 'b') || (action == 'B') {
-		return cli.RemoveBinary(uid)
-	}
-
-	return errors.New(ErrUnknownAction + string(action))
+func processFKeys(cli *client.Client, bt byte, uid string) (err error) {
+	return forgetRecord(cli, bt, uid)
 }
 
-func clearCache(cli *client.Client, action byte) (err error) {
-	if (action == 't') || (action == 'T') {
-		return cli.ClearTextCache()
+func forgetRecord(cli *client.Client, bt byte, uid string) (err error) {
+	if (bt == 't') || (bt == 'T') {
+		return cli.ForgetTextRecord(uid)
 	}
 
-	if (action == 'b') || (action == 'B') {
-		return cli.ClearBinaryCache()
+	if (bt == 'b') || (bt == 'B') {
+		return cli.ForgetBinaryRecord(uid)
 	}
 
-	return errors.New(ErrUnknownAction + string(action))
+	return errors.New(ErrUnsupportedKey + string(bt))
 }
 
-func getDetailedError(err error) (de *common.Error) {
-	detailedError, ok := err.(*common.Error)
-	if !ok {
-		return nil
+func processRKeys(cli *client.Client, bt byte) (err error) {
+	return resetCache(cli, bt)
+}
+
+func resetCache(cli *client.Client, bt byte) (err error) {
+	if (bt == 't') || (bt == 'T') {
+		return cli.ResetTextCache()
 	}
 
-	return detailedError
+	if (bt == 'b') || (bt == 'B') {
+		return cli.ResetBinaryCache()
+	}
+
+	return errors.New(ErrUnsupportedKey + string(bt))
 }
