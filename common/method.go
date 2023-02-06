@@ -5,44 +5,81 @@ import (
 	"strings"
 )
 
-// As opposed to the HTTP protocol, here
-// Method is a hybrid of action type and status code.
-
 // Method name settings.
 const (
-	MethodNameSpacer      = " "
-	MethodNameLengthLimit = 3
+	// MethodNameSpacer is used to fill free space when method name is shorter
+	// than its maximum length (3).
+	MethodNameSpacer = " "
 
-	MethodNameClientError        = "EEE"
-	MethodNameCloseConnection    = "CLC"
-	MethodNameClosingConnection  = "BYE"
-	MethodNameShowText           = "ST"
-	MethodNameShowingText        = "TT"
-	MethodNameShowBinary         = "SB"
-	MethodNameShowingBinary      = "BB"
+	MethodNameLengthLimit = 3
+)
+
+// Method names.
+const (
+	MethodNameClientError       = "EEE"
+	MethodNameOK                = "KKK"
+	MethodNameCloseConnection   = "CCC"
+	MethodNameClosingConnection = "YYY"
+
+	MethodNameShowText      = "ST"
+	MethodNameShowBinary    = "SB"
+	MethodNameShowingText   = "GT"
+	MethodNameShowingBinary = "GB"
+
+	MethodNameSearchTextRecord         = "FRT"
+	MethodNameSearchBinaryRecord       = "FRB"
+	MethodNameTextRecordExists         = "RET"
+	MethodNameBinaryRecordExists       = "REB"
+	MethodNameTextRecordDoesNotExist   = "RNT"
+	MethodNameBinaryRecordDoesNotExist = "RNB"
+
+	MethodNameSearchTextFile         = "FFT"
+	MethodNameSearchBinaryFile       = "FFB"
+	MethodNameTextFileExists         = "FET"
+	MethodNameBinaryFileExists       = "FEB"
+	MethodNameTextFileDoesNotExist   = "FNT"
+	MethodNameBinaryFileDoesNotExist = "FNB"
+
 	MethodNameForgetTextRecord   = "RRT"
 	MethodNameForgetBinaryRecord = "RRB"
 	MethodNameResetTextCache     = "RST"
 	MethodNameResetBinaryCache   = "RSB"
-	MethodNameOK                 = "OK"
 )
 
-// Methods.
+// Method values.
 const (
-	MethodClientError        = Method(0)
-	MethodCloseConnection    = Method(1)
-	MethodClosingConnection  = Method(2)
-	MethodShowText           = Method(4)
-	MethodShowingText        = Method(8)
-	MethodShowBinary         = Method(16)
-	MethodShowingBinary      = Method(32)
+	MethodClientError       = Method(1)
+	MethodOK                = Method(2)
+	MethodCloseConnection   = Method(4 + 0)
+	MethodClosingConnection = Method(4 + 2 + 1)
+
+	MethodShowText      = Method(8 + 1)
+	MethodShowBinary    = Method(8 + 2)
+	MethodShowingText   = Method(8 + 4 + 1)
+	MethodShowingBinary = Method(8 + 4 + 2)
+
+	MethodSearchTextRecord         = Method(16 + 1)     //TODO
+	MethodSearchBinaryRecord       = Method(16 + 2)     //TODO
+	MethodTextRecordExists         = Method(16 + 4 + 1) //TODO
+	MethodBinaryRecordExists       = Method(16 + 4 + 2) //TODO
+	MethodTextRecordDoesNotExist   = Method(16 + 8 + 1) //TODO
+	MethodBinaryRecordDoesNotExist = Method(16 + 8 + 2) //TODO
+
+	MethodSearchTextFile         = Method(32 + 1)     //TODO
+	MethodSearchBinaryFile       = Method(32 + 2)     //TODO
+	MethodTextFileExists         = Method(32 + 4 + 1) //TODO
+	MethodBinaryFileExists       = Method(32 + 4 + 2) //TODO
+	MethodTextFileDoesNotExist   = Method(32 + 8 + 1) //TODO
+	MethodBinaryFileDoesNotExist = Method(32 + 8 + 2) //TODO
+
 	MethodForgetTextRecord   = Method(64 + 1)
 	MethodForgetBinaryRecord = Method(64 + 2)
-	MethodResetTextCache     = Method(128 + 1)
-	MethodResetBinaryCache   = Method(128 + 2)
-	MethodOK                 = Method(255)
+	MethodResetTextCache     = Method(64 + 32 + 16 + 1)
+	MethodResetBinaryCache   = Method(64 + 32 + 16 + 2)
 )
 
+// Method is a hybrid of action type and status code, as opposed to the HTTP
+// protocol.
 type Method byte
 
 func (c *Connection) NewMethodFromBytes(b []byte) (m Method, err error) {
