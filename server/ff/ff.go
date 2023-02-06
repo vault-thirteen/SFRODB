@@ -6,14 +6,16 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/vault-thirteen/errorz"
 	"github.com/vault-thirteen/file"
 )
 
 const (
-	ErrFolderIsNotFound = "folder is not found: %s"
-	ErrFileDoesNotExist = "file does not exist: "
+	ErrFolderIsNotFound  = "folder is not found: %s"
+	ErrFileDoesNotExist  = "file does not exist: "
+	ErrRelPathIsNotValid = "relative path is not valid"
 )
 
 type FilesFolder struct {
@@ -22,7 +24,7 @@ type FilesFolder struct {
 
 func NewFilesFolder(baseFolder string) (ff *FilesFolder, err error) {
 	var ok bool
-	ok, err = DoesFolderExist(baseFolder)
+	ok, err = file.FolderExists(baseFolder)
 	if err != nil {
 		return nil, err
 	}
@@ -39,11 +41,15 @@ func NewFilesFolder(baseFolder string) (ff *FilesFolder, err error) {
 }
 
 func (ff *FilesFolder) GetFileContents(relPath string) (fileExists bool, data []byte, err error) {
+	if !isRelPathValid(relPath) {
+		return false, nil, errors.New(ErrRelPathIsNotValid)
+	}
+
 	filePath := filepath.Join(ff.folder, relPath)
 
-	fileExists, err = file.Exists(filePath)
+	fileExists, err = file.FileExists(filePath)
 	if !fileExists {
-		return fileExists, nil, errors.New(ErrFileDoesNotExist + filePath)
+		return false, nil, errors.New(ErrFileDoesNotExist + filePath)
 	}
 
 	var f *os.File
@@ -64,16 +70,19 @@ func (ff *FilesFolder) GetFileContents(relPath string) (fileExists bool, data []
 		return fileExists, nil, err
 	}
 
-	return fileExists, data, nil
+	return true, data, nil
 }
 
-func DoesFolderExist(folderPath string) (ok bool, err error) {
-	var info os.FileInfo
-	info, err = os.Stat(folderPath)
-
-	if err == nil && info.IsDir() {
-		return true, nil
+func (ff *FilesFolder) FileExists(relPath string) (fileExists bool, err error) {
+	if !isRelPathValid(relPath) {
+		return false, errors.New(ErrRelPathIsNotValid)
 	}
 
-	return false, err
+	filePath := filepath.Join(ff.folder, relPath)
+
+	return file.FileExists(filePath)
+}
+
+func isRelPathValid(relPath string) (ok bool) {
+	return !strings.Contains(relPath, "..")
 }
