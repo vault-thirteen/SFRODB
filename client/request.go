@@ -1,16 +1,16 @@
 package client
 
 import (
-	"github.com/vault-thirteen/SFRODB/common"
 	"github.com/vault-thirteen/SFRODB/common/connection"
 	ce "github.com/vault-thirteen/SFRODB/common/error"
+	"github.com/vault-thirteen/SFRODB/common/request"
 )
 
 // closeConnection asks server to close the connection.
 // Returns a detailed error.
 func (cli *Client) closeConnection(c *connection.Connection) (err error) {
-	var rm *common.Request
-	rm, err = common.NewRequest_CloseConnection()
+	var rm *request.Request
+	rm, err = request.NewRequest_CloseConnection()
 	if err != nil {
 		return ce.NewClientError(err.Error(), 0)
 	}
@@ -26,8 +26,8 @@ func (cli *Client) closeConnection(c *connection.Connection) (err error) {
 // showText asks server for text.
 // Returns a detailed error.
 func (cli *Client) showText(c *connection.Connection, uid string) (err error) {
-	var rm *common.Request
-	rm, err = common.NewRequest_ShowText(uid)
+	var rm *request.Request
+	rm, err = request.NewRequest_ShowText(uid)
 	if err != nil {
 		return ce.NewClientError(err.Error(), 0)
 	}
@@ -43,8 +43,8 @@ func (cli *Client) showText(c *connection.Connection, uid string) (err error) {
 // showBinary asks server for binary data.
 // Returns a detailed error.
 func (cli *Client) showBinary(c *connection.Connection, uid string) (err error) {
-	var rm *common.Request
-	rm, err = common.NewRequest_ShowBinary(uid)
+	var rm *request.Request
+	rm, err = request.NewRequest_ShowBinary(uid)
 	if err != nil {
 		return ce.NewClientError(err.Error(), 0)
 	}
@@ -60,8 +60,8 @@ func (cli *Client) showBinary(c *connection.Connection, uid string) (err error) 
 // searchTextRecord asks server to check existence of a text record in cache.
 // Returns a detailed error.
 func (cli *Client) searchTextRecord(c *connection.Connection, uid string) (err error) {
-	var rm *common.Request
-	rm, err = common.NewRequest_SearchTextRecord(uid)
+	var rm *request.Request
+	rm, err = request.NewRequest_SearchTextRecord(uid)
 	if err != nil {
 		return ce.NewClientError(err.Error(), 0)
 	}
@@ -77,8 +77,8 @@ func (cli *Client) searchTextRecord(c *connection.Connection, uid string) (err e
 // searchBinaryRecord asks server to check existence of a binary record in cache.
 // Returns a detailed error.
 func (cli *Client) searchBinaryRecord(c *connection.Connection, uid string) (err error) {
-	var rm *common.Request
-	rm, err = common.NewRequest_SearchBinaryRecord(uid)
+	var rm *request.Request
+	rm, err = request.NewRequest_SearchBinaryRecord(uid)
 	if err != nil {
 		return ce.NewClientError(err.Error(), 0)
 	}
@@ -94,8 +94,8 @@ func (cli *Client) searchBinaryRecord(c *connection.Connection, uid string) (err
 // searchTextFile asks server to check existence of a text file.
 // Returns a detailed error.
 func (cli *Client) searchTextFile(c *connection.Connection, uid string) (err error) {
-	var rm *common.Request
-	rm, err = common.NewRequest_SearchTextFile(uid)
+	var rm *request.Request
+	rm, err = request.NewRequest_SearchTextFile(uid)
 	if err != nil {
 		return ce.NewClientError(err.Error(), 0)
 	}
@@ -111,8 +111,8 @@ func (cli *Client) searchTextFile(c *connection.Connection, uid string) (err err
 // searchBinaryFile asks server to check existence of a binary file.
 // Returns a detailed error.
 func (cli *Client) searchBinaryFile(c *connection.Connection, uid string) (err error) {
-	var rm *common.Request
-	rm, err = common.NewRequest_SearchBinaryFile(uid)
+	var rm *request.Request
+	rm, err = request.NewRequest_SearchBinaryFile(uid)
 	if err != nil {
 		return ce.NewClientError(err.Error(), 0)
 	}
@@ -128,8 +128,8 @@ func (cli *Client) searchBinaryFile(c *connection.Connection, uid string) (err e
 // forgetTextRecord asks server to remove a text record from cache.
 // Returns a detailed error.
 func (cli *Client) forgetTextRecord(c *connection.Connection, uid string) (err error) {
-	var rm *common.Request
-	rm, err = common.NewRequest_ForgetTextRecord(uid)
+	var rm *request.Request
+	rm, err = request.NewRequest_ForgetTextRecord(uid)
 	if err != nil {
 		return ce.NewClientError(err.Error(), 0)
 	}
@@ -145,8 +145,8 @@ func (cli *Client) forgetTextRecord(c *connection.Connection, uid string) (err e
 // forgetBinaryRecord asks server to remove a binary record from cache.
 // Returns a detailed error.
 func (cli *Client) forgetBinaryRecord(c *connection.Connection, uid string) (err error) {
-	var rm *common.Request
-	rm, err = common.NewRequest_ForgetBinaryRecord(uid)
+	var rm *request.Request
+	rm, err = request.NewRequest_ForgetBinaryRecord(uid)
 	if err != nil {
 		return ce.NewClientError(err.Error(), 0)
 	}
@@ -162,8 +162,8 @@ func (cli *Client) forgetBinaryRecord(c *connection.Connection, uid string) (err
 // resetTextCache asks server to remove all text records from cache.
 // Returns a detailed error.
 func (cli *Client) resetTextCache(c *connection.Connection) (err error) {
-	var rm *common.Request
-	rm, err = common.NewRequest_ResetTextCache()
+	var rm *request.Request
+	rm, err = request.NewRequest_ResetTextCache()
 	if err != nil {
 		return ce.NewClientError(err.Error(), 0)
 	}
@@ -179,8 +179,8 @@ func (cli *Client) resetTextCache(c *connection.Connection) (err error) {
 // resetBinaryCache asks server to remove all binary records from cache.
 // Returns a detailed error.
 func (cli *Client) resetBinaryCache(c *connection.Connection) (err error) {
-	var rm *common.Request
-	rm, err = common.NewRequest_ResetBinaryCache()
+	var rm *request.Request
+	rm, err = request.NewRequest_ResetBinaryCache()
 	if err != nil {
 		return ce.NewClientError(err.Error(), 0)
 	}

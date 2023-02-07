@@ -7,11 +7,11 @@ import (
 	"sync/atomic"
 
 	"github.com/vault-thirteen/Cache"
-	"github.com/vault-thirteen/SFRODB/common"
 	"github.com/vault-thirteen/SFRODB/common/connection"
 	ce "github.com/vault-thirteen/SFRODB/common/error"
 	"github.com/vault-thirteen/SFRODB/common/method"
 	"github.com/vault-thirteen/SFRODB/common/protocol"
+	"github.com/vault-thirteen/SFRODB/common/request"
 	"github.com/vault-thirteen/SFRODB/server/ff"
 	"github.com/vault-thirteen/SFRODB/server/settings"
 )
@@ -192,7 +192,7 @@ func (srv *Server) handleMainConnection(conn net.Conn) {
 		}
 	}()
 
-	var req *common.Request
+	var req *request.Request
 	var isServerError bool
 
 	for {
@@ -257,7 +257,7 @@ func (srv *Server) handleAuxConnection(conn net.Conn) {
 		}
 	}()
 
-	var req *common.Request
+	var req *request.Request
 	var isServerError bool
 
 	for {

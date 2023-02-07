@@ -13,6 +13,7 @@ import (
 	mn "github.com/vault-thirteen/SFRODB/common/method/name"
 	"github.com/vault-thirteen/SFRODB/common/protocol"
 	"github.com/vault-thirteen/SFRODB/common/reader"
+	"github.com/vault-thirteen/SFRODB/common/request"
 )
 
 type Connection struct {
@@ -49,8 +50,8 @@ func (c *Connection) close() (err error) {
 
 // GetNextRequest is a method used by a Server to receive a request from the
 // client.
-func (c *Connection) GetNextRequest() (r *common.Request, err error) {
-	r = &common.Request{}
+func (c *Connection) GetNextRequest() (r *request.Request, err error) {
+	r = &request.Request{}
 
 	r.SRS, err = c.getSRS()
 	if err != nil {
@@ -91,7 +92,7 @@ func (c *Connection) getSRS() (srs byte, err error) {
 	return 0, fmt.Errorf(ce.ErrSrsIsNotSupported, srs)
 }
 
-func (c *Connection) getRequestSize(r *common.Request) (err error) {
+func (c *Connection) getRequestSize(r *request.Request) (err error) {
 	switch r.SRS {
 	case proto.SRS_A:
 		return c.getRequestSizeA(r)
@@ -102,7 +103,7 @@ func (c *Connection) getRequestSize(r *common.Request) (err error) {
 	return fmt.Errorf(ce.ErrSrsIsNotSupported, r.SRS)
 }
 
-func (c *Connection) getRequestSizeA(r *common.Request) (err error) {
+func (c *Connection) getRequestSizeA(r *request.Request) (err error) {
 	var data []byte
 	data, err = reader.ReadExactSize(c.netConn, proto.RS_LengthA)
 	if err != nil {
@@ -114,7 +115,7 @@ func (c *Connection) getRequestSizeA(r *common.Request) (err error) {
 	return nil
 }
 
-func (c *Connection) getRequestSizeB(r *common.Request) (err error) {
+func (c *Connection) getRequestSizeB(r *request.Request) (err error) {
 	var data []byte
 	data, err = reader.ReadExactSize(c.netConn, proto.RS_LengthB)
 	if err != nil {
@@ -126,7 +127,7 @@ func (c *Connection) getRequestSizeB(r *common.Request) (err error) {
 	return nil
 }
 
-func (c *Connection) getRequestMethodAndUID(r *common.Request) (err error) {
+func (c *Connection) getRequestMethodAndUID(r *request.Request) (err error) {
 	var reqMsgLen uint
 	switch r.SRS {
 	case proto.SRS_A:
@@ -230,7 +231,7 @@ func (c *Connection) sendResponseMethodAndData(rm *common.Response, useBinary bo
 
 // SendRequestMessage is a method used by a Client to send a request to the
 // server.
-func (c *Connection) SendRequestMessage(rm *common.Request) (err error) {
+func (c *Connection) SendRequestMessage(rm *request.Request) (err error) {
 	err = c.sendSRS(rm.SRS)
 	if err != nil {
 		return err
@@ -249,7 +250,7 @@ func (c *Connection) SendRequestMessage(rm *common.Request) (err error) {
 	return nil
 }
 
-func (c *Connection) sendRequestSize(rm *common.Request) (err error) {
+func (c *Connection) sendRequestSize(rm *request.Request) (err error) {
 	var buf []byte
 	switch rm.SRS {
 	case proto.SRS_A:
@@ -272,7 +273,7 @@ func (c *Connection) sendRequestSize(rm *common.Request) (err error) {
 	return nil
 }
 
-func (c *Connection) sendRequestMethodAndUid(rm *common.Request) (err error) {
+func (c *Connection) sendRequestMethodAndUid(rm *request.Request) (err error) {
 	_, err = c.netConn.Write((*c.methodNameBuffers)[rm.Method])
 	if err != nil {
 		return err

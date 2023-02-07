@@ -9,11 +9,12 @@ import (
 	"github.com/vault-thirteen/SFRODB/common/connection"
 	ce "github.com/vault-thirteen/SFRODB/common/error"
 	"github.com/vault-thirteen/SFRODB/common/method"
+	"github.com/vault-thirteen/SFRODB/common/request"
 )
 
 // showRecord shows a record.
 // Returns a detailed error.
-func (srv *Server) showRecord(c *connection.Connection, r *common.Request) (err error) {
+func (srv *Server) showRecord(c *connection.Connection, r *request.Request) (err error) {
 	switch r.Method {
 	case method.ShowText:
 		var text string
@@ -38,7 +39,7 @@ func (srv *Server) showRecord(c *connection.Connection, r *common.Request) (err 
 
 // searchRecord checks existence of a record.
 // Returns a detailed error.
-func (srv *Server) searchRecord(c *connection.Connection, r *common.Request) (err error) {
+func (srv *Server) searchRecord(c *connection.Connection, r *request.Request) (err error) {
 	// Check the UID.
 	if !common.IsUidValid(r.UID) {
 		return ce.NewClientError(ce.ErrUid, 0)
@@ -70,7 +71,7 @@ func (srv *Server) searchRecord(c *connection.Connection, r *common.Request) (er
 
 // searchFile checks existence of a file.
 // Returns a detailed error.
-func (srv *Server) searchFile(c *connection.Connection, r *common.Request) (err error) {
+func (srv *Server) searchFile(c *connection.Connection, r *request.Request) (err error) {
 	// Check the UID.
 	if !common.IsUidValid(r.UID) {
 		return ce.NewClientError(ce.ErrUid, 0)
@@ -111,7 +112,7 @@ func (srv *Server) searchFile(c *connection.Connection, r *common.Request) (err 
 
 // forgetRecord removes a record from cache.
 // Returns a detailed error.
-func (srv *Server) forgetRecord(c *connection.Connection, r *common.Request) (err error) {
+func (srv *Server) forgetRecord(c *connection.Connection, r *request.Request) (err error) {
 	// Check the UID.
 	if !common.IsUidValid(r.UID) {
 		return ce.NewClientError(ce.ErrUid, 0)
@@ -139,7 +140,7 @@ func (srv *Server) forgetRecord(c *connection.Connection, r *common.Request) (er
 
 // resetCache removes all records from cache.
 // Returns a detailed error.
-func (srv *Server) resetCache(c *connection.Connection, r *common.Request) (err error) {
+func (srv *Server) resetCache(c *connection.Connection, r *request.Request) (err error) {
 	log.Println(MsgResettingCache)
 
 	// Clear the cache.

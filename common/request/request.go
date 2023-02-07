@@ -1,9 +1,10 @@
-package common
+package request
 
 import (
 	"errors"
 	"fmt"
 
+	"github.com/vault-thirteen/SFRODB/common"
 	ce "github.com/vault-thirteen/SFRODB/common/error"
 	"github.com/vault-thirteen/SFRODB/common/method"
 	"github.com/vault-thirteen/SFRODB/common/method/name"
@@ -52,7 +53,7 @@ func NewRequest_ResetBinaryCache() (req *Request, err error) {
 }
 
 func newNormalRequest(method method.Method, uid string) (req *Request, err error) {
-	if !IsUidValid(uid) {
+	if !common.IsUidValid(uid) {
 		return nil, fmt.Errorf(ce.ErrUid)
 	}
 
