@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/vault-thirteen/errorz"
 	"github.com/vault-thirteen/file"
@@ -19,7 +20,8 @@ const (
 )
 
 type FilesFolder struct {
-	folder string
+	folder        string
+	storageAccess *sync.Mutex
 }
 
 func NewFilesFolder(baseFolder string) (ff *FilesFolder, err error) {
@@ -34,7 +36,8 @@ func NewFilesFolder(baseFolder string) (ff *FilesFolder, err error) {
 	}
 
 	ff = &FilesFolder{
-		folder: baseFolder,
+		folder:        baseFolder,
+		storageAccess: new(sync.Mutex),
 	}
 
 	return ff, nil
@@ -46,6 +49,9 @@ func (ff *FilesFolder) GetFileContents(relPath string) (fileExists bool, data []
 	}
 
 	filePath := filepath.Join(ff.folder, relPath)
+
+	ff.storageAccess.Lock()
+	defer ff.storageAccess.Unlock()
 
 	fileExists, err = file.FileExists(filePath)
 	if !fileExists {
@@ -79,6 +85,9 @@ func (ff *FilesFolder) FileExists(relPath string) (fileExists bool, err error) {
 	}
 
 	filePath := filepath.Join(ff.folder, relPath)
+
+	ff.storageAccess.Lock()
+	defer ff.storageAccess.Unlock()
 
 	return file.FileExists(filePath)
 }
