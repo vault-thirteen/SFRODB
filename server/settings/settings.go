@@ -5,8 +5,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/vault-thirteen/SFRODB/common"
 	ce "github.com/vault-thirteen/SFRODB/common/error"
+	"github.com/vault-thirteen/SFRODB/common/helper"
 	"github.com/vault-thirteen/errorz"
 	"github.com/vault-thirteen/reader"
 )
@@ -63,12 +63,12 @@ func NewSettingsFromFile(filePath string) (stn *Settings, err error) {
 	// Server Host & Port.
 	stn.ServerHost = strings.TrimSpace(string(buf[0]))
 
-	stn.MainPort, err = common.ParseUint16(strings.TrimSpace(string(buf[1])))
+	stn.MainPort, err = helper.ParseUint16(strings.TrimSpace(string(buf[1])))
 	if err != nil {
 		return stn, err
 	}
 
-	stn.AuxPort, err = common.ParseUint16(strings.TrimSpace(string(buf[2])))
+	stn.AuxPort, err = helper.ParseUint16(strings.TrimSpace(string(buf[2])))
 	if err != nil {
 		return stn, err
 	}
