@@ -20,11 +20,9 @@ const (
 )
 
 const (
-	ErrSrsIsNotSupported = "SRS is unsupported: %d"
-	ErrSrsReading        = "SRS reading error: "
-
-	ErrRsReading = "RS reading error: "
-
+	ErrSrsIsNotSupported      = "SRS is unsupported: %d"
+	ErrSrsReading             = "SRS reading error: "
+	ErrRsReading              = "RS reading error: "
 	ErrReadingMethodAndData   = "error reading method and data: "
 	ErrUnsupportedMethodValue = "unsupported method value: %d"
 	ErrUnknownMethodName      = "unknown method name: %s"
@@ -47,24 +45,34 @@ type CommonError struct {
 	// You wanted Go language to be a replacement for the good old C language.
 	// Do you know why C has a "typedef" ? They are smart enough to let all the
 	// users use the "type" word in their programs. Shame on you.
-	type_  cet.ErrorType
-	text   string
-	method method.Method
+	typeOfError cet.ErrorType
+	text        string
+	method      method.Method
 }
 
-func newCommonError(et cet.ErrorType, msg string, method method.Method) (ce *CommonError) {
+func newCommonError(
+	et cet.ErrorType,
+	msg string,
+	method method.Method,
+) (ce *CommonError) {
 	return &CommonError{
-		type_:  et,
-		text:   msg,
-		method: method,
+		typeOfError: et,
+		text:        msg,
+		method:      method,
 	}
 }
 
-func NewServerError(msg string, method method.Method) (ce *CommonError) {
+func NewServerError(
+	msg string,
+	method method.Method,
+) (ce *CommonError) {
 	return newCommonError(cet.ErrorTypeServer, msg, method)
 }
 
-func NewClientError(msg string, method method.Method) (ce *CommonError) {
+func NewClientError(
+	msg string,
+	method method.Method,
+) (ce *CommonError) {
 	return newCommonError(cet.ErrorTypeClient, msg, method)
 }
 
@@ -77,9 +85,9 @@ func (ce *CommonError) GetMethod() method.Method {
 }
 
 func (ce *CommonError) IsServerError() bool {
-	return ce.type_ == cet.ErrorTypeServer
+	return ce.typeOfError == cet.ErrorTypeServer
 }
 
 func (ce *CommonError) IsClientError() bool {
-	return ce.type_ == cet.ErrorTypeClient
+	return ce.typeOfError == cet.ErrorTypeClient
 }

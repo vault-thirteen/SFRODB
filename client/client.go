@@ -14,6 +14,9 @@ import (
 
 // Client is client.
 type Client struct {
+	// All the clients must have unique IDs.
+	id string
+
 	settings *settings.Settings
 
 	mainDsn string
@@ -30,13 +33,14 @@ type Client struct {
 }
 
 // NewClient creates a client.
-func NewClient(stn *settings.Settings) (cli *Client, err error) {
+func NewClient(stn *settings.Settings, id string) (cli *Client, err error) {
 	err = stn.Check()
 	if err != nil {
 		return nil, err
 	}
 
 	cli = &Client{
+		id:       id,
 		settings: stn,
 		mainDsn:  fmt.Sprintf("%s:%d", stn.Host, stn.MainPort),
 		auxDsn:   fmt.Sprintf("%s:%d", stn.Host, stn.AuxPort),
@@ -57,12 +61,17 @@ func NewClient(stn *settings.Settings) (cli *Client, err error) {
 	return cli, nil
 }
 
-// GetMainDsn returns the DSN of the main connection.
+// GetId returns the ID of the client.
+func (cli *Client) GetId() (id string) {
+	return cli.id
+}
+
+// GetMainDsn returns the DSN of the main connection of the client.
 func (cli *Client) GetMainDsn() (dsn string) {
 	return cli.mainDsn
 }
 
-// GetAuxDsn returns the DSN of the auxiliary connection.
+// GetAuxDsn returns the DSN of the auxiliary connection of the client.
 func (cli *Client) GetAuxDsn() (dsn string) {
 	return cli.auxDsn
 }

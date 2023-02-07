@@ -21,7 +21,7 @@ func main() {
 	log.Println("Settings:", stn)
 
 	var cli *client.Client
-	cli, err = client.NewClient(stn)
+	cli, err = client.NewClient(stn, "1")
 	mustBeNoError(err)
 
 	cerr := cli.Start()
