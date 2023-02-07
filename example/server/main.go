@@ -24,8 +24,10 @@ func main() {
 	srv, err = server.NewServer(stn)
 	mustBeNoError(err)
 
-	err = srv.Start()
-	mustBeNoError(err)
+	cerr := srv.Start()
+	if cerr != nil {
+		log.Fatal(cerr)
+	}
 	fmt.Println("Main Listener: " + srv.GetMainDsn())
 	fmt.Println("Auxiliary Listener: " + srv.GetAuxDsn())
 
@@ -33,8 +35,10 @@ func main() {
 	waitForQuitSignalFromOS(&appMustBeStopped)
 	<-appMustBeStopped
 
-	err = srv.Stop()
-	mustBeNoError(err)
+	cerr = srv.Stop()
+	if cerr != nil {
+		log.Println(cerr)
+	}
 	time.Sleep(time.Second)
 }
 

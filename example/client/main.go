@@ -24,8 +24,10 @@ func main() {
 	cli, err = client.NewClient(stn)
 	mustBeNoError(err)
 
-	err = cli.Start()
-	mustBeNoError(err)
+	cerr := cli.Start()
+	if cerr != nil {
+		log.Fatal(cerr)
+	}
 	fmt.Println("Connected to " + cli.GetMainDsn())
 	fmt.Println("Connected to " + cli.GetAuxDsn())
 
@@ -35,8 +37,10 @@ func main() {
 	waitForQuitSignalFromOS(&appMustBeStopped)
 	<-appMustBeStopped
 
-	err = cli.Stop()
-	mustBeNoError(err)
+	cerr = cli.Stop()
+	if cerr != nil {
+		log.Println(cerr)
+	}
 }
 
 func mustBeNoError(err error) {

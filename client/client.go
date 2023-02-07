@@ -6,6 +6,7 @@ import (
 
 	"github.com/vault-thirteen/SFRODB/client/settings"
 	"github.com/vault-thirteen/SFRODB/common/connection"
+	ce "github.com/vault-thirteen/SFRODB/common/error"
 	"github.com/vault-thirteen/SFRODB/common/method"
 	"github.com/vault-thirteen/SFRODB/common/protocol"
 )
@@ -66,11 +67,12 @@ func (cli *Client) GetAuxDsn() (dsn string) {
 }
 
 // Start starts the client.
-func (cli *Client) Start() (err error) {
+func (cli *Client) Start() (cerr *ce.CommonError) {
 	var mainConn net.Conn
+	var err error
 	mainConn, err = net.DialTCP(proto.LowLevelProtocol, nil, cli.mainAddr)
 	if err != nil {
-		return err
+		return ce.NewClientError(err.Error(), 0)
 	}
 
 	cli.mainConnection = connection.NewConnection(
@@ -83,7 +85,7 @@ func (cli *Client) Start() (err error) {
 	var auxConn net.Conn
 	auxConn, err = net.DialTCP(proto.LowLevelProtocol, nil, cli.auxAddr)
 	if err != nil {
-		return err
+		return ce.NewClientError(err.Error(), 0)
 	}
 
 	cli.auxConnection = connection.NewConnection(
@@ -97,28 +99,28 @@ func (cli *Client) Start() (err error) {
 }
 
 // Stop stops the client.
-func (cli *Client) Stop() (err error) {
-	err = cli.mainConnection.Break()
-	if err != nil {
-		return err
+func (cli *Client) Stop() (cerr *ce.CommonError) {
+	cerr = cli.mainConnection.Break()
+	if cerr != nil {
+		return cerr
 	}
 
-	err = cli.auxConnection.Break()
-	if err != nil {
-		return err
+	cerr = cli.auxConnection.Break()
+	if cerr != nil {
+		return cerr
 	}
 
 	return nil
 }
 
 // Restart re-starts the client.
-func (cli *Client) Restart(forcibly bool) (err error) {
+func (cli *Client) Restart(forcibly bool) (cerr *ce.CommonError) {
 	if forcibly {
 		_ = cli.Stop()
 	} else {
-		err = cli.Stop()
-		if err != nil {
-			return err
+		cerr = cli.Stop()
+		if cerr != nil {
+			return cerr
 		}
 	}
 

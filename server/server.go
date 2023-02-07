@@ -103,15 +103,16 @@ func (srv *Server) GetAuxDsn() (dsn string) {
 }
 
 // Start starts the server.
-func (srv *Server) Start() (err error) {
+func (srv *Server) Start() (cerr *ce.CommonError) {
+	var err error
 	srv.mainListener, err = net.Listen(proto.LowLevelProtocol, srv.mainDsn)
 	if err != nil {
-		return err
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	srv.auxListener, err = net.Listen(proto.LowLevelProtocol, srv.auxDsn)
 	if err != nil {
-		return err
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	srv.isRunning.Store(true)
@@ -156,15 +157,16 @@ func (srv *Server) runAuxLoop() {
 }
 
 // Stop stops the server.
-func (srv *Server) Stop() (err error) {
+func (srv *Server) Stop() (cerr *ce.CommonError) {
+	var err error
 	err = srv.mainListener.Close()
 	if err != nil {
-		return err
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	err = srv.auxListener.Close()
 	if err != nil {
-		return err
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	srv.isRunning.Store(false)

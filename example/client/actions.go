@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -21,6 +20,7 @@ func makeSomeActions(cli *client.Client, appMustBeStopped *chan bool) {
 	var tbc byte
 	var uid string
 	var err error
+	var cerr *ce.CommonError
 	var normalExit = false
 
 	for {
@@ -69,67 +69,52 @@ func makeSomeActions(cli *client.Client, appMustBeStopped *chan bool) {
 
 		switch action {
 		case 'g', 'G':
-			err = processGKeys(cli, tbc, uid)
+			cerr = processGKeys(cli, tbc, uid)
 		case 'e', 'E':
-			err = processEKeys(cli, tbc, uid)
+			cerr = processEKeys(cli, tbc, uid)
 		case 's', 'S':
-			err = processSKeys(cli, tbc, uid)
+			cerr = processSKeys(cli, tbc, uid)
 		case 'f', 'F':
-			err = processFKeys(cli, tbc, uid)
+			cerr = processFKeys(cli, tbc, uid)
 		case 'r', 'R':
-			err = processRKeys(cli, tbc)
+			cerr = processRKeys(cli, tbc)
 		default:
 			continue
 		}
-		if err != nil {
-			de := getDetailedError(err)
-			if de != nil {
-				if de.IsServerError() {
-					log.Println("Server Error: " + err.Error())
-					break
-				} else if de.IsClientError() {
-					log.Println("Client Error: " + err.Error())
-					continue
-				} else {
-					log.Println("Anomaly: " + err.Error())
-					break
-				}
-			} else {
-				log.Println(err.Error())
+		if cerr != nil {
+			if cerr.IsServerError() {
+				log.Println("Server Error: " + err.Error())
+				break
+			} else if cerr.IsClientError() {
+				log.Println("Client Error: " + err.Error())
 				continue
+			} else {
+				log.Println("Anomaly: " + err.Error())
+				break
 			}
 		}
 	}
 
 	// Send the 'Close' Request.
-	err = cli.CloseConnection_Main(normalExit)
-	if err != nil {
-		log.Println(err.Error())
+	cerr = cli.CloseConnection_Main(normalExit)
+	if cerr != nil {
+		log.Println(cerr.Error())
 	}
 
-	err = cli.CloseConnection_Aux(normalExit)
-	if err != nil {
-		log.Println(err.Error())
+	cerr = cli.CloseConnection_Aux(normalExit)
+	if cerr != nil {
+		log.Println(cerr.Error())
 	}
 
 	*appMustBeStopped <- true
 }
 
-func getDetailedError(err error) (de *ce.CommonError) {
-	detailedError, ok := err.(*ce.CommonError)
-	if !ok {
-		return nil
-	}
-
-	return detailedError
-}
-
-func processGKeys(cli *client.Client, bt byte, uid string) (err error) {
+func processGKeys(cli *client.Client, bt byte, uid string) (cerr *ce.CommonError) {
 	var item any
 	t1 := time.Now()
-	item, err = getRecord(cli, bt, uid)
-	if err != nil {
-		return err
+	item, cerr = getRecord(cli, bt, uid)
+	if cerr != nil {
+		return cerr
 	}
 	t1e := time.Now().Sub(t1)
 
@@ -146,10 +131,11 @@ func processGKeys(cli *client.Client, bt byte, uid string) (err error) {
 
 	var mustShowData = false
 	var ch byte
+	var err error
 	if itemLen > ItemLenLimit {
 		ch, err = getUserInputChar(HintDataSize)
 		if err != nil {
-			return err
+			return ce.NewClientError(err.Error(), 0)
 		}
 
 		if (ch == 'Y') || (ch == 'y') {
@@ -169,7 +155,7 @@ func processGKeys(cli *client.Client, bt byte, uid string) (err error) {
 	return nil
 }
 
-func getRecord(cli *client.Client, bt byte, uid string) (item any, err error) {
+func getRecord(cli *client.Client, bt byte, uid string) (item any, cerr *ce.CommonError) {
 	if (bt == 't') || (bt == 'T') {
 		return cli.ShowText(uid)
 	}
@@ -178,14 +164,14 @@ func getRecord(cli *client.Client, bt byte, uid string) (item any, err error) {
 		return cli.ShowBinary(uid)
 	}
 
-	return nil, errors.New(ErrUnsupportedKey + string(bt))
+	return nil, ce.NewClientError(ErrUnsupportedKey+string(bt), 0)
 }
 
-func processEKeys(cli *client.Client, bt byte, uid string) (err error) {
+func processEKeys(cli *client.Client, bt byte, uid string) (cerr *ce.CommonError) {
 	var recExists bool
-	recExists, err = searchRecord(cli, bt, uid)
-	if err != nil {
-		return err
+	recExists, cerr = searchRecord(cli, bt, uid)
+	if cerr != nil {
+		return cerr
 	}
 
 	if recExists {
@@ -197,7 +183,7 @@ func processEKeys(cli *client.Client, bt byte, uid string) (err error) {
 	return nil
 }
 
-func searchRecord(cli *client.Client, bt byte, uid string) (exists bool, err error) {
+func searchRecord(cli *client.Client, bt byte, uid string) (exists bool, cerr *ce.CommonError) {
 	if (bt == 't') || (bt == 'T') {
 		return cli.SearchTextRecord(uid)
 	}
@@ -206,14 +192,14 @@ func searchRecord(cli *client.Client, bt byte, uid string) (exists bool, err err
 		return cli.SearchBinaryRecord(uid)
 	}
 
-	return false, errors.New(ErrUnsupportedKey + string(bt))
+	return false, ce.NewClientError(ErrUnsupportedKey+string(bt), 0)
 }
 
-func processSKeys(cli *client.Client, bt byte, uid string) (err error) {
+func processSKeys(cli *client.Client, bt byte, uid string) (cerr *ce.CommonError) {
 	var fileExists bool
-	fileExists, err = searchFile(cli, bt, uid)
-	if err != nil {
-		return err
+	fileExists, cerr = searchFile(cli, bt, uid)
+	if cerr != nil {
+		return cerr
 	}
 
 	if fileExists {
@@ -225,7 +211,7 @@ func processSKeys(cli *client.Client, bt byte, uid string) (err error) {
 	return nil
 }
 
-func searchFile(cli *client.Client, bt byte, uid string) (exists bool, err error) {
+func searchFile(cli *client.Client, bt byte, uid string) (exists bool, cerr *ce.CommonError) {
 	if (bt == 't') || (bt == 'T') {
 		return cli.SearchTextFile(uid)
 	}
@@ -234,14 +220,14 @@ func searchFile(cli *client.Client, bt byte, uid string) (exists bool, err error
 		return cli.SearchBinaryFile(uid)
 	}
 
-	return false, errors.New(ErrUnsupportedKey + string(bt))
+	return false, ce.NewClientError(ErrUnsupportedKey+string(bt), 0)
 }
 
-func processFKeys(cli *client.Client, bt byte, uid string) (err error) {
+func processFKeys(cli *client.Client, bt byte, uid string) (cerr *ce.CommonError) {
 	return forgetRecord(cli, bt, uid)
 }
 
-func forgetRecord(cli *client.Client, bt byte, uid string) (err error) {
+func forgetRecord(cli *client.Client, bt byte, uid string) (cerr *ce.CommonError) {
 	if (bt == 't') || (bt == 'T') {
 		return cli.ForgetTextRecord(uid)
 	}
@@ -250,14 +236,14 @@ func forgetRecord(cli *client.Client, bt byte, uid string) (err error) {
 		return cli.ForgetBinaryRecord(uid)
 	}
 
-	return errors.New(ErrUnsupportedKey + string(bt))
+	return ce.NewClientError(ErrUnsupportedKey+string(bt), 0)
 }
 
-func processRKeys(cli *client.Client, bt byte) (err error) {
+func processRKeys(cli *client.Client, bt byte) (cerr *ce.CommonError) {
 	return resetCache(cli, bt)
 }
 
-func resetCache(cli *client.Client, bt byte) (err error) {
+func resetCache(cli *client.Client, bt byte) (cerr *ce.CommonError) {
 	if (bt == 't') || (bt == 'T') {
 		return cli.ResetTextCache()
 	}
@@ -266,5 +252,5 @@ func resetCache(cli *client.Client, bt byte) (err error) {
 		return cli.ResetBinaryCache()
 	}
 
-	return errors.New(ErrUnsupportedKey + string(bt))
+	return ce.NewClientError(ErrUnsupportedKey+string(bt), 0)
 }
