@@ -6,6 +6,7 @@ import (
 	ce "github.com/vault-thirteen/SFRODB/common/error"
 	"github.com/vault-thirteen/SFRODB/common/method"
 	mn "github.com/vault-thirteen/SFRODB/common/method/name"
+	proto "github.com/vault-thirteen/SFRODB/common/protocol"
 )
 
 type Response struct {
@@ -28,7 +29,7 @@ type Response struct {
 
 func newSimpleResponse(method method.Method) (resp *Response, err error) {
 	return &Response{
-		SRS:           SRS_A,
+		SRS:           proto.SRS_A,
 		ResponseSizeA: mn.LengthLimit,
 		Method:        method,
 	}, nil
@@ -101,24 +102,24 @@ func newNormalResponse(
 	}
 
 	// SRS.
-	if contentLen > ResponseMessageLengthC-mn.LengthLimit {
-		err = fmt.Errorf(ce.ErrTextIsTooLong, ResponseMessageLengthC-mn.LengthLimit, contentLen)
+	if contentLen > proto.ResponseMessageLengthC-mn.LengthLimit {
+		err = fmt.Errorf(ce.ErrTextIsTooLong, proto.ResponseMessageLengthC-mn.LengthLimit, contentLen)
 		return nil, err
-	} else if contentLen > ResponseMessageLengthB-mn.LengthLimit {
-		resp.SRS = SRS_C
-	} else if contentLen > ResponseMessageLengthA-mn.LengthLimit {
-		resp.SRS = SRS_B
+	} else if contentLen > proto.ResponseMessageLengthB-mn.LengthLimit {
+		resp.SRS = proto.SRS_C
+	} else if contentLen > proto.ResponseMessageLengthA-mn.LengthLimit {
+		resp.SRS = proto.SRS_B
 	} else {
-		resp.SRS = SRS_A
+		resp.SRS = proto.SRS_A
 	}
 
 	// RS.
 	switch resp.SRS {
-	case SRS_A:
+	case proto.SRS_A:
 		resp.ResponseSizeA = mn.LengthLimit + uint8(contentLen)
-	case SRS_B:
+	case proto.SRS_B:
 		resp.ResponseSizeB = mn.LengthLimit + uint16(contentLen)
-	case SRS_C:
+	case proto.SRS_C:
 		resp.ResponseSizeC = mn.LengthLimit + uint32(contentLen)
 	default:
 		return nil, fmt.Errorf(ce.ErrSrsIsNotSupported, resp.SRS)

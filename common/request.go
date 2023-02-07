@@ -7,6 +7,7 @@ import (
 	ce "github.com/vault-thirteen/SFRODB/common/error"
 	"github.com/vault-thirteen/SFRODB/common/method"
 	"github.com/vault-thirteen/SFRODB/common/method/name"
+	"github.com/vault-thirteen/SFRODB/common/protocol"
 )
 
 type Request struct {
@@ -32,7 +33,7 @@ func (r *Request) IsCloseConnection() bool {
 
 func newSimpleRequest(method method.Method) (req *Request, err error) {
 	return &Request{
-		SRS:          SRS_A,
+		SRS:          proto.SRS_A,
 		RequestSizeA: mn.LengthLimit,
 		Method:       method,
 	}, nil
@@ -67,19 +68,19 @@ func newNormalRequest(method method.Method, uid string) (req *Request, err error
 	uidLen := len(uid)
 	if uidLen <= 0 {
 		return nil, errors.New(ce.ErrUid)
-	} else if uidLen <= RequestMessageLengthA-mn.LengthLimit {
-		req.SRS = SRS_A
-	} else if uidLen <= RequestMessageLengthB-mn.LengthLimit {
-		req.SRS = SRS_B
+	} else if uidLen <= proto.RequestMessageLengthA-mn.LengthLimit {
+		req.SRS = proto.SRS_A
+	} else if uidLen <= proto.RequestMessageLengthB-mn.LengthLimit {
+		req.SRS = proto.SRS_B
 	} else {
 		return nil, errors.New(ce.ErrUidIsTooLong)
 	}
 
 	// RS.
 	switch req.SRS {
-	case SRS_A:
+	case proto.SRS_A:
 		req.RequestSizeA = mn.LengthLimit + uint8(uidLen)
-	case SRS_B:
+	case proto.SRS_B:
 		req.RequestSizeB = mn.LengthLimit + uint16(uidLen)
 	default:
 		return nil, fmt.Errorf(ce.ErrSrsIsNotSupported, req.SRS)

@@ -11,6 +11,7 @@ import (
 	ce "github.com/vault-thirteen/SFRODB/common/error"
 	"github.com/vault-thirteen/SFRODB/common/method"
 	mn "github.com/vault-thirteen/SFRODB/common/method/name"
+	"github.com/vault-thirteen/SFRODB/common/protocol"
 	"github.com/vault-thirteen/SFRODB/common/reader"
 )
 
@@ -79,11 +80,11 @@ func (c *Connection) getSRS() (srs byte, err error) {
 	srs = data[0]
 
 	switch srs {
-	case common.SRS_A:
+	case proto.SRS_A:
 		return srs, nil
-	case common.SRS_B:
+	case proto.SRS_B:
 		return srs, nil
-	case common.SRS_C:
+	case proto.SRS_C:
 		return srs, nil
 	}
 
@@ -92,9 +93,9 @@ func (c *Connection) getSRS() (srs byte, err error) {
 
 func (c *Connection) getRequestSize(r *common.Request) (err error) {
 	switch r.SRS {
-	case common.SRS_A:
+	case proto.SRS_A:
 		return c.getRequestSizeA(r)
-	case common.SRS_B:
+	case proto.SRS_B:
 		return c.getRequestSizeB(r)
 	}
 
@@ -103,7 +104,7 @@ func (c *Connection) getRequestSize(r *common.Request) (err error) {
 
 func (c *Connection) getRequestSizeA(r *common.Request) (err error) {
 	var data []byte
-	data, err = reader.ReadExactSize(c.netConn, common.RS_LengthA)
+	data, err = reader.ReadExactSize(c.netConn, proto.RS_LengthA)
 	if err != nil {
 		return err
 	}
@@ -115,7 +116,7 @@ func (c *Connection) getRequestSizeA(r *common.Request) (err error) {
 
 func (c *Connection) getRequestSizeB(r *common.Request) (err error) {
 	var data []byte
-	data, err = reader.ReadExactSize(c.netConn, common.RS_LengthB)
+	data, err = reader.ReadExactSize(c.netConn, proto.RS_LengthB)
 	if err != nil {
 		return err
 	}
@@ -128,9 +129,9 @@ func (c *Connection) getRequestSizeB(r *common.Request) (err error) {
 func (c *Connection) getRequestMethodAndUID(r *common.Request) (err error) {
 	var reqMsgLen uint
 	switch r.SRS {
-	case common.SRS_A:
+	case proto.SRS_A:
 		reqMsgLen = uint(r.RequestSizeA)
-	case common.SRS_B:
+	case proto.SRS_B:
 		reqMsgLen = uint(r.RequestSizeB)
 	default:
 		return fmt.Errorf(ce.ErrSrsIsNotSupported, r.SRS)
@@ -188,16 +189,16 @@ func (c *Connection) sendSRS(srs byte) (err error) {
 func (c *Connection) sendResponseSize(rm *common.Response) (err error) {
 	var buf []byte
 	switch rm.SRS {
-	case common.SRS_A:
-		buf = make([]byte, common.RS_LengthA)
+	case proto.SRS_A:
+		buf = make([]byte, proto.RS_LengthA)
 		buf[0] = rm.ResponseSizeA
 
-	case common.SRS_B:
-		buf = make([]byte, common.RS_LengthB)
+	case proto.SRS_B:
+		buf = make([]byte, proto.RS_LengthB)
 		binary.BigEndian.PutUint16(buf, rm.ResponseSizeB)
 
-	case common.SRS_C:
-		buf = make([]byte, common.RS_LengthC)
+	case proto.SRS_C:
+		buf = make([]byte, proto.RS_LengthC)
 		binary.BigEndian.PutUint32(buf, rm.ResponseSizeC)
 	}
 
@@ -251,12 +252,12 @@ func (c *Connection) SendRequestMessage(rm *common.Request) (err error) {
 func (c *Connection) sendRequestSize(rm *common.Request) (err error) {
 	var buf []byte
 	switch rm.SRS {
-	case common.SRS_A:
-		buf = make([]byte, common.RS_LengthA)
+	case proto.SRS_A:
+		buf = make([]byte, proto.RS_LengthA)
 		buf[0] = rm.RequestSizeA
 
-	case common.SRS_B:
-		buf = make([]byte, common.RS_LengthB)
+	case proto.SRS_B:
+		buf = make([]byte, proto.RS_LengthB)
 		binary.BigEndian.PutUint16(buf, rm.RequestSizeB)
 
 	default:
@@ -310,11 +311,11 @@ func (c *Connection) GetResponseMessage(useBinary bool) (resp *common.Response, 
 
 func (c *Connection) getResponseSize(resp *common.Response) (err error) {
 	switch resp.SRS {
-	case common.SRS_A:
+	case proto.SRS_A:
 		return c.getResponseSizeA(resp)
-	case common.SRS_B:
+	case proto.SRS_B:
 		return c.getResponseSizeB(resp)
-	case common.SRS_C:
+	case proto.SRS_C:
 		return c.getResponseSizeC(resp)
 	}
 
@@ -323,7 +324,7 @@ func (c *Connection) getResponseSize(resp *common.Response) (err error) {
 
 func (c *Connection) getResponseSizeA(resp *common.Response) (err error) {
 	var data []byte
-	data, err = reader.ReadExactSize(c.netConn, common.RS_LengthA)
+	data, err = reader.ReadExactSize(c.netConn, proto.RS_LengthA)
 	if err != nil {
 		return err
 	}
@@ -335,7 +336,7 @@ func (c *Connection) getResponseSizeA(resp *common.Response) (err error) {
 
 func (c *Connection) getResponseSizeB(resp *common.Response) (err error) {
 	var data []byte
-	data, err = reader.ReadExactSize(c.netConn, common.RS_LengthB)
+	data, err = reader.ReadExactSize(c.netConn, proto.RS_LengthB)
 	if err != nil {
 		return err
 	}
@@ -347,7 +348,7 @@ func (c *Connection) getResponseSizeB(resp *common.Response) (err error) {
 
 func (c *Connection) getResponseSizeC(resp *common.Response) (err error) {
 	var data []byte
-	data, err = reader.ReadExactSize(c.netConn, common.RS_LengthC)
+	data, err = reader.ReadExactSize(c.netConn, proto.RS_LengthC)
 	if err != nil {
 		return err
 	}
@@ -360,11 +361,11 @@ func (c *Connection) getResponseSizeC(resp *common.Response) (err error) {
 func (c *Connection) getResponseMethodAndData(resp *common.Response, useBinary bool) (err error) {
 	var respMsgLen uint
 	switch resp.SRS {
-	case common.SRS_A:
+	case proto.SRS_A:
 		respMsgLen = uint(resp.ResponseSizeA)
-	case common.SRS_B:
+	case proto.SRS_B:
 		respMsgLen = uint(resp.ResponseSizeB)
-	case common.SRS_C:
+	case proto.SRS_C:
 		respMsgLen = uint(resp.ResponseSizeC)
 	default:
 		return fmt.Errorf(ce.ErrSrsIsNotSupported, resp.SRS)

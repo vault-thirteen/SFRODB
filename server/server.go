@@ -11,6 +11,7 @@ import (
 	"github.com/vault-thirteen/SFRODB/common/connection"
 	ce "github.com/vault-thirteen/SFRODB/common/error"
 	"github.com/vault-thirteen/SFRODB/common/method"
+	"github.com/vault-thirteen/SFRODB/common/protocol"
 	"github.com/vault-thirteen/SFRODB/server/ff"
 	"github.com/vault-thirteen/SFRODB/server/settings"
 )
@@ -103,12 +104,12 @@ func (srv *Server) GetAuxDsn() (dsn string) {
 
 // Start starts the server.
 func (srv *Server) Start() (err error) {
-	srv.mainListener, err = net.Listen(common.LowLevelProtocol, srv.mainDsn)
+	srv.mainListener, err = net.Listen(proto.LowLevelProtocol, srv.mainDsn)
 	if err != nil {
 		return err
 	}
 
-	srv.auxListener, err = net.Listen(common.LowLevelProtocol, srv.auxDsn)
+	srv.auxListener, err = net.Listen(proto.LowLevelProtocol, srv.auxDsn)
 	if err != nil {
 		return err
 	}

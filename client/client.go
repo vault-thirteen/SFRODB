@@ -6,9 +6,9 @@ import (
 	"net"
 
 	"github.com/vault-thirteen/SFRODB/client/settings"
-	"github.com/vault-thirteen/SFRODB/common"
 	"github.com/vault-thirteen/SFRODB/common/connection"
 	"github.com/vault-thirteen/SFRODB/common/method"
+	"github.com/vault-thirteen/SFRODB/common/protocol"
 )
 
 // Client is client.
@@ -41,12 +41,12 @@ func NewClient(stn *settings.Settings) (cli *Client, err error) {
 		auxDsn:   fmt.Sprintf("%s:%d", stn.Host, stn.AuxPort),
 	}
 
-	cli.mainAddr, err = net.ResolveTCPAddr(common.LowLevelProtocol, cli.mainDsn)
+	cli.mainAddr, err = net.ResolveTCPAddr(proto.LowLevelProtocol, cli.mainDsn)
 	if err != nil {
 		return nil, err
 	}
 
-	cli.auxAddr, err = net.ResolveTCPAddr(common.LowLevelProtocol, cli.auxDsn)
+	cli.auxAddr, err = net.ResolveTCPAddr(proto.LowLevelProtocol, cli.auxDsn)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (cli *Client) GetAuxDsn() (dsn string) {
 // Start starts the client.
 func (cli *Client) Start() (err error) {
 	var mainConn net.Conn
-	mainConn, err = net.DialTCP(common.LowLevelProtocol, nil, cli.mainAddr)
+	mainConn, err = net.DialTCP(proto.LowLevelProtocol, nil, cli.mainAddr)
 	if err != nil {
 		return err
 	}
@@ -86,7 +86,7 @@ func (cli *Client) Start() (err error) {
 	}
 
 	var auxConn net.Conn
-	auxConn, err = net.DialTCP(common.LowLevelProtocol, nil, cli.auxAddr)
+	auxConn, err = net.DialTCP(proto.LowLevelProtocol, nil, cli.auxAddr)
 	if err != nil {
 		return err
 	}

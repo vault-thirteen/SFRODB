@@ -1,4 +1,4 @@
-package common
+package proto
 
 const (
 	LowLevelProtocol = "tcp"
