@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/vault-thirteen/SFRODB/common"
+	ce "github.com/vault-thirteen/SFRODB/common/error"
 	"github.com/vault-thirteen/SFRODB/common/method"
 	mn "github.com/vault-thirteen/SFRODB/common/method/name"
 	"github.com/vault-thirteen/SFRODB/common/reader"
@@ -52,17 +53,17 @@ func (c *Connection) GetNextRequest() (r *common.Request, err error) {
 
 	r.SRS, err = c.getSRS()
 	if err != nil {
-		return nil, errors.New(common.ErrSrsReading + err.Error())
+		return nil, errors.New(ce.ErrSrsReading + err.Error())
 	}
 
 	err = c.getRequestSize(r)
 	if err != nil {
-		return nil, errors.New(common.ErrRsReading + err.Error())
+		return nil, errors.New(ce.ErrRsReading + err.Error())
 	}
 
 	err = c.getRequestMethodAndUID(r)
 	if err != nil {
-		return nil, errors.New(common.ErrReadingMethodAndData + err.Error())
+		return nil, errors.New(ce.ErrReadingMethodAndData + err.Error())
 	}
 
 	return r, nil
@@ -86,7 +87,7 @@ func (c *Connection) getSRS() (srs byte, err error) {
 		return srs, nil
 	}
 
-	return 0, fmt.Errorf(common.ErrSrsIsNotSupported, srs)
+	return 0, fmt.Errorf(ce.ErrSrsIsNotSupported, srs)
 }
 
 func (c *Connection) getRequestSize(r *common.Request) (err error) {
@@ -97,7 +98,7 @@ func (c *Connection) getRequestSize(r *common.Request) (err error) {
 		return c.getRequestSizeB(r)
 	}
 
-	return fmt.Errorf(common.ErrSrsIsNotSupported, r.SRS)
+	return fmt.Errorf(ce.ErrSrsIsNotSupported, r.SRS)
 }
 
 func (c *Connection) getRequestSizeA(r *common.Request) (err error) {
@@ -132,7 +133,7 @@ func (c *Connection) getRequestMethodAndUID(r *common.Request) (err error) {
 	case common.SRS_B:
 		reqMsgLen = uint(r.RequestSizeB)
 	default:
-		return fmt.Errorf(common.ErrSrsIsNotSupported, r.SRS)
+		return fmt.Errorf(ce.ErrSrsIsNotSupported, r.SRS)
 	}
 
 	var data []byte
@@ -259,7 +260,7 @@ func (c *Connection) sendRequestSize(rm *common.Request) (err error) {
 		binary.BigEndian.PutUint16(buf, rm.RequestSizeB)
 
 	default:
-		return fmt.Errorf(common.ErrSrsIsNotSupported, rm.SRS)
+		return fmt.Errorf(ce.ErrSrsIsNotSupported, rm.SRS)
 	}
 
 	_, err = c.netConn.Write(buf)
@@ -291,17 +292,17 @@ func (c *Connection) GetResponseMessage(useBinary bool) (resp *common.Response, 
 
 	resp.SRS, err = c.getSRS()
 	if err != nil {
-		return nil, errors.New(common.ErrSrsReading + err.Error())
+		return nil, errors.New(ce.ErrSrsReading + err.Error())
 	}
 
 	err = c.getResponseSize(resp)
 	if err != nil {
-		return nil, errors.New(common.ErrRsReading + err.Error())
+		return nil, errors.New(ce.ErrRsReading + err.Error())
 	}
 
 	err = c.getResponseMethodAndData(resp, useBinary)
 	if err != nil {
-		return nil, errors.New(common.ErrReadingMethodAndData + err.Error())
+		return nil, errors.New(ce.ErrReadingMethodAndData + err.Error())
 	}
 
 	return resp, nil
@@ -317,7 +318,7 @@ func (c *Connection) getResponseSize(resp *common.Response) (err error) {
 		return c.getResponseSizeC(resp)
 	}
 
-	return fmt.Errorf(common.ErrSrsIsNotSupported, resp.SRS)
+	return fmt.Errorf(ce.ErrSrsIsNotSupported, resp.SRS)
 }
 
 func (c *Connection) getResponseSizeA(resp *common.Response) (err error) {
@@ -366,11 +367,11 @@ func (c *Connection) getResponseMethodAndData(resp *common.Response, useBinary b
 	case common.SRS_C:
 		respMsgLen = uint(resp.ResponseSizeC)
 	default:
-		return fmt.Errorf(common.ErrSrsIsNotSupported, resp.SRS)
+		return fmt.Errorf(ce.ErrSrsIsNotSupported, resp.SRS)
 	}
 
 	if respMsgLen > c.responseMessageLengthLimit {
-		return fmt.Errorf(common.ErrMessageIsTooLong, c.responseMessageLengthLimit, respMsgLen)
+		return fmt.Errorf(ce.ErrMessageIsTooLong, c.responseMessageLengthLimit, respMsgLen)
 	}
 
 	var data []byte
@@ -407,7 +408,7 @@ func (c *Connection) NewMethodFromString(s string) (m method.Method, err error) 
 	var ok bool
 	m, ok = (*c.methodValues)[methodStr]
 	if !ok {
-		return 0, fmt.Errorf(common.ErrUnknownMethodName, methodStr)
+		return 0, fmt.Errorf(ce.ErrUnknownMethodName, methodStr)
 	}
 
 	return m, nil

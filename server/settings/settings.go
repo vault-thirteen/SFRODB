@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/vault-thirteen/SFRODB/common"
+	ce "github.com/vault-thirteen/SFRODB/common/error"
 	"github.com/vault-thirteen/errorz"
 	"github.com/vault-thirteen/reader"
 )
@@ -89,19 +90,19 @@ func NewSettingsFromFile(filePath string) (stn *Settings, err error) {
 
 func (stn *Settings) Check() (err error) {
 	if len(stn.File) == 0 {
-		return errors.New(common.ErrFileIsNotSet)
+		return errors.New(ce.ErrFileIsNotSet)
 	}
 
 	if len(stn.ServerHost) == 0 {
-		return errors.New(common.ErrServerHostIsNotSet)
+		return errors.New(ce.ErrServerHostIsNotSet)
 	}
 
 	if stn.MainPort == 0 {
-		return errors.New(common.ErrServerPortIsNotSet)
+		return errors.New(ce.ErrServerPortIsNotSet)
 	}
 
 	if stn.AuxPort == 0 {
-		return errors.New(common.ErrServerPortIsNotSet)
+		return errors.New(ce.ErrServerPortIsNotSet)
 	}
 
 	err = stn.TextData.Check()

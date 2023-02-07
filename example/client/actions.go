@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/vault-thirteen/SFRODB/client"
-	"github.com/vault-thirteen/SFRODB/common"
+	ce "github.com/vault-thirteen/SFRODB/common/error"
 )
 
 const (
@@ -115,8 +115,8 @@ func makeSomeActions(cli *client.Client, appMustBeStopped *chan bool) {
 	*appMustBeStopped <- true
 }
 
-func getDetailedError(err error) (de *common.Error) {
-	detailedError, ok := err.(*common.Error)
+func getDetailedError(err error) (de *ce.CommonError) {
+	detailedError, ok := err.(*ce.CommonError)
 	if !ok {
 		return nil
 	}

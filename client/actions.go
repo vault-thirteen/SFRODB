@@ -2,6 +2,7 @@ package client
 
 import (
 	"github.com/vault-thirteen/SFRODB/common"
+	ce "github.com/vault-thirteen/SFRODB/common/error"
 	"github.com/vault-thirteen/SFRODB/common/method"
 )
 
@@ -42,14 +43,14 @@ func (cli *Client) closeConnection_any(useMainConnection bool, normalExit bool, 
 		resp, err = cli.auxConnection.GetResponseMessage(useBinary)
 	}
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	if resp.Method == method.ClosingConnection {
 		return nil
 	}
 
-	return common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
+	return ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method)
 }
 
 // ShowText requests a text from server and returns it.
@@ -63,14 +64,14 @@ func (cli *Client) ShowText(uid string) (text string, err error) {
 	var resp *common.Response
 	resp, err = cli.mainConnection.GetResponseMessage(false)
 	if err != nil {
-		return "", common.NewServerError(err.Error(), 0)
+		return "", ce.NewServerError(err.Error(), 0)
 	}
 
 	switch resp.Method {
 	case method.ClientError:
-		return "", common.NewClientError(common.ErrSomethingWentWrong, resp.Method)
+		return "", ce.NewClientError(ce.ErrSomethingWentWrong, resp.Method)
 	case method.ClosingConnection:
-		return "", common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
+		return "", ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method)
 	}
 
 	return resp.Text, nil
@@ -87,14 +88,14 @@ func (cli *Client) ShowBinary(uid string) (data []byte, err error) {
 	var resp *common.Response
 	resp, err = cli.mainConnection.GetResponseMessage(true)
 	if err != nil {
-		return nil, common.NewServerError(err.Error(), 0)
+		return nil, ce.NewServerError(err.Error(), 0)
 	}
 
 	switch resp.Method {
 	case method.ClientError:
-		return nil, common.NewClientError(common.ErrSomethingWentWrong, resp.Method)
+		return nil, ce.NewClientError(ce.ErrSomethingWentWrong, resp.Method)
 	case method.ClosingConnection:
-		return nil, common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
+		return nil, ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method)
 	}
 
 	return resp.Data, nil
@@ -111,7 +112,7 @@ func (cli *Client) SearchTextRecord(uid string) (recExists bool, err error) {
 	var resp *common.Response
 	resp, err = cli.mainConnection.GetResponseMessage(false)
 	if err != nil {
-		return false, common.NewServerError(err.Error(), 0)
+		return false, ce.NewServerError(err.Error(), 0)
 	}
 
 	switch resp.Method {
@@ -120,11 +121,11 @@ func (cli *Client) SearchTextRecord(uid string) (recExists bool, err error) {
 	case method.TextRecordDoesNotExist:
 		return false, nil
 	case method.ClientError:
-		return false, common.NewClientError(common.ErrSomethingWentWrong, resp.Method)
+		return false, ce.NewClientError(ce.ErrSomethingWentWrong, resp.Method)
 	case method.ClosingConnection:
-		return false, common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
+		return false, ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method)
 	default:
-		return false, common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
+		return false, ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method)
 	}
 }
 
@@ -139,7 +140,7 @@ func (cli *Client) SearchBinaryRecord(uid string) (recExists bool, err error) {
 	var resp *common.Response
 	resp, err = cli.mainConnection.GetResponseMessage(true)
 	if err != nil {
-		return false, common.NewServerError(err.Error(), 0)
+		return false, ce.NewServerError(err.Error(), 0)
 	}
 
 	switch resp.Method {
@@ -148,11 +149,11 @@ func (cli *Client) SearchBinaryRecord(uid string) (recExists bool, err error) {
 	case method.BinaryRecordDoesNotExist:
 		return false, nil
 	case method.ClientError:
-		return false, common.NewClientError(common.ErrSomethingWentWrong, resp.Method)
+		return false, ce.NewClientError(ce.ErrSomethingWentWrong, resp.Method)
 	case method.ClosingConnection:
-		return false, common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
+		return false, ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method)
 	default:
-		return false, common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
+		return false, ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method)
 	}
 }
 
@@ -167,7 +168,7 @@ func (cli *Client) SearchTextFile(uid string) (fileExists bool, err error) {
 	var resp *common.Response
 	resp, err = cli.mainConnection.GetResponseMessage(false)
 	if err != nil {
-		return false, common.NewServerError(err.Error(), 0)
+		return false, ce.NewServerError(err.Error(), 0)
 	}
 
 	switch resp.Method {
@@ -176,11 +177,11 @@ func (cli *Client) SearchTextFile(uid string) (fileExists bool, err error) {
 	case method.TextFileDoesNotExist:
 		return false, nil
 	case method.ClientError:
-		return false, common.NewClientError(common.ErrSomethingWentWrong, resp.Method)
+		return false, ce.NewClientError(ce.ErrSomethingWentWrong, resp.Method)
 	case method.ClosingConnection:
-		return false, common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
+		return false, ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method)
 	default:
-		return false, common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
+		return false, ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method)
 	}
 }
 
@@ -195,7 +196,7 @@ func (cli *Client) SearchBinaryFile(uid string) (fileExists bool, err error) {
 	var resp *common.Response
 	resp, err = cli.mainConnection.GetResponseMessage(true)
 	if err != nil {
-		return false, common.NewServerError(err.Error(), 0)
+		return false, ce.NewServerError(err.Error(), 0)
 	}
 
 	switch resp.Method {
@@ -204,11 +205,11 @@ func (cli *Client) SearchBinaryFile(uid string) (fileExists bool, err error) {
 	case method.BinaryFileDoesNotExist:
 		return false, nil
 	case method.ClientError:
-		return false, common.NewClientError(common.ErrSomethingWentWrong, resp.Method)
+		return false, ce.NewClientError(ce.ErrSomethingWentWrong, resp.Method)
 	case method.ClosingConnection:
-		return false, common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
+		return false, ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method)
 	default:
-		return false, common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
+		return false, ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method)
 	}
 }
 
@@ -223,7 +224,7 @@ func (cli *Client) ForgetTextRecord(uid string) (err error) {
 	var resp *common.Response
 	resp, err = cli.auxConnection.GetResponseMessage(false)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	if resp.Method == method.OK {
@@ -232,11 +233,11 @@ func (cli *Client) ForgetTextRecord(uid string) (err error) {
 
 	switch resp.Method {
 	case method.ClientError:
-		return common.NewClientError(common.ErrSomethingWentWrong, resp.Method)
+		return ce.NewClientError(ce.ErrSomethingWentWrong, resp.Method)
 	case method.ClosingConnection:
-		return common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
+		return ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method)
 	default:
-		return common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
+		return ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method)
 	}
 }
 
@@ -251,7 +252,7 @@ func (cli *Client) ForgetBinaryRecord(uid string) (err error) {
 	var resp *common.Response
 	resp, err = cli.auxConnection.GetResponseMessage(true)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	if resp.Method == method.OK {
@@ -260,11 +261,11 @@ func (cli *Client) ForgetBinaryRecord(uid string) (err error) {
 
 	switch resp.Method {
 	case method.ClientError:
-		return common.NewClientError(common.ErrSomethingWentWrong, resp.Method)
+		return ce.NewClientError(ce.ErrSomethingWentWrong, resp.Method)
 	case method.ClosingConnection:
-		return common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
+		return ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method)
 	default:
-		return common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
+		return ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method)
 	}
 }
 
@@ -279,7 +280,7 @@ func (cli *Client) ResetTextCache() (err error) {
 	var resp *common.Response
 	resp, err = cli.auxConnection.GetResponseMessage(false)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	if resp.Method == method.OK {
@@ -288,11 +289,11 @@ func (cli *Client) ResetTextCache() (err error) {
 
 	switch resp.Method {
 	case method.ClientError:
-		return common.NewClientError(common.ErrSomethingWentWrong, resp.Method)
+		return ce.NewClientError(ce.ErrSomethingWentWrong, resp.Method)
 	case method.ClosingConnection:
-		return common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
+		return ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method)
 	default:
-		return common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
+		return ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method)
 	}
 }
 
@@ -307,7 +308,7 @@ func (cli *Client) ResetBinaryCache() (err error) {
 	var resp *common.Response
 	resp, err = cli.auxConnection.GetResponseMessage(true)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	if resp.Method == method.OK {
@@ -316,10 +317,10 @@ func (cli *Client) ResetBinaryCache() (err error) {
 
 	switch resp.Method {
 	case method.ClientError:
-		return common.NewClientError(common.ErrSomethingWentWrong, resp.Method)
+		return ce.NewClientError(ce.ErrSomethingWentWrong, resp.Method)
 	case method.ClosingConnection:
-		return common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
+		return ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method)
 	default:
-		return common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
+		return ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method)
 	}
 }

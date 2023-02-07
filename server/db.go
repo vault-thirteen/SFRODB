@@ -1,8 +1,10 @@
 package server
 
 import (
-	"github.com/vault-thirteen/SFRODB/common"
 	"path/filepath"
+
+	"github.com/vault-thirteen/SFRODB/common"
+	ce "github.com/vault-thirteen/SFRODB/common/error"
 )
 
 // getText gets the text either from cache or from file storage.
@@ -10,7 +12,7 @@ import (
 func (srv *Server) getText(uid string) (text string, err error) {
 	// Check the UID.
 	if !common.IsUidValid(uid) {
-		return "", common.NewClientError(common.ErrUid, 0)
+		return "", ce.NewClientError(ce.ErrUid, 0)
 	}
 
 	// Try to find the text in cache.
@@ -26,17 +28,17 @@ func (srv *Server) getText(uid string) (text string, err error) {
 	var fileExists bool
 	fileExists, data, err = srv.filesT.GetFileContents(relPath)
 	if !fileExists {
-		return "", common.NewClientError(err.Error(), 0)
+		return "", ce.NewClientError(err.Error(), 0)
 	}
 	if err != nil {
-		return "", common.NewServerError(err.Error(), 0)
+		return "", ce.NewServerError(err.Error(), 0)
 	}
 	text = string(data)
 
 	// Save data in the cache.
 	err = srv.cacheT.AddRecord(uid, text)
 	if err != nil {
-		return "", common.NewServerError(err.Error(), 0)
+		return "", ce.NewServerError(err.Error(), 0)
 	}
 
 	return text, nil
@@ -47,7 +49,7 @@ func (srv *Server) getText(uid string) (text string, err error) {
 func (srv *Server) getBinary(uid string) (data []byte, err error) {
 	// Check the UID.
 	if !common.IsUidValid(uid) {
-		return nil, common.NewClientError(common.ErrUid, 0)
+		return nil, ce.NewClientError(ce.ErrUid, 0)
 	}
 
 	// Try to find the data in cache.
@@ -62,16 +64,16 @@ func (srv *Server) getBinary(uid string) (data []byte, err error) {
 	var fileExists bool
 	fileExists, data, err = srv.filesB.GetFileContents(relPath)
 	if !fileExists {
-		return nil, common.NewClientError(err.Error(), 0)
+		return nil, ce.NewClientError(err.Error(), 0)
 	}
 	if err != nil {
-		return nil, common.NewServerError(err.Error(), 0)
+		return nil, ce.NewServerError(err.Error(), 0)
 	}
 
 	// Save data in the cache.
 	err = srv.cacheB.AddRecord(uid, data)
 	if err != nil {
-		return nil, common.NewServerError(err.Error(), 0)
+		return nil, ce.NewServerError(err.Error(), 0)
 	}
 
 	return data, nil

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/vault-thirteen/SFRODB/common"
+	ce "github.com/vault-thirteen/SFRODB/common/error"
 )
 
 const ErrSyntax = "syntax error"
@@ -62,23 +63,23 @@ func ParseDataSettings(line1, line2 string) (ds *DataSettings, err error) {
 
 func (ds *DataSettings) Check() (err error) {
 	if len(ds.Folder) == 0 {
-		return errors.New(common.ErrDataFolderIsNotSet)
+		return errors.New(ce.ErrDataFolderIsNotSet)
 	}
 
 	if len(ds.FileExtension) == 0 {
-		return errors.New(common.ErrDataFileExtensionIsNotSet)
+		return errors.New(ce.ErrDataFileExtensionIsNotSet)
 	}
 
 	if ds.CacheVolumeMax == 0 {
-		return errors.New(common.ErrCacheVolumeMaxIsNotSet)
+		return errors.New(ce.ErrCacheVolumeMaxIsNotSet)
 	}
 
 	if ds.CachedItemVolumeMax == 0 {
-		return errors.New(common.ErrCachedItemVolumeMaxIsNotSet)
+		return errors.New(ce.ErrCachedItemVolumeMaxIsNotSet)
 	}
 
 	if ds.CachedItemTTL == 0 {
-		return errors.New(common.ErrCachedItemTTLIsNotSet)
+		return errors.New(ce.ErrCachedItemTTLIsNotSet)
 	}
 
 	return nil

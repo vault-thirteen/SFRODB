@@ -3,6 +3,7 @@ package common
 import (
 	"fmt"
 
+	ce "github.com/vault-thirteen/SFRODB/common/error"
 	"github.com/vault-thirteen/SFRODB/common/method"
 	mn "github.com/vault-thirteen/SFRODB/common/method/name"
 )
@@ -101,7 +102,7 @@ func newNormalResponse(
 
 	// SRS.
 	if contentLen > ResponseMessageLengthC-mn.LengthLimit {
-		err = fmt.Errorf(ErrTextIsTooLong, ResponseMessageLengthC-mn.LengthLimit, contentLen)
+		err = fmt.Errorf(ce.ErrTextIsTooLong, ResponseMessageLengthC-mn.LengthLimit, contentLen)
 		return nil, err
 	} else if contentLen > ResponseMessageLengthB-mn.LengthLimit {
 		resp.SRS = SRS_C
@@ -120,7 +121,7 @@ func newNormalResponse(
 	case SRS_C:
 		resp.ResponseSizeC = mn.LengthLimit + uint32(contentLen)
 	default:
-		return nil, fmt.Errorf(ErrSrsIsNotSupported, resp.SRS)
+		return nil, fmt.Errorf(ce.ErrSrsIsNotSupported, resp.SRS)
 	}
 
 	return resp, nil

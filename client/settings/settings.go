@@ -3,7 +3,7 @@ package settings
 import (
 	"errors"
 
-	"github.com/vault-thirteen/SFRODB/common"
+	ce "github.com/vault-thirteen/SFRODB/common/error"
 )
 
 const ResponseMessageLengthLimitDefault = 1_000_000 // 1 MB.
@@ -25,19 +25,19 @@ type Settings struct {
 
 func (stn *Settings) Check() (err error) {
 	if len(stn.Host) == 0 {
-		return errors.New(common.ErrClientHostIsNotSet)
+		return errors.New(ce.ErrClientHostIsNotSet)
 	}
 
 	if stn.MainPort == 0 {
-		return errors.New(common.ErrClientPortIsNotSet)
+		return errors.New(ce.ErrClientPortIsNotSet)
 	}
 
 	if stn.AuxPort == 0 {
-		return errors.New(common.ErrClientPortIsNotSet)
+		return errors.New(ce.ErrClientPortIsNotSet)
 	}
 
 	if stn.ResponseMessageLengthLimit == 0 {
-		return errors.New(common.ErrResponseMessageLengthLimit)
+		return errors.New(ce.ErrResponseMessageLengthLimit)
 	}
 
 	return nil

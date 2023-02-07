@@ -3,6 +3,7 @@ package client
 import (
 	"github.com/vault-thirteen/SFRODB/common"
 	"github.com/vault-thirteen/SFRODB/common/connection"
+	ce "github.com/vault-thirteen/SFRODB/common/error"
 )
 
 // closeConnection asks server to close the connection.
@@ -11,12 +12,12 @@ func (cli *Client) closeConnection(c *connection.Connection) (err error) {
 	var rm *common.Request
 	rm, err = common.NewRequest_CloseConnection()
 	if err != nil {
-		return common.NewClientError(err.Error(), 0)
+		return ce.NewClientError(err.Error(), 0)
 	}
 
 	err = c.SendRequestMessage(rm)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	return nil
@@ -28,12 +29,12 @@ func (cli *Client) showText(c *connection.Connection, uid string) (err error) {
 	var rm *common.Request
 	rm, err = common.NewRequest_ShowText(uid)
 	if err != nil {
-		return common.NewClientError(err.Error(), 0)
+		return ce.NewClientError(err.Error(), 0)
 	}
 
 	err = c.SendRequestMessage(rm)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	return nil
@@ -45,12 +46,12 @@ func (cli *Client) showBinary(c *connection.Connection, uid string) (err error) 
 	var rm *common.Request
 	rm, err = common.NewRequest_ShowBinary(uid)
 	if err != nil {
-		return common.NewClientError(err.Error(), 0)
+		return ce.NewClientError(err.Error(), 0)
 	}
 
 	err = c.SendRequestMessage(rm)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	return nil
@@ -62,12 +63,12 @@ func (cli *Client) searchTextRecord(c *connection.Connection, uid string) (err e
 	var rm *common.Request
 	rm, err = common.NewRequest_SearchTextRecord(uid)
 	if err != nil {
-		return common.NewClientError(err.Error(), 0)
+		return ce.NewClientError(err.Error(), 0)
 	}
 
 	err = c.SendRequestMessage(rm)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	return nil
@@ -79,12 +80,12 @@ func (cli *Client) searchBinaryRecord(c *connection.Connection, uid string) (err
 	var rm *common.Request
 	rm, err = common.NewRequest_SearchBinaryRecord(uid)
 	if err != nil {
-		return common.NewClientError(err.Error(), 0)
+		return ce.NewClientError(err.Error(), 0)
 	}
 
 	err = c.SendRequestMessage(rm)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	return nil
@@ -96,12 +97,12 @@ func (cli *Client) searchTextFile(c *connection.Connection, uid string) (err err
 	var rm *common.Request
 	rm, err = common.NewRequest_SearchTextFile(uid)
 	if err != nil {
-		return common.NewClientError(err.Error(), 0)
+		return ce.NewClientError(err.Error(), 0)
 	}
 
 	err = c.SendRequestMessage(rm)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	return nil
@@ -113,12 +114,12 @@ func (cli *Client) searchBinaryFile(c *connection.Connection, uid string) (err e
 	var rm *common.Request
 	rm, err = common.NewRequest_SearchBinaryFile(uid)
 	if err != nil {
-		return common.NewClientError(err.Error(), 0)
+		return ce.NewClientError(err.Error(), 0)
 	}
 
 	err = c.SendRequestMessage(rm)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	return nil
@@ -130,12 +131,12 @@ func (cli *Client) forgetTextRecord(c *connection.Connection, uid string) (err e
 	var rm *common.Request
 	rm, err = common.NewRequest_ForgetTextRecord(uid)
 	if err != nil {
-		return common.NewClientError(err.Error(), 0)
+		return ce.NewClientError(err.Error(), 0)
 	}
 
 	err = c.SendRequestMessage(rm)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	return nil
@@ -147,12 +148,12 @@ func (cli *Client) forgetBinaryRecord(c *connection.Connection, uid string) (err
 	var rm *common.Request
 	rm, err = common.NewRequest_ForgetBinaryRecord(uid)
 	if err != nil {
-		return common.NewClientError(err.Error(), 0)
+		return ce.NewClientError(err.Error(), 0)
 	}
 
 	err = c.SendRequestMessage(rm)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	return nil
@@ -164,12 +165,12 @@ func (cli *Client) resetTextCache(c *connection.Connection) (err error) {
 	var rm *common.Request
 	rm, err = common.NewRequest_ResetTextCache()
 	if err != nil {
-		return common.NewClientError(err.Error(), 0)
+		return ce.NewClientError(err.Error(), 0)
 	}
 
 	err = c.SendRequestMessage(rm)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	return nil
@@ -181,12 +182,12 @@ func (cli *Client) resetBinaryCache(c *connection.Connection) (err error) {
 	var rm *common.Request
 	rm, err = common.NewRequest_ResetBinaryCache()
 	if err != nil {
-		return common.NewClientError(err.Error(), 0)
+		return ce.NewClientError(err.Error(), 0)
 	}
 
 	err = c.SendRequestMessage(rm)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	return nil

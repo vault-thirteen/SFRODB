@@ -7,6 +7,7 @@ import (
 
 	"github.com/vault-thirteen/SFRODB/common"
 	"github.com/vault-thirteen/SFRODB/common/connection"
+	ce "github.com/vault-thirteen/SFRODB/common/error"
 	"github.com/vault-thirteen/SFRODB/common/method"
 )
 
@@ -31,7 +32,7 @@ func (srv *Server) showRecord(c *connection.Connection, r *common.Request) (err 
 		return srv.showingBinary(c, data)
 
 	default:
-		return common.NewServerError(fmt.Sprintf(common.ErrUnsupportedMethodValue, r.Method), 0)
+		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0)
 	}
 }
 
@@ -40,7 +41,7 @@ func (srv *Server) showRecord(c *connection.Connection, r *common.Request) (err 
 func (srv *Server) searchRecord(c *connection.Connection, r *common.Request) (err error) {
 	// Check the UID.
 	if !common.IsUidValid(r.UID) {
-		return common.NewClientError(common.ErrUid, 0)
+		return ce.NewClientError(ce.ErrUid, 0)
 	}
 
 	// Search for the record in cache.
@@ -63,7 +64,7 @@ func (srv *Server) searchRecord(c *connection.Connection, r *common.Request) (er
 		}
 
 	default:
-		return common.NewServerError(fmt.Sprintf(common.ErrUnsupportedMethodValue, r.Method), 0)
+		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0)
 	}
 }
 
@@ -72,7 +73,7 @@ func (srv *Server) searchRecord(c *connection.Connection, r *common.Request) (er
 func (srv *Server) searchFile(c *connection.Connection, r *common.Request) (err error) {
 	// Check the UID.
 	if !common.IsUidValid(r.UID) {
-		return common.NewClientError(common.ErrUid, 0)
+		return ce.NewClientError(ce.ErrUid, 0)
 	}
 
 	// Search for the file in storage.
@@ -83,7 +84,7 @@ func (srv *Server) searchFile(c *connection.Connection, r *common.Request) (err 
 		relPath = filepath.Join(r.UID+srv.settings.TextData.FileExtension, "")
 		fileExists, err = srv.filesT.FileExists(relPath)
 		if err != nil {
-			return common.NewServerError(err.Error(), 0)
+			return ce.NewServerError(err.Error(), 0)
 		}
 		if fileExists {
 			return srv.textFileExists(c)
@@ -95,7 +96,7 @@ func (srv *Server) searchFile(c *connection.Connection, r *common.Request) (err 
 		relPath = filepath.Join(r.UID+srv.settings.BinaryData.FileExtension, "")
 		fileExists, err = srv.filesB.FileExists(relPath)
 		if err != nil {
-			return common.NewServerError(err.Error(), 0)
+			return ce.NewServerError(err.Error(), 0)
 		}
 		if fileExists {
 			return srv.binaryFileExists(c)
@@ -104,7 +105,7 @@ func (srv *Server) searchFile(c *connection.Connection, r *common.Request) (err 
 		}
 
 	default:
-		return common.NewServerError(fmt.Sprintf(common.ErrUnsupportedMethodValue, r.Method), 0)
+		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0)
 	}
 }
 
@@ -113,7 +114,7 @@ func (srv *Server) searchFile(c *connection.Connection, r *common.Request) (err 
 func (srv *Server) forgetRecord(c *connection.Connection, r *common.Request) (err error) {
 	// Check the UID.
 	if !common.IsUidValid(r.UID) {
-		return common.NewClientError(common.ErrUid, 0)
+		return ce.NewClientError(ce.ErrUid, 0)
 	}
 
 	// Remove the record from the cache.
@@ -124,13 +125,13 @@ func (srv *Server) forgetRecord(c *connection.Connection, r *common.Request) (er
 	case method.ForgetBinaryRecord:
 		recExists, err = srv.cacheB.RemoveRecord(r.UID)
 	default:
-		return common.NewServerError(fmt.Sprintf(common.ErrUnsupportedMethodValue, r.Method), 0)
+		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0)
 	}
 	if !recExists {
-		return common.NewClientError(err.Error(), 0)
+		return ce.NewClientError(err.Error(), 0)
 	}
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	return srv.ok(c)
@@ -148,10 +149,10 @@ func (srv *Server) resetCache(c *connection.Connection, r *common.Request) (err 
 	case method.ResetBinaryCache:
 		err = srv.cacheB.Clear()
 	default:
-		return common.NewServerError(fmt.Sprintf(common.ErrUnsupportedMethodValue, r.Method), 0)
+		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0)
 	}
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	return srv.ok(c)
@@ -159,7 +160,7 @@ func (srv *Server) resetCache(c *connection.Connection, r *common.Request) (err 
 
 // processError processes a detailed error.
 func (srv *Server) processError(err error) (isServerError bool) {
-	detailedError, ok := err.(*common.Error)
+	detailedError, ok := err.(*ce.CommonError)
 	if !ok {
 		return false
 	}

@@ -9,6 +9,7 @@ import (
 	"github.com/vault-thirteen/Cache"
 	"github.com/vault-thirteen/SFRODB/common"
 	"github.com/vault-thirteen/SFRODB/common/connection"
+	ce "github.com/vault-thirteen/SFRODB/common/error"
 	"github.com/vault-thirteen/SFRODB/common/method"
 	"github.com/vault-thirteen/SFRODB/server/ff"
 	"github.com/vault-thirteen/SFRODB/server/settings"
@@ -218,8 +219,8 @@ func (srv *Server) handleMainConnection(conn net.Conn) {
 			err = srv.searchFile(c, req)
 
 		default:
-			msg := fmt.Sprintf(common.ErrUnsupportedMethodValue, req.Method)
-			err = common.NewClientError(msg, 0)
+			msg := fmt.Sprintf(ce.ErrUnsupportedMethodValue, req.Method)
+			err = ce.NewClientError(msg, 0)
 		}
 		if err != nil {
 			isServerError = srv.processError(err)
@@ -279,8 +280,8 @@ func (srv *Server) handleAuxConnection(conn net.Conn) {
 			err = srv.resetCache(c, req)
 
 		default:
-			msg := fmt.Sprintf(common.ErrUnsupportedMethodValue, req.Method)
-			err = common.NewClientError(msg, 0)
+			msg := fmt.Sprintf(ce.ErrUnsupportedMethodValue, req.Method)
+			err = ce.NewClientError(msg, 0)
 		}
 		if err != nil {
 			isServerError = srv.processError(err)

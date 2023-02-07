@@ -1,5 +1,6 @@
-package common
+package cet
 
+// ErrorType is a common error type.
 type ErrorType byte
 
 const (

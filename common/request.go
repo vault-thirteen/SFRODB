@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	ce "github.com/vault-thirteen/SFRODB/common/error"
 	"github.com/vault-thirteen/SFRODB/common/method"
 	"github.com/vault-thirteen/SFRODB/common/method/name"
 )
@@ -51,7 +52,7 @@ func NewRequest_ResetBinaryCache() (req *Request, err error) {
 
 func newNormalRequest(method method.Method, uid string) (req *Request, err error) {
 	if !IsUidValid(uid) {
-		return nil, fmt.Errorf(ErrUid)
+		return nil, fmt.Errorf(ce.ErrUid)
 	}
 
 	req = &Request{
@@ -65,13 +66,13 @@ func newNormalRequest(method method.Method, uid string) (req *Request, err error
 	// SRS.
 	uidLen := len(uid)
 	if uidLen <= 0 {
-		return nil, errors.New(ErrUid)
+		return nil, errors.New(ce.ErrUid)
 	} else if uidLen <= RequestMessageLengthA-mn.LengthLimit {
 		req.SRS = SRS_A
 	} else if uidLen <= RequestMessageLengthB-mn.LengthLimit {
 		req.SRS = SRS_B
 	} else {
-		return nil, errors.New(ErrUidIsTooLong)
+		return nil, errors.New(ce.ErrUidIsTooLong)
 	}
 
 	// RS.
@@ -81,7 +82,7 @@ func newNormalRequest(method method.Method, uid string) (req *Request, err error
 	case SRS_B:
 		req.RequestSizeB = mn.LengthLimit + uint16(uidLen)
 	default:
-		return nil, fmt.Errorf(ErrSrsIsNotSupported, req.SRS)
+		return nil, fmt.Errorf(ce.ErrSrsIsNotSupported, req.SRS)
 	}
 
 	return req, nil

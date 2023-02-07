@@ -3,6 +3,7 @@ package server
 import (
 	"github.com/vault-thirteen/SFRODB/common"
 	"github.com/vault-thirteen/SFRODB/common/connection"
+	ce "github.com/vault-thirteen/SFRODB/common/error"
 )
 
 // clientError tells the client about its (client's) error.
@@ -11,12 +12,12 @@ func (srv *Server) clientError(c *connection.Connection) (err error) {
 	var rm *common.Response
 	rm, err = common.NewResponse_ClientError()
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	err = c.SendResponseMessage(rm, false)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	return nil
@@ -28,12 +29,12 @@ func (srv *Server) ok(c *connection.Connection) (err error) {
 	var rm *common.Response
 	rm, err = common.NewResponse_OK()
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	err = c.SendResponseMessage(rm, false)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	return nil
@@ -46,12 +47,12 @@ func (srv *Server) closingConnection(c *connection.Connection) (err error) {
 	var rm *common.Response
 	rm, err = common.NewResponse_ClosingConnection()
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	err = c.SendResponseMessage(rm, false)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	return nil
@@ -63,12 +64,12 @@ func (srv *Server) showingText(c *connection.Connection, text string) (err error
 	var rm *common.Response
 	rm, err = common.NewResponse_ShowingText(text)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	err = c.SendResponseMessage(rm, false)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	return nil
@@ -80,12 +81,12 @@ func (srv *Server) showingBinary(c *connection.Connection, data []byte) (err err
 	var rm *common.Response
 	rm, err = common.NewResponse_ShowingBinary(data)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	err = c.SendResponseMessage(rm, true)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	return nil
@@ -97,12 +98,12 @@ func (srv *Server) textRecordExists(c *connection.Connection) (err error) {
 	var rm *common.Response
 	rm, err = common.NewResponse_TextRecordExists()
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	err = c.SendResponseMessage(rm, false)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	return nil
@@ -114,12 +115,12 @@ func (srv *Server) binaryRecordExists(c *connection.Connection) (err error) {
 	var rm *common.Response
 	rm, err = common.NewResponse_BinaryRecordExists()
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	err = c.SendResponseMessage(rm, true)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	return nil
@@ -131,12 +132,12 @@ func (srv *Server) textRecordDoesNotExist(c *connection.Connection) (err error) 
 	var rm *common.Response
 	rm, err = common.NewResponse_TextRecordDoesNotExist()
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	err = c.SendResponseMessage(rm, false)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	return nil
@@ -148,12 +149,12 @@ func (srv *Server) binaryRecordDoesNotExist(c *connection.Connection) (err error
 	var rm *common.Response
 	rm, err = common.NewResponse_BinaryRecordDoesNotExist()
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	err = c.SendResponseMessage(rm, true)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	return nil
@@ -165,12 +166,12 @@ func (srv *Server) textFileExists(c *connection.Connection) (err error) {
 	var rm *common.Response
 	rm, err = common.NewResponse_TextFileExists()
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	err = c.SendResponseMessage(rm, false)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	return nil
@@ -182,12 +183,12 @@ func (srv *Server) binaryFileExists(c *connection.Connection) (err error) {
 	var rm *common.Response
 	rm, err = common.NewResponse_BinaryFileExists()
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	err = c.SendResponseMessage(rm, true)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	return nil
@@ -199,12 +200,12 @@ func (srv *Server) textFileDoesNotExist(c *connection.Connection) (err error) {
 	var rm *common.Response
 	rm, err = common.NewResponse_TextFileDoesNotExist()
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	err = c.SendResponseMessage(rm, false)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	return nil
@@ -216,12 +217,12 @@ func (srv *Server) binaryFileDoesNotExist(c *connection.Connection) (err error) 
 	var rm *common.Response
 	rm, err = common.NewResponse_BinaryFileDoesNotExist()
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	err = c.SendResponseMessage(rm, true)
 	if err != nil {
-		return common.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0)
 	}
 
 	return nil

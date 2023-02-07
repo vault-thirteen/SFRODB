@@ -1,6 +1,9 @@
-package common
+package ce
 
-import "github.com/vault-thirteen/SFRODB/common/method"
+import (
+	cet "github.com/vault-thirteen/SFRODB/common/error/type"
+	"github.com/vault-thirteen/SFRODB/common/method"
+)
 
 const (
 	ErrFileIsNotSet                = "file is not set"
@@ -38,18 +41,19 @@ const (
 	ErrSomethingWentWrong = "something went wrong"
 )
 
-type Error struct {
+// CommonError is a common error used by the service.
+type CommonError struct {
 	// Hey you, Go language developers !
 	// You wanted Go language to be a replacement for the good old C language.
 	// Do you know why C has a "typedef" ? They are smart enough to let all the
 	// users use the "type" word in their programs. Shame on you.
-	type_  ErrorType
+	type_  cet.ErrorType
 	text   string
 	method method.Method
 }
 
-func newError(et ErrorType, msg string, method method.Method) (err error) {
-	return &Error{
+func newError(et cet.ErrorType, msg string, method method.Method) (err error) {
+	return &CommonError{
 		type_:  et,
 		text:   msg,
 		method: method,
@@ -57,25 +61,25 @@ func newError(et ErrorType, msg string, method method.Method) (err error) {
 }
 
 func NewServerError(msg string, method method.Method) (err error) {
-	return newError(ErrorTypeServer, msg, method)
+	return newError(cet.ErrorTypeServer, msg, method)
 }
 
 func NewClientError(msg string, method method.Method) (err error) {
-	return newError(ErrorTypeClient, msg, method)
+	return newError(cet.ErrorTypeClient, msg, method)
 }
 
-func (e *Error) Error() string {
-	return e.text
+func (ce *CommonError) Error() string {
+	return ce.text
 }
 
-func (e *Error) GetMethod() method.Method {
-	return e.method
+func (ce *CommonError) GetMethod() method.Method {
+	return ce.method
 }
 
-func (e *Error) IsServerError() bool {
-	return e.type_ == ErrorTypeServer
+func (ce *CommonError) IsServerError() bool {
+	return ce.type_ == cet.ErrorTypeServer
 }
 
-func (e *Error) IsClientError() bool {
-	return e.type_ == ErrorTypeClient
+func (ce *CommonError) IsClientError() bool {
+	return ce.type_ == cet.ErrorTypeClient
 }
