@@ -2,6 +2,7 @@ package client
 
 import (
 	"github.com/vault-thirteen/SFRODB/common"
+	"github.com/vault-thirteen/SFRODB/common/method"
 )
 
 // CloseConnection_Main tells the server to close the main connection.
@@ -44,7 +45,7 @@ func (cli *Client) closeConnection_any(useMainConnection bool, normalExit bool, 
 		return common.NewServerError(err.Error(), 0)
 	}
 
-	if resp.Method == common.MethodClosingConnection {
+	if resp.Method == method.ClosingConnection {
 		return nil
 	}
 
@@ -66,9 +67,9 @@ func (cli *Client) ShowText(uid string) (text string, err error) {
 	}
 
 	switch resp.Method {
-	case common.MethodClientError:
+	case method.ClientError:
 		return "", common.NewClientError(common.ErrSomethingWentWrong, resp.Method)
-	case common.MethodClosingConnection:
+	case method.ClosingConnection:
 		return "", common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
 	}
 
@@ -90,9 +91,9 @@ func (cli *Client) ShowBinary(uid string) (data []byte, err error) {
 	}
 
 	switch resp.Method {
-	case common.MethodClientError:
+	case method.ClientError:
 		return nil, common.NewClientError(common.ErrSomethingWentWrong, resp.Method)
-	case common.MethodClosingConnection:
+	case method.ClosingConnection:
 		return nil, common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
 	}
 
@@ -114,13 +115,13 @@ func (cli *Client) SearchTextRecord(uid string) (recExists bool, err error) {
 	}
 
 	switch resp.Method {
-	case common.MethodTextRecordExists:
+	case method.TextRecordExists:
 		return true, nil
-	case common.MethodTextRecordDoesNotExist:
+	case method.TextRecordDoesNotExist:
 		return false, nil
-	case common.MethodClientError:
+	case method.ClientError:
 		return false, common.NewClientError(common.ErrSomethingWentWrong, resp.Method)
-	case common.MethodClosingConnection:
+	case method.ClosingConnection:
 		return false, common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
 	default:
 		return false, common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
@@ -142,13 +143,13 @@ func (cli *Client) SearchBinaryRecord(uid string) (recExists bool, err error) {
 	}
 
 	switch resp.Method {
-	case common.MethodBinaryRecordExists:
+	case method.BinaryRecordExists:
 		return true, nil
-	case common.MethodBinaryRecordDoesNotExist:
+	case method.BinaryRecordDoesNotExist:
 		return false, nil
-	case common.MethodClientError:
+	case method.ClientError:
 		return false, common.NewClientError(common.ErrSomethingWentWrong, resp.Method)
-	case common.MethodClosingConnection:
+	case method.ClosingConnection:
 		return false, common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
 	default:
 		return false, common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
@@ -170,13 +171,13 @@ func (cli *Client) SearchTextFile(uid string) (fileExists bool, err error) {
 	}
 
 	switch resp.Method {
-	case common.MethodTextFileExists:
+	case method.TextFileExists:
 		return true, nil
-	case common.MethodTextFileDoesNotExist:
+	case method.TextFileDoesNotExist:
 		return false, nil
-	case common.MethodClientError:
+	case method.ClientError:
 		return false, common.NewClientError(common.ErrSomethingWentWrong, resp.Method)
-	case common.MethodClosingConnection:
+	case method.ClosingConnection:
 		return false, common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
 	default:
 		return false, common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
@@ -198,13 +199,13 @@ func (cli *Client) SearchBinaryFile(uid string) (fileExists bool, err error) {
 	}
 
 	switch resp.Method {
-	case common.MethodBinaryFileExists:
+	case method.BinaryFileExists:
 		return true, nil
-	case common.MethodBinaryFileDoesNotExist:
+	case method.BinaryFileDoesNotExist:
 		return false, nil
-	case common.MethodClientError:
+	case method.ClientError:
 		return false, common.NewClientError(common.ErrSomethingWentWrong, resp.Method)
-	case common.MethodClosingConnection:
+	case method.ClosingConnection:
 		return false, common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
 	default:
 		return false, common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
@@ -225,14 +226,14 @@ func (cli *Client) ForgetTextRecord(uid string) (err error) {
 		return common.NewServerError(err.Error(), 0)
 	}
 
-	if resp.Method == common.MethodOK {
+	if resp.Method == method.OK {
 		return nil
 	}
 
 	switch resp.Method {
-	case common.MethodClientError:
+	case method.ClientError:
 		return common.NewClientError(common.ErrSomethingWentWrong, resp.Method)
-	case common.MethodClosingConnection:
+	case method.ClosingConnection:
 		return common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
 	default:
 		return common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
@@ -253,14 +254,14 @@ func (cli *Client) ForgetBinaryRecord(uid string) (err error) {
 		return common.NewServerError(err.Error(), 0)
 	}
 
-	if resp.Method == common.MethodOK {
+	if resp.Method == method.OK {
 		return nil
 	}
 
 	switch resp.Method {
-	case common.MethodClientError:
+	case method.ClientError:
 		return common.NewClientError(common.ErrSomethingWentWrong, resp.Method)
-	case common.MethodClosingConnection:
+	case method.ClosingConnection:
 		return common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
 	default:
 		return common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
@@ -281,14 +282,14 @@ func (cli *Client) ResetTextCache() (err error) {
 		return common.NewServerError(err.Error(), 0)
 	}
 
-	if resp.Method == common.MethodOK {
+	if resp.Method == method.OK {
 		return nil
 	}
 
 	switch resp.Method {
-	case common.MethodClientError:
+	case method.ClientError:
 		return common.NewClientError(common.ErrSomethingWentWrong, resp.Method)
-	case common.MethodClosingConnection:
+	case method.ClosingConnection:
 		return common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
 	default:
 		return common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
@@ -309,14 +310,14 @@ func (cli *Client) ResetBinaryCache() (err error) {
 		return common.NewServerError(err.Error(), 0)
 	}
 
-	if resp.Method == common.MethodOK {
+	if resp.Method == method.OK {
 		return nil
 	}
 
 	switch resp.Method {
-	case common.MethodClientError:
+	case method.ClientError:
 		return common.NewClientError(common.ErrSomethingWentWrong, resp.Method)
-	case common.MethodClosingConnection:
+	case method.ClosingConnection:
 		return common.NewServerError(common.ErrSomethingWentWrong, resp.Method)
 	default:
 		return common.NewServerError(common.ErrSomethingWentWrong, resp.Method)

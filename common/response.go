@@ -2,6 +2,9 @@ package common
 
 import (
 	"fmt"
+
+	"github.com/vault-thirteen/SFRODB/common/method"
+	mn "github.com/vault-thirteen/SFRODB/common/method/name"
 )
 
 type Response struct {
@@ -15,70 +18,70 @@ type Response struct {
 	ResponseSizeC uint32
 
 	// Response Method.
-	Method Method
+	Method method.Method
 
 	// Response Data: Textual and Binary.
 	Text string
 	Data []byte
 }
 
-func newSimpleResponse(method Method) (resp *Response, err error) {
+func newSimpleResponse(method method.Method) (resp *Response, err error) {
 	return &Response{
 		SRS:           SRS_A,
-		ResponseSizeA: MethodNameLengthLimit,
+		ResponseSizeA: mn.LengthLimit,
 		Method:        method,
 	}, nil
 }
 
 func NewResponse_ClientError() (resp *Response, err error) {
-	return newSimpleResponse(MethodClientError)
+	return newSimpleResponse(method.ClientError)
 }
 
 func NewResponse_OK() (resp *Response, err error) {
-	return newSimpleResponse(MethodOK)
+	return newSimpleResponse(method.OK)
 }
 
 func NewResponse_ClosingConnection() (resp *Response, err error) {
-	return newSimpleResponse(MethodClosingConnection)
+	return newSimpleResponse(method.ClosingConnection)
 }
 
 func NewResponse_TextRecordExists() (resp *Response, err error) {
-	return newSimpleResponse(MethodTextRecordExists)
+	return newSimpleResponse(method.TextRecordExists)
 }
 
 func NewResponse_BinaryRecordExists() (resp *Response, err error) {
-	return newSimpleResponse(MethodBinaryRecordExists)
+	return newSimpleResponse(method.BinaryRecordExists)
 }
 
 func NewResponse_TextRecordDoesNotExist() (resp *Response, err error) {
-	return newSimpleResponse(MethodTextRecordDoesNotExist)
+	return newSimpleResponse(method.TextRecordDoesNotExist)
 }
 
 func NewResponse_BinaryRecordDoesNotExist() (resp *Response, err error) {
-	return newSimpleResponse(MethodBinaryRecordDoesNotExist)
+	return newSimpleResponse(method.BinaryRecordDoesNotExist)
 }
 
 func NewResponse_TextFileExists() (resp *Response, err error) {
-	return newSimpleResponse(MethodTextFileExists)
+	return newSimpleResponse(method.TextFileExists)
 }
 
 func NewResponse_BinaryFileExists() (resp *Response, err error) {
-	return newSimpleResponse(MethodBinaryFileExists)
+	return newSimpleResponse(method.BinaryFileExists)
 }
 
 func NewResponse_TextFileDoesNotExist() (resp *Response, err error) {
-	return newSimpleResponse(MethodTextFileDoesNotExist)
+	return newSimpleResponse(method.TextFileDoesNotExist)
 }
 
 func NewResponse_BinaryFileDoesNotExist() (resp *Response, err error) {
-	return newSimpleResponse(MethodBinaryFileDoesNotExist)
+	return newSimpleResponse(method.BinaryFileDoesNotExist)
 }
 
 func newNormalResponse(
 	text string,
 	data []byte,
 	useBinary bool,
-	method Method,
+	method method.Method,
 ) (resp *Response, err error) {
 	resp = &Response{
 		SRS:           0, // Will be automatically calculated.
@@ -97,12 +100,12 @@ func newNormalResponse(
 	}
 
 	// SRS.
-	if contentLen > ResponseMessageLengthC-MethodNameLengthLimit {
-		err = fmt.Errorf(ErrTextIsTooLong, ResponseMessageLengthC-MethodNameLengthLimit, contentLen)
+	if contentLen > ResponseMessageLengthC-mn.LengthLimit {
+		err = fmt.Errorf(ErrTextIsTooLong, ResponseMessageLengthC-mn.LengthLimit, contentLen)
 		return nil, err
-	} else if contentLen > ResponseMessageLengthB-MethodNameLengthLimit {
+	} else if contentLen > ResponseMessageLengthB-mn.LengthLimit {
 		resp.SRS = SRS_C
-	} else if contentLen > ResponseMessageLengthA-MethodNameLengthLimit {
+	} else if contentLen > ResponseMessageLengthA-mn.LengthLimit {
 		resp.SRS = SRS_B
 	} else {
 		resp.SRS = SRS_A
@@ -111,11 +114,11 @@ func newNormalResponse(
 	// RS.
 	switch resp.SRS {
 	case SRS_A:
-		resp.ResponseSizeA = MethodNameLengthLimit + uint8(contentLen)
+		resp.ResponseSizeA = mn.LengthLimit + uint8(contentLen)
 	case SRS_B:
-		resp.ResponseSizeB = MethodNameLengthLimit + uint16(contentLen)
+		resp.ResponseSizeB = mn.LengthLimit + uint16(contentLen)
 	case SRS_C:
-		resp.ResponseSizeC = MethodNameLengthLimit + uint32(contentLen)
+		resp.ResponseSizeC = mn.LengthLimit + uint32(contentLen)
 	default:
 		return nil, fmt.Errorf(ErrSrsIsNotSupported, resp.SRS)
 	}
@@ -124,9 +127,9 @@ func newNormalResponse(
 }
 
 func NewResponse_ShowingText(text string) (resp *Response, err error) {
-	return newNormalResponse(text, nil, false, MethodShowingText)
+	return newNormalResponse(text, nil, false, method.ShowingText)
 }
 
 func NewResponse_ShowingBinary(data []byte) (resp *Response, err error) {
-	return newNormalResponse("", data, true, MethodShowingBinary)
+	return newNormalResponse("", data, true, method.ShowingBinary)
 }

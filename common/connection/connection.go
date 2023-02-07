@@ -1,4 +1,4 @@
-package common
+package connection
 
 import (
 	"encoding/binary"
@@ -7,20 +7,23 @@ import (
 	"net"
 	"strings"
 
+	"github.com/vault-thirteen/SFRODB/common"
+	"github.com/vault-thirteen/SFRODB/common/method"
+	mn "github.com/vault-thirteen/SFRODB/common/method/name"
 	"github.com/vault-thirteen/SFRODB/common/reader"
 )
 
 type Connection struct {
 	netConn                    net.Conn
-	methodNameBuffers          *map[Method][]byte
-	methodValues               *map[string]Method
+	methodNameBuffers          *map[method.Method][]byte
+	methodValues               *map[string]method.Method
 	responseMessageLengthLimit uint
 }
 
 func NewConnection(
 	netConn net.Conn,
-	methodNameBuffers *map[Method][]byte,
-	methodValues *map[string]Method,
+	methodNameBuffers *map[method.Method][]byte,
+	methodValues *map[string]method.Method,
 
 	// This limit is used on client only.
 	responseMessageLengthLimit uint,
@@ -44,22 +47,22 @@ func (c *Connection) close() (err error) {
 
 // GetNextRequest is a method used by a Server to receive a request from the
 // client.
-func (c *Connection) GetNextRequest() (r *Request, err error) {
-	r = &Request{}
+func (c *Connection) GetNextRequest() (r *common.Request, err error) {
+	r = &common.Request{}
 
 	r.SRS, err = c.getSRS()
 	if err != nil {
-		return nil, errors.New(ErrSrsReading + err.Error())
+		return nil, errors.New(common.ErrSrsReading + err.Error())
 	}
 
 	err = c.getRequestSize(r)
 	if err != nil {
-		return nil, errors.New(ErrRsReading + err.Error())
+		return nil, errors.New(common.ErrRsReading + err.Error())
 	}
 
 	err = c.getRequestMethodAndUID(r)
 	if err != nil {
-		return nil, errors.New(ErrReadingMethodAndData + err.Error())
+		return nil, errors.New(common.ErrReadingMethodAndData + err.Error())
 	}
 
 	return r, nil
@@ -75,31 +78,31 @@ func (c *Connection) getSRS() (srs byte, err error) {
 	srs = data[0]
 
 	switch srs {
-	case SRS_A:
+	case common.SRS_A:
 		return srs, nil
-	case SRS_B:
+	case common.SRS_B:
 		return srs, nil
-	case SRS_C:
+	case common.SRS_C:
 		return srs, nil
 	}
 
-	return 0, fmt.Errorf(ErrSrsIsNotSupported, srs)
+	return 0, fmt.Errorf(common.ErrSrsIsNotSupported, srs)
 }
 
-func (c *Connection) getRequestSize(r *Request) (err error) {
+func (c *Connection) getRequestSize(r *common.Request) (err error) {
 	switch r.SRS {
-	case SRS_A:
+	case common.SRS_A:
 		return c.getRequestSizeA(r)
-	case SRS_B:
+	case common.SRS_B:
 		return c.getRequestSizeB(r)
 	}
 
-	return fmt.Errorf(ErrSrsIsNotSupported, r.SRS)
+	return fmt.Errorf(common.ErrSrsIsNotSupported, r.SRS)
 }
 
-func (c *Connection) getRequestSizeA(r *Request) (err error) {
+func (c *Connection) getRequestSizeA(r *common.Request) (err error) {
 	var data []byte
-	data, err = reader.ReadExactSize(c.netConn, RS_LengthA)
+	data, err = reader.ReadExactSize(c.netConn, common.RS_LengthA)
 	if err != nil {
 		return err
 	}
@@ -109,9 +112,9 @@ func (c *Connection) getRequestSizeA(r *Request) (err error) {
 	return nil
 }
 
-func (c *Connection) getRequestSizeB(r *Request) (err error) {
+func (c *Connection) getRequestSizeB(r *common.Request) (err error) {
 	var data []byte
-	data, err = reader.ReadExactSize(c.netConn, RS_LengthB)
+	data, err = reader.ReadExactSize(c.netConn, common.RS_LengthB)
 	if err != nil {
 		return err
 	}
@@ -121,15 +124,15 @@ func (c *Connection) getRequestSizeB(r *Request) (err error) {
 	return nil
 }
 
-func (c *Connection) getRequestMethodAndUID(r *Request) (err error) {
+func (c *Connection) getRequestMethodAndUID(r *common.Request) (err error) {
 	var reqMsgLen uint
 	switch r.SRS {
-	case SRS_A:
+	case common.SRS_A:
 		reqMsgLen = uint(r.RequestSizeA)
-	case SRS_B:
+	case common.SRS_B:
 		reqMsgLen = uint(r.RequestSizeB)
 	default:
-		return fmt.Errorf(ErrSrsIsNotSupported, r.SRS)
+		return fmt.Errorf(common.ErrSrsIsNotSupported, r.SRS)
 	}
 
 	var data []byte
@@ -150,7 +153,7 @@ func (c *Connection) getRequestMethodAndUID(r *Request) (err error) {
 
 // SendResponseMessage is a method used by a Server to send a response to the
 // client.
-func (c *Connection) SendResponseMessage(rm *Response, useBinary bool) (err error) {
+func (c *Connection) SendResponseMessage(rm *common.Response, useBinary bool) (err error) {
 	err = c.sendSRS(rm.SRS)
 	if err != nil {
 		return err
@@ -181,19 +184,19 @@ func (c *Connection) sendSRS(srs byte) (err error) {
 	return nil
 }
 
-func (c *Connection) sendResponseSize(rm *Response) (err error) {
+func (c *Connection) sendResponseSize(rm *common.Response) (err error) {
 	var buf []byte
 	switch rm.SRS {
-	case SRS_A:
-		buf = make([]byte, RS_LengthA)
+	case common.SRS_A:
+		buf = make([]byte, common.RS_LengthA)
 		buf[0] = rm.ResponseSizeA
 
-	case SRS_B:
-		buf = make([]byte, RS_LengthB)
+	case common.SRS_B:
+		buf = make([]byte, common.RS_LengthB)
 		binary.BigEndian.PutUint16(buf, rm.ResponseSizeB)
 
-	case SRS_C:
-		buf = make([]byte, RS_LengthC)
+	case common.SRS_C:
+		buf = make([]byte, common.RS_LengthC)
 		binary.BigEndian.PutUint32(buf, rm.ResponseSizeC)
 	}
 
@@ -205,7 +208,7 @@ func (c *Connection) sendResponseSize(rm *Response) (err error) {
 	return nil
 }
 
-func (c *Connection) sendResponseMethodAndData(rm *Response, useBinary bool) (err error) {
+func (c *Connection) sendResponseMethodAndData(rm *common.Response, useBinary bool) (err error) {
 	_, err = c.netConn.Write((*c.methodNameBuffers)[rm.Method])
 	if err != nil {
 		return err
@@ -225,7 +228,7 @@ func (c *Connection) sendResponseMethodAndData(rm *Response, useBinary bool) (er
 
 // SendRequestMessage is a method used by a Client to send a request to the
 // server.
-func (c *Connection) SendRequestMessage(rm *Request) (err error) {
+func (c *Connection) SendRequestMessage(rm *common.Request) (err error) {
 	err = c.sendSRS(rm.SRS)
 	if err != nil {
 		return err
@@ -244,19 +247,19 @@ func (c *Connection) SendRequestMessage(rm *Request) (err error) {
 	return nil
 }
 
-func (c *Connection) sendRequestSize(rm *Request) (err error) {
+func (c *Connection) sendRequestSize(rm *common.Request) (err error) {
 	var buf []byte
 	switch rm.SRS {
-	case SRS_A:
-		buf = make([]byte, RS_LengthA)
+	case common.SRS_A:
+		buf = make([]byte, common.RS_LengthA)
 		buf[0] = rm.RequestSizeA
 
-	case SRS_B:
-		buf = make([]byte, RS_LengthB)
+	case common.SRS_B:
+		buf = make([]byte, common.RS_LengthB)
 		binary.BigEndian.PutUint16(buf, rm.RequestSizeB)
 
 	default:
-		return fmt.Errorf(ErrSrsIsNotSupported, rm.SRS)
+		return fmt.Errorf(common.ErrSrsIsNotSupported, rm.SRS)
 	}
 
 	_, err = c.netConn.Write(buf)
@@ -267,7 +270,7 @@ func (c *Connection) sendRequestSize(rm *Request) (err error) {
 	return nil
 }
 
-func (c *Connection) sendRequestMethodAndUid(rm *Request) (err error) {
+func (c *Connection) sendRequestMethodAndUid(rm *common.Request) (err error) {
 	_, err = c.netConn.Write((*c.methodNameBuffers)[rm.Method])
 	if err != nil {
 		return err
@@ -283,43 +286,43 @@ func (c *Connection) sendRequestMethodAndUid(rm *Request) (err error) {
 
 // GetResponseMessage is a method used by a Client to read a response from the
 // server.
-func (c *Connection) GetResponseMessage(useBinary bool) (resp *Response, err error) {
-	resp = &Response{}
+func (c *Connection) GetResponseMessage(useBinary bool) (resp *common.Response, err error) {
+	resp = &common.Response{}
 
 	resp.SRS, err = c.getSRS()
 	if err != nil {
-		return nil, errors.New(ErrSrsReading + err.Error())
+		return nil, errors.New(common.ErrSrsReading + err.Error())
 	}
 
 	err = c.getResponseSize(resp)
 	if err != nil {
-		return nil, errors.New(ErrRsReading + err.Error())
+		return nil, errors.New(common.ErrRsReading + err.Error())
 	}
 
 	err = c.getResponseMethodAndData(resp, useBinary)
 	if err != nil {
-		return nil, errors.New(ErrReadingMethodAndData + err.Error())
+		return nil, errors.New(common.ErrReadingMethodAndData + err.Error())
 	}
 
 	return resp, nil
 }
 
-func (c *Connection) getResponseSize(resp *Response) (err error) {
+func (c *Connection) getResponseSize(resp *common.Response) (err error) {
 	switch resp.SRS {
-	case SRS_A:
+	case common.SRS_A:
 		return c.getResponseSizeA(resp)
-	case SRS_B:
+	case common.SRS_B:
 		return c.getResponseSizeB(resp)
-	case SRS_C:
+	case common.SRS_C:
 		return c.getResponseSizeC(resp)
 	}
 
-	return fmt.Errorf(ErrSrsIsNotSupported, resp.SRS)
+	return fmt.Errorf(common.ErrSrsIsNotSupported, resp.SRS)
 }
 
-func (c *Connection) getResponseSizeA(resp *Response) (err error) {
+func (c *Connection) getResponseSizeA(resp *common.Response) (err error) {
 	var data []byte
-	data, err = reader.ReadExactSize(c.netConn, RS_LengthA)
+	data, err = reader.ReadExactSize(c.netConn, common.RS_LengthA)
 	if err != nil {
 		return err
 	}
@@ -329,9 +332,9 @@ func (c *Connection) getResponseSizeA(resp *Response) (err error) {
 	return nil
 }
 
-func (c *Connection) getResponseSizeB(resp *Response) (err error) {
+func (c *Connection) getResponseSizeB(resp *common.Response) (err error) {
 	var data []byte
-	data, err = reader.ReadExactSize(c.netConn, RS_LengthB)
+	data, err = reader.ReadExactSize(c.netConn, common.RS_LengthB)
 	if err != nil {
 		return err
 	}
@@ -341,9 +344,9 @@ func (c *Connection) getResponseSizeB(resp *Response) (err error) {
 	return nil
 }
 
-func (c *Connection) getResponseSizeC(resp *Response) (err error) {
+func (c *Connection) getResponseSizeC(resp *common.Response) (err error) {
 	var data []byte
-	data, err = reader.ReadExactSize(c.netConn, RS_LengthC)
+	data, err = reader.ReadExactSize(c.netConn, common.RS_LengthC)
 	if err != nil {
 		return err
 	}
@@ -353,21 +356,21 @@ func (c *Connection) getResponseSizeC(resp *Response) (err error) {
 	return nil
 }
 
-func (c *Connection) getResponseMethodAndData(resp *Response, useBinary bool) (err error) {
+func (c *Connection) getResponseMethodAndData(resp *common.Response, useBinary bool) (err error) {
 	var respMsgLen uint
 	switch resp.SRS {
-	case SRS_A:
+	case common.SRS_A:
 		respMsgLen = uint(resp.ResponseSizeA)
-	case SRS_B:
+	case common.SRS_B:
 		respMsgLen = uint(resp.ResponseSizeB)
-	case SRS_C:
+	case common.SRS_C:
 		respMsgLen = uint(resp.ResponseSizeC)
 	default:
-		return fmt.Errorf(ErrSrsIsNotSupported, resp.SRS)
+		return fmt.Errorf(common.ErrSrsIsNotSupported, resp.SRS)
 	}
 
 	if respMsgLen > c.responseMessageLengthLimit {
-		return fmt.Errorf(ErrMessageIsTooLong, c.responseMessageLengthLimit, respMsgLen)
+		return fmt.Errorf(common.ErrMessageIsTooLong, c.responseMessageLengthLimit, respMsgLen)
 	}
 
 	var data []byte
@@ -388,4 +391,24 @@ func (c *Connection) getResponseMethodAndData(resp *Response, useBinary bool) (e
 	}
 
 	return nil
+}
+
+func (c *Connection) NewMethodFromBytes(b []byte) (m method.Method, err error) {
+	if len(b) == 3 {
+		return c.NewMethodFromString(string(b))
+	}
+
+	return c.NewMethodFromString(string(b[0:3]))
+}
+
+func (c *Connection) NewMethodFromString(s string) (m method.Method, err error) {
+	methodStr := strings.TrimSuffix(s, mn.Spacer)
+
+	var ok bool
+	m, ok = (*c.methodValues)[methodStr]
+	if !ok {
+		return 0, fmt.Errorf(common.ErrUnknownMethodName, methodStr)
+	}
+
+	return m, nil
 }

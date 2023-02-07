@@ -8,6 +8,8 @@ import (
 
 	"github.com/vault-thirteen/Cache"
 	"github.com/vault-thirteen/SFRODB/common"
+	"github.com/vault-thirteen/SFRODB/common/connection"
+	"github.com/vault-thirteen/SFRODB/common/method"
 	"github.com/vault-thirteen/SFRODB/server/ff"
 	"github.com/vault-thirteen/SFRODB/server/settings"
 )
@@ -30,8 +32,8 @@ type Server struct {
 	cacheT *cache.Cache[string, string]
 	cacheB *cache.Cache[string, []byte]
 
-	methodNameBuffers map[common.Method][]byte
-	methodValues      map[string]common.Method
+	methodNameBuffers map[method.Method][]byte
+	methodValues      map[string]method.Method
 
 	filesT *ff.FilesFolder
 	filesB *ff.FilesFolder
@@ -83,7 +85,7 @@ func NewServer(stn *settings.Settings) (srv *Server, err error) {
 		return nil, err
 	}
 
-	srv.methodNameBuffers, srv.methodValues = common.InitMethods()
+	srv.methodNameBuffers, srv.methodValues = method.InitMethods()
 
 	return srv, nil
 }
@@ -170,7 +172,7 @@ func (srv *Server) Stop() (err error) {
 }
 
 func (srv *Server) handleMainConnection(conn net.Conn) {
-	c, err := common.NewConnection(
+	c, err := connection.NewConnection(
 		conn,
 		&srv.methodNameBuffers,
 		&srv.methodValues,
@@ -203,16 +205,16 @@ func (srv *Server) handleMainConnection(conn net.Conn) {
 		}
 
 		switch req.Method {
-		case common.MethodShowText,
-			common.MethodShowBinary:
+		case method.ShowText,
+			method.ShowBinary:
 			err = srv.showRecord(c, req)
 
-		case common.MethodSearchTextRecord,
-			common.MethodSearchBinaryRecord:
+		case method.SearchTextRecord,
+			method.SearchBinaryRecord:
 			err = srv.searchRecord(c, req)
 
-		case common.MethodSearchTextFile,
-			common.MethodSearchBinaryFile:
+		case method.SearchTextFile,
+			method.SearchBinaryFile:
 			err = srv.searchFile(c, req)
 
 		default:
@@ -235,7 +237,7 @@ func (srv *Server) handleMainConnection(conn net.Conn) {
 }
 
 func (srv *Server) handleAuxConnection(conn net.Conn) {
-	c, err := common.NewConnection(
+	c, err := connection.NewConnection(
 		conn,
 		&srv.methodNameBuffers,
 		&srv.methodValues,
@@ -268,12 +270,12 @@ func (srv *Server) handleAuxConnection(conn net.Conn) {
 		}
 
 		switch req.Method {
-		case common.MethodForgetTextRecord,
-			common.MethodForgetBinaryRecord:
+		case method.ForgetTextRecord,
+			method.ForgetBinaryRecord:
 			err = srv.forgetRecord(c, req)
 
-		case common.MethodResetTextCache,
-			common.MethodResetBinaryCache:
+		case method.ResetTextCache,
+			method.ResetBinaryCache:
 			err = srv.resetCache(c, req)
 
 		default:
@@ -298,7 +300,7 @@ func (srv *Server) handleAuxConnection(conn net.Conn) {
 // finalize is a method used by a Server to finalize the client's connection.
 // This method is used either when the client requested to stop the
 // communication or when an internal error happened on the server.
-func (srv *Server) finalize(c *common.Connection) (err error) {
+func (srv *Server) finalize(c *connection.Connection) (err error) {
 	err = srv.closingConnection(c)
 	if err != nil {
 		return err

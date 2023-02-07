@@ -7,6 +7,8 @@ import (
 
 	"github.com/vault-thirteen/SFRODB/client/settings"
 	"github.com/vault-thirteen/SFRODB/common"
+	"github.com/vault-thirteen/SFRODB/common/connection"
+	"github.com/vault-thirteen/SFRODB/common/method"
 )
 
 // Client is client.
@@ -19,11 +21,11 @@ type Client struct {
 	mainAddr *net.TCPAddr
 	auxAddr  *net.TCPAddr
 
-	methodNameBuffers map[common.Method][]byte
-	methodValues      map[string]common.Method
+	methodNameBuffers map[method.Method][]byte
+	methodValues      map[string]method.Method
 
-	mainConnection *common.Connection
-	auxConnection  *common.Connection
+	mainConnection *connection.Connection
+	auxConnection  *connection.Connection
 }
 
 // NewClient creates a client.
@@ -49,7 +51,7 @@ func NewClient(stn *settings.Settings) (cli *Client, err error) {
 		return nil, err
 	}
 
-	cli.methodNameBuffers, cli.methodValues = common.InitMethods()
+	cli.methodNameBuffers, cli.methodValues = method.InitMethods()
 
 	return cli, nil
 }
@@ -72,7 +74,7 @@ func (cli *Client) Start() (err error) {
 		return err
 	}
 
-	cli.mainConnection, err = common.NewConnection(
+	cli.mainConnection, err = connection.NewConnection(
 		mainConn,
 		&cli.methodNameBuffers,
 		&cli.methodValues,
@@ -89,7 +91,7 @@ func (cli *Client) Start() (err error) {
 		return err
 	}
 
-	cli.auxConnection, err = common.NewConnection(
+	cli.auxConnection, err = connection.NewConnection(
 		auxConn,
 		&cli.methodNameBuffers,
 		&cli.methodValues,

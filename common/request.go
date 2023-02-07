@@ -3,6 +3,9 @@ package common
 import (
 	"errors"
 	"fmt"
+
+	"github.com/vault-thirteen/SFRODB/common/method"
+	"github.com/vault-thirteen/SFRODB/common/method/name"
 )
 
 type Request struct {
@@ -16,37 +19,37 @@ type Request struct {
 	RequestSizeB uint16
 
 	// Request Method.
-	Method Method
+	Method method.Method
 
 	// UID of the Requested Item.
 	UID string
 }
 
 func (r *Request) IsCloseConnection() bool {
-	return r.Method == MethodCloseConnection
+	return r.Method == method.CloseConnection
 }
 
-func newSimpleRequest(method Method) (req *Request, err error) {
+func newSimpleRequest(method method.Method) (req *Request, err error) {
 	return &Request{
 		SRS:          SRS_A,
-		RequestSizeA: MethodNameLengthLimit,
+		RequestSizeA: mn.LengthLimit,
 		Method:       method,
 	}, nil
 }
 
 func NewRequest_CloseConnection() (req *Request, err error) {
-	return newSimpleRequest(MethodCloseConnection)
+	return newSimpleRequest(method.CloseConnection)
 }
 
 func NewRequest_ResetTextCache() (req *Request, err error) {
-	return newSimpleRequest(MethodResetTextCache)
+	return newSimpleRequest(method.ResetTextCache)
 }
 
 func NewRequest_ResetBinaryCache() (req *Request, err error) {
-	return newSimpleRequest(MethodResetBinaryCache)
+	return newSimpleRequest(method.ResetBinaryCache)
 }
 
-func newNormalRequest(method Method, uid string) (req *Request, err error) {
+func newNormalRequest(method method.Method, uid string) (req *Request, err error) {
 	if !IsUidValid(uid) {
 		return nil, fmt.Errorf(ErrUid)
 	}
@@ -63,9 +66,9 @@ func newNormalRequest(method Method, uid string) (req *Request, err error) {
 	uidLen := len(uid)
 	if uidLen <= 0 {
 		return nil, errors.New(ErrUid)
-	} else if uidLen <= RequestMessageLengthA-MethodNameLengthLimit {
+	} else if uidLen <= RequestMessageLengthA-mn.LengthLimit {
 		req.SRS = SRS_A
-	} else if uidLen <= RequestMessageLengthB-MethodNameLengthLimit {
+	} else if uidLen <= RequestMessageLengthB-mn.LengthLimit {
 		req.SRS = SRS_B
 	} else {
 		return nil, errors.New(ErrUidIsTooLong)
@@ -74,9 +77,9 @@ func newNormalRequest(method Method, uid string) (req *Request, err error) {
 	// RS.
 	switch req.SRS {
 	case SRS_A:
-		req.RequestSizeA = MethodNameLengthLimit + uint8(uidLen)
+		req.RequestSizeA = mn.LengthLimit + uint8(uidLen)
 	case SRS_B:
-		req.RequestSizeB = MethodNameLengthLimit + uint16(uidLen)
+		req.RequestSizeB = mn.LengthLimit + uint16(uidLen)
 	default:
 		return nil, fmt.Errorf(ErrSrsIsNotSupported, req.SRS)
 	}
@@ -85,33 +88,33 @@ func newNormalRequest(method Method, uid string) (req *Request, err error) {
 }
 
 func NewRequest_ShowText(uid string) (req *Request, err error) {
-	return newNormalRequest(MethodShowText, uid)
+	return newNormalRequest(method.ShowText, uid)
 }
 
 func NewRequest_ShowBinary(uid string) (req *Request, err error) {
-	return newNormalRequest(MethodShowBinary, uid)
+	return newNormalRequest(method.ShowBinary, uid)
 }
 
 func NewRequest_SearchTextRecord(uid string) (req *Request, err error) {
-	return newNormalRequest(MethodSearchTextRecord, uid)
+	return newNormalRequest(method.SearchTextRecord, uid)
 }
 
 func NewRequest_SearchBinaryRecord(uid string) (req *Request, err error) {
-	return newNormalRequest(MethodSearchBinaryRecord, uid)
+	return newNormalRequest(method.SearchBinaryRecord, uid)
 }
 
 func NewRequest_SearchTextFile(uid string) (req *Request, err error) {
-	return newNormalRequest(MethodSearchTextFile, uid)
+	return newNormalRequest(method.SearchTextFile, uid)
 }
 
 func NewRequest_SearchBinaryFile(uid string) (req *Request, err error) {
-	return newNormalRequest(MethodSearchBinaryFile, uid)
+	return newNormalRequest(method.SearchBinaryFile, uid)
 }
 
 func NewRequest_ForgetTextRecord(uid string) (req *Request, err error) {
-	return newNormalRequest(MethodForgetTextRecord, uid)
+	return newNormalRequest(method.ForgetTextRecord, uid)
 }
 
 func NewRequest_ForgetBinaryRecord(uid string) (req *Request, err error) {
-	return newNormalRequest(MethodForgetBinaryRecord, uid)
+	return newNormalRequest(method.ForgetBinaryRecord, uid)
 }

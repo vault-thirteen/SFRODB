@@ -2,16 +2,19 @@ package server
 
 import (
 	"fmt"
-	"github.com/vault-thirteen/SFRODB/common"
 	"log"
 	"path/filepath"
+
+	"github.com/vault-thirteen/SFRODB/common"
+	"github.com/vault-thirteen/SFRODB/common/connection"
+	"github.com/vault-thirteen/SFRODB/common/method"
 )
 
 // showRecord shows a record.
 // Returns a detailed error.
-func (srv *Server) showRecord(c *common.Connection, r *common.Request) (err error) {
+func (srv *Server) showRecord(c *connection.Connection, r *common.Request) (err error) {
 	switch r.Method {
-	case common.MethodShowText:
+	case method.ShowText:
 		var text string
 		text, err = srv.getText(r.UID)
 		if err != nil {
@@ -19,7 +22,7 @@ func (srv *Server) showRecord(c *common.Connection, r *common.Request) (err erro
 		}
 		return srv.showingText(c, text)
 
-	case common.MethodShowBinary:
+	case method.ShowBinary:
 		var data []byte
 		data, err = srv.getBinary(r.UID)
 		if err != nil {
@@ -34,7 +37,7 @@ func (srv *Server) showRecord(c *common.Connection, r *common.Request) (err erro
 
 // searchRecord checks existence of a record.
 // Returns a detailed error.
-func (srv *Server) searchRecord(c *common.Connection, r *common.Request) (err error) {
+func (srv *Server) searchRecord(c *connection.Connection, r *common.Request) (err error) {
 	// Check the UID.
 	if !common.IsUidValid(r.UID) {
 		return common.NewClientError(common.ErrUid, 0)
@@ -43,7 +46,7 @@ func (srv *Server) searchRecord(c *common.Connection, r *common.Request) (err er
 	// Search for the record in cache.
 	var recExists bool
 	switch r.Method {
-	case common.MethodSearchTextRecord:
+	case method.SearchTextRecord:
 		recExists = srv.cacheT.RecordExists(r.UID)
 		if recExists {
 			return srv.textRecordExists(c)
@@ -51,7 +54,7 @@ func (srv *Server) searchRecord(c *common.Connection, r *common.Request) (err er
 			return srv.textRecordDoesNotExist(c)
 		}
 
-	case common.MethodSearchBinaryRecord:
+	case method.SearchBinaryRecord:
 		recExists = srv.cacheB.RecordExists(r.UID)
 		if recExists {
 			return srv.binaryRecordExists(c)
@@ -66,7 +69,7 @@ func (srv *Server) searchRecord(c *common.Connection, r *common.Request) (err er
 
 // searchFile checks existence of a file.
 // Returns a detailed error.
-func (srv *Server) searchFile(c *common.Connection, r *common.Request) (err error) {
+func (srv *Server) searchFile(c *connection.Connection, r *common.Request) (err error) {
 	// Check the UID.
 	if !common.IsUidValid(r.UID) {
 		return common.NewClientError(common.ErrUid, 0)
@@ -76,7 +79,7 @@ func (srv *Server) searchFile(c *common.Connection, r *common.Request) (err erro
 	var fileExists bool
 	var relPath string
 	switch r.Method {
-	case common.MethodSearchTextFile:
+	case method.SearchTextFile:
 		relPath = filepath.Join(r.UID+srv.settings.TextData.FileExtension, "")
 		fileExists, err = srv.filesT.FileExists(relPath)
 		if err != nil {
@@ -88,7 +91,7 @@ func (srv *Server) searchFile(c *common.Connection, r *common.Request) (err erro
 			return srv.textFileDoesNotExist(c)
 		}
 
-	case common.MethodSearchBinaryFile:
+	case method.SearchBinaryFile:
 		relPath = filepath.Join(r.UID+srv.settings.BinaryData.FileExtension, "")
 		fileExists, err = srv.filesB.FileExists(relPath)
 		if err != nil {
@@ -107,7 +110,7 @@ func (srv *Server) searchFile(c *common.Connection, r *common.Request) (err erro
 
 // forgetRecord removes a record from cache.
 // Returns a detailed error.
-func (srv *Server) forgetRecord(c *common.Connection, r *common.Request) (err error) {
+func (srv *Server) forgetRecord(c *connection.Connection, r *common.Request) (err error) {
 	// Check the UID.
 	if !common.IsUidValid(r.UID) {
 		return common.NewClientError(common.ErrUid, 0)
@@ -116,9 +119,9 @@ func (srv *Server) forgetRecord(c *common.Connection, r *common.Request) (err er
 	// Remove the record from the cache.
 	var recExists bool
 	switch r.Method {
-	case common.MethodForgetTextRecord:
+	case method.ForgetTextRecord:
 		recExists, err = srv.cacheT.RemoveRecord(r.UID)
-	case common.MethodForgetBinaryRecord:
+	case method.ForgetBinaryRecord:
 		recExists, err = srv.cacheB.RemoveRecord(r.UID)
 	default:
 		return common.NewServerError(fmt.Sprintf(common.ErrUnsupportedMethodValue, r.Method), 0)
@@ -135,14 +138,14 @@ func (srv *Server) forgetRecord(c *common.Connection, r *common.Request) (err er
 
 // resetCache removes all records from cache.
 // Returns a detailed error.
-func (srv *Server) resetCache(c *common.Connection, r *common.Request) (err error) {
+func (srv *Server) resetCache(c *connection.Connection, r *common.Request) (err error) {
 	log.Println(MsgResettingCache)
 
 	// Clear the cache.
 	switch r.Method {
-	case common.MethodResetTextCache:
+	case method.ResetTextCache:
 		err = srv.cacheT.Clear()
-	case common.MethodResetBinaryCache:
+	case method.ResetBinaryCache:
 		err = srv.cacheB.Clear()
 	default:
 		return common.NewServerError(fmt.Sprintf(common.ErrUnsupportedMethodValue, r.Method), 0)

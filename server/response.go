@@ -1,10 +1,13 @@
 package server
 
-import "github.com/vault-thirteen/SFRODB/common"
+import (
+	"github.com/vault-thirteen/SFRODB/common"
+	"github.com/vault-thirteen/SFRODB/common/connection"
+)
 
 // clientError tells the client about its (client's) error.
 // Returns a detailed error.
-func (srv *Server) clientError(c *common.Connection) (err error) {
+func (srv *Server) clientError(c *connection.Connection) (err error) {
 	var rm *common.Response
 	rm, err = common.NewResponse_ClientError()
 	if err != nil {
@@ -21,7 +24,7 @@ func (srv *Server) clientError(c *common.Connection) (err error) {
 
 // ok tells the client about its (client's) success.
 // Returns a detailed error.
-func (srv *Server) ok(c *common.Connection) (err error) {
+func (srv *Server) ok(c *connection.Connection) (err error) {
 	var rm *common.Response
 	rm, err = common.NewResponse_OK()
 	if err != nil {
@@ -39,7 +42,7 @@ func (srv *Server) ok(c *common.Connection) (err error) {
 // closingConnection tells the client that server is going to close the
 // connection.
 // Returns a detailed error.
-func (srv *Server) closingConnection(c *common.Connection) (err error) {
+func (srv *Server) closingConnection(c *connection.Connection) (err error) {
 	var rm *common.Response
 	rm, err = common.NewResponse_ClosingConnection()
 	if err != nil {
@@ -56,7 +59,7 @@ func (srv *Server) closingConnection(c *common.Connection) (err error) {
 
 // showingText tells the client that server is showing text.
 // Returns a detailed error.
-func (srv *Server) showingText(c *common.Connection, text string) (err error) {
+func (srv *Server) showingText(c *connection.Connection, text string) (err error) {
 	var rm *common.Response
 	rm, err = common.NewResponse_ShowingText(text)
 	if err != nil {
@@ -73,7 +76,7 @@ func (srv *Server) showingText(c *common.Connection, text string) (err error) {
 
 // showingBinary tells the client that server is showing binary data.
 // Returns a detailed error.
-func (srv *Server) showingBinary(c *common.Connection, data []byte) (err error) {
+func (srv *Server) showingBinary(c *connection.Connection, data []byte) (err error) {
 	var rm *common.Response
 	rm, err = common.NewResponse_ShowingBinary(data)
 	if err != nil {
@@ -90,7 +93,7 @@ func (srv *Server) showingBinary(c *common.Connection, data []byte) (err error) 
 
 // textRecordExists tells the client that a text record exists.
 // Returns a detailed error.
-func (srv *Server) textRecordExists(c *common.Connection) (err error) {
+func (srv *Server) textRecordExists(c *connection.Connection) (err error) {
 	var rm *common.Response
 	rm, err = common.NewResponse_TextRecordExists()
 	if err != nil {
@@ -107,7 +110,7 @@ func (srv *Server) textRecordExists(c *common.Connection) (err error) {
 
 // binaryRecordExists tells the client that a binary record exists.
 // Returns a detailed error.
-func (srv *Server) binaryRecordExists(c *common.Connection) (err error) {
+func (srv *Server) binaryRecordExists(c *connection.Connection) (err error) {
 	var rm *common.Response
 	rm, err = common.NewResponse_BinaryRecordExists()
 	if err != nil {
@@ -124,7 +127,7 @@ func (srv *Server) binaryRecordExists(c *common.Connection) (err error) {
 
 // textRecordDoesNotExist tells the client that a text record does not exist.
 // Returns a detailed error.
-func (srv *Server) textRecordDoesNotExist(c *common.Connection) (err error) {
+func (srv *Server) textRecordDoesNotExist(c *connection.Connection) (err error) {
 	var rm *common.Response
 	rm, err = common.NewResponse_TextRecordDoesNotExist()
 	if err != nil {
@@ -141,7 +144,7 @@ func (srv *Server) textRecordDoesNotExist(c *common.Connection) (err error) {
 
 // binaryRecordDoesNotExist tells the client that a binary record does not exist.
 // Returns a detailed error.
-func (srv *Server) binaryRecordDoesNotExist(c *common.Connection) (err error) {
+func (srv *Server) binaryRecordDoesNotExist(c *connection.Connection) (err error) {
 	var rm *common.Response
 	rm, err = common.NewResponse_BinaryRecordDoesNotExist()
 	if err != nil {
@@ -158,7 +161,7 @@ func (srv *Server) binaryRecordDoesNotExist(c *common.Connection) (err error) {
 
 // textFileExists tells the client that a text file exists.
 // Returns a detailed error.
-func (srv *Server) textFileExists(c *common.Connection) (err error) {
+func (srv *Server) textFileExists(c *connection.Connection) (err error) {
 	var rm *common.Response
 	rm, err = common.NewResponse_TextFileExists()
 	if err != nil {
@@ -175,7 +178,7 @@ func (srv *Server) textFileExists(c *common.Connection) (err error) {
 
 // binaryFileExists tells the client that a binary file exists.
 // Returns a detailed error.
-func (srv *Server) binaryFileExists(c *common.Connection) (err error) {
+func (srv *Server) binaryFileExists(c *connection.Connection) (err error) {
 	var rm *common.Response
 	rm, err = common.NewResponse_BinaryFileExists()
 	if err != nil {
@@ -192,7 +195,7 @@ func (srv *Server) binaryFileExists(c *common.Connection) (err error) {
 
 // textFileDoesNotExist tells the client that a text file does not exist.
 // Returns a detailed error.
-func (srv *Server) textFileDoesNotExist(c *common.Connection) (err error) {
+func (srv *Server) textFileDoesNotExist(c *connection.Connection) (err error) {
 	var rm *common.Response
 	rm, err = common.NewResponse_TextFileDoesNotExist()
 	if err != nil {
@@ -209,7 +212,7 @@ func (srv *Server) textFileDoesNotExist(c *common.Connection) (err error) {
 
 // binaryFileDoesNotExist tells the client that a binary file does not exist.
 // Returns a detailed error.
-func (srv *Server) binaryFileDoesNotExist(c *common.Connection) (err error) {
+func (srv *Server) binaryFileDoesNotExist(c *connection.Connection) (err error) {
 	var rm *common.Response
 	rm, err = common.NewResponse_BinaryFileDoesNotExist()
 	if err != nil {

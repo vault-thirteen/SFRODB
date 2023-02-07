@@ -1,5 +1,7 @@
 package common
 
+import "github.com/vault-thirteen/SFRODB/common/method"
+
 const (
 	ErrFileIsNotSet                = "file is not set"
 	ErrDataFolderIsNotSet          = "data folder is not set"
@@ -43,10 +45,10 @@ type Error struct {
 	// users use the "type" word in their programs. Shame on you.
 	type_  ErrorType
 	text   string
-	method Method
+	method method.Method
 }
 
-func newError(et ErrorType, msg string, method Method) (err error) {
+func newError(et ErrorType, msg string, method method.Method) (err error) {
 	return &Error{
 		type_:  et,
 		text:   msg,
@@ -54,11 +56,11 @@ func newError(et ErrorType, msg string, method Method) (err error) {
 	}
 }
 
-func NewServerError(msg string, method Method) (err error) {
+func NewServerError(msg string, method method.Method) (err error) {
 	return newError(ErrorTypeServer, msg, method)
 }
 
-func NewClientError(msg string, method Method) (err error) {
+func NewClientError(msg string, method method.Method) (err error) {
 	return newError(ErrorTypeClient, msg, method)
 }
 
@@ -66,7 +68,7 @@ func (e *Error) Error() string {
 	return e.text
 }
 
-func (e *Error) GetMethod() Method {
+func (e *Error) GetMethod() method.Method {
 	return e.method
 }
 
