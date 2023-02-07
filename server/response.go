@@ -1,16 +1,16 @@
 package server
 
 import (
-	"github.com/vault-thirteen/SFRODB/common"
 	"github.com/vault-thirteen/SFRODB/common/connection"
 	ce "github.com/vault-thirteen/SFRODB/common/error"
+	"github.com/vault-thirteen/SFRODB/common/response"
 )
 
 // clientError tells the client about its (client's) error.
 // Returns a detailed error.
 func (srv *Server) clientError(c *connection.Connection) (err error) {
-	var rm *common.Response
-	rm, err = common.NewResponse_ClientError()
+	var rm *response.Response
+	rm, err = response.NewResponse_ClientError()
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0)
 	}
@@ -26,8 +26,8 @@ func (srv *Server) clientError(c *connection.Connection) (err error) {
 // ok tells the client about its (client's) success.
 // Returns a detailed error.
 func (srv *Server) ok(c *connection.Connection) (err error) {
-	var rm *common.Response
-	rm, err = common.NewResponse_OK()
+	var rm *response.Response
+	rm, err = response.NewResponse_OK()
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0)
 	}
@@ -44,8 +44,8 @@ func (srv *Server) ok(c *connection.Connection) (err error) {
 // connection.
 // Returns a detailed error.
 func (srv *Server) closingConnection(c *connection.Connection) (err error) {
-	var rm *common.Response
-	rm, err = common.NewResponse_ClosingConnection()
+	var rm *response.Response
+	rm, err = response.NewResponse_ClosingConnection()
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0)
 	}
@@ -61,8 +61,8 @@ func (srv *Server) closingConnection(c *connection.Connection) (err error) {
 // showingText tells the client that server is showing text.
 // Returns a detailed error.
 func (srv *Server) showingText(c *connection.Connection, text string) (err error) {
-	var rm *common.Response
-	rm, err = common.NewResponse_ShowingText(text)
+	var rm *response.Response
+	rm, err = response.NewResponse_ShowingText(text)
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0)
 	}
@@ -78,8 +78,8 @@ func (srv *Server) showingText(c *connection.Connection, text string) (err error
 // showingBinary tells the client that server is showing binary data.
 // Returns a detailed error.
 func (srv *Server) showingBinary(c *connection.Connection, data []byte) (err error) {
-	var rm *common.Response
-	rm, err = common.NewResponse_ShowingBinary(data)
+	var rm *response.Response
+	rm, err = response.NewResponse_ShowingBinary(data)
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0)
 	}
@@ -95,8 +95,8 @@ func (srv *Server) showingBinary(c *connection.Connection, data []byte) (err err
 // textRecordExists tells the client that a text record exists.
 // Returns a detailed error.
 func (srv *Server) textRecordExists(c *connection.Connection) (err error) {
-	var rm *common.Response
-	rm, err = common.NewResponse_TextRecordExists()
+	var rm *response.Response
+	rm, err = response.NewResponse_TextRecordExists()
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0)
 	}
@@ -112,8 +112,8 @@ func (srv *Server) textRecordExists(c *connection.Connection) (err error) {
 // binaryRecordExists tells the client that a binary record exists.
 // Returns a detailed error.
 func (srv *Server) binaryRecordExists(c *connection.Connection) (err error) {
-	var rm *common.Response
-	rm, err = common.NewResponse_BinaryRecordExists()
+	var rm *response.Response
+	rm, err = response.NewResponse_BinaryRecordExists()
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0)
 	}
@@ -129,8 +129,8 @@ func (srv *Server) binaryRecordExists(c *connection.Connection) (err error) {
 // textRecordDoesNotExist tells the client that a text record does not exist.
 // Returns a detailed error.
 func (srv *Server) textRecordDoesNotExist(c *connection.Connection) (err error) {
-	var rm *common.Response
-	rm, err = common.NewResponse_TextRecordDoesNotExist()
+	var rm *response.Response
+	rm, err = response.NewResponse_TextRecordDoesNotExist()
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0)
 	}
@@ -146,8 +146,8 @@ func (srv *Server) textRecordDoesNotExist(c *connection.Connection) (err error) 
 // binaryRecordDoesNotExist tells the client that a binary record does not exist.
 // Returns a detailed error.
 func (srv *Server) binaryRecordDoesNotExist(c *connection.Connection) (err error) {
-	var rm *common.Response
-	rm, err = common.NewResponse_BinaryRecordDoesNotExist()
+	var rm *response.Response
+	rm, err = response.NewResponse_BinaryRecordDoesNotExist()
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0)
 	}
@@ -163,8 +163,8 @@ func (srv *Server) binaryRecordDoesNotExist(c *connection.Connection) (err error
 // textFileExists tells the client that a text file exists.
 // Returns a detailed error.
 func (srv *Server) textFileExists(c *connection.Connection) (err error) {
-	var rm *common.Response
-	rm, err = common.NewResponse_TextFileExists()
+	var rm *response.Response
+	rm, err = response.NewResponse_TextFileExists()
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0)
 	}
@@ -180,8 +180,8 @@ func (srv *Server) textFileExists(c *connection.Connection) (err error) {
 // binaryFileExists tells the client that a binary file exists.
 // Returns a detailed error.
 func (srv *Server) binaryFileExists(c *connection.Connection) (err error) {
-	var rm *common.Response
-	rm, err = common.NewResponse_BinaryFileExists()
+	var rm *response.Response
+	rm, err = response.NewResponse_BinaryFileExists()
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0)
 	}
@@ -197,8 +197,8 @@ func (srv *Server) binaryFileExists(c *connection.Connection) (err error) {
 // textFileDoesNotExist tells the client that a text file does not exist.
 // Returns a detailed error.
 func (srv *Server) textFileDoesNotExist(c *connection.Connection) (err error) {
-	var rm *common.Response
-	rm, err = common.NewResponse_TextFileDoesNotExist()
+	var rm *response.Response
+	rm, err = response.NewResponse_TextFileDoesNotExist()
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0)
 	}
@@ -214,8 +214,8 @@ func (srv *Server) textFileDoesNotExist(c *connection.Connection) (err error) {
 // binaryFileDoesNotExist tells the client that a binary file does not exist.
 // Returns a detailed error.
 func (srv *Server) binaryFileDoesNotExist(c *connection.Connection) (err error) {
-	var rm *common.Response
-	rm, err = common.NewResponse_BinaryFileDoesNotExist()
+	var rm *response.Response
+	rm, err = response.NewResponse_BinaryFileDoesNotExist()
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0)
 	}

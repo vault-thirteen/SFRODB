@@ -7,13 +7,13 @@ import (
 	"net"
 	"strings"
 
-	"github.com/vault-thirteen/SFRODB/common"
 	ce "github.com/vault-thirteen/SFRODB/common/error"
 	"github.com/vault-thirteen/SFRODB/common/method"
 	mn "github.com/vault-thirteen/SFRODB/common/method/name"
 	"github.com/vault-thirteen/SFRODB/common/protocol"
 	"github.com/vault-thirteen/SFRODB/common/reader"
 	"github.com/vault-thirteen/SFRODB/common/request"
+	"github.com/vault-thirteen/SFRODB/common/response"
 )
 
 type Connection struct {
@@ -156,7 +156,7 @@ func (c *Connection) getRequestMethodAndUID(r *request.Request) (err error) {
 
 // SendResponseMessage is a method used by a Server to send a response to the
 // client.
-func (c *Connection) SendResponseMessage(rm *common.Response, useBinary bool) (err error) {
+func (c *Connection) SendResponseMessage(rm *response.Response, useBinary bool) (err error) {
 	err = c.sendSRS(rm.SRS)
 	if err != nil {
 		return err
@@ -187,7 +187,7 @@ func (c *Connection) sendSRS(srs byte) (err error) {
 	return nil
 }
 
-func (c *Connection) sendResponseSize(rm *common.Response) (err error) {
+func (c *Connection) sendResponseSize(rm *response.Response) (err error) {
 	var buf []byte
 	switch rm.SRS {
 	case proto.SRS_A:
@@ -211,7 +211,7 @@ func (c *Connection) sendResponseSize(rm *common.Response) (err error) {
 	return nil
 }
 
-func (c *Connection) sendResponseMethodAndData(rm *common.Response, useBinary bool) (err error) {
+func (c *Connection) sendResponseMethodAndData(rm *response.Response, useBinary bool) (err error) {
 	_, err = c.netConn.Write((*c.methodNameBuffers)[rm.Method])
 	if err != nil {
 		return err
@@ -289,8 +289,8 @@ func (c *Connection) sendRequestMethodAndUid(rm *request.Request) (err error) {
 
 // GetResponseMessage is a method used by a Client to read a response from the
 // server.
-func (c *Connection) GetResponseMessage(useBinary bool) (resp *common.Response, err error) {
-	resp = &common.Response{}
+func (c *Connection) GetResponseMessage(useBinary bool) (resp *response.Response, err error) {
+	resp = &response.Response{}
 
 	resp.SRS, err = c.getSRS()
 	if err != nil {
@@ -310,7 +310,7 @@ func (c *Connection) GetResponseMessage(useBinary bool) (resp *common.Response, 
 	return resp, nil
 }
 
-func (c *Connection) getResponseSize(resp *common.Response) (err error) {
+func (c *Connection) getResponseSize(resp *response.Response) (err error) {
 	switch resp.SRS {
 	case proto.SRS_A:
 		return c.getResponseSizeA(resp)
@@ -323,7 +323,7 @@ func (c *Connection) getResponseSize(resp *common.Response) (err error) {
 	return fmt.Errorf(ce.ErrSrsIsNotSupported, resp.SRS)
 }
 
-func (c *Connection) getResponseSizeA(resp *common.Response) (err error) {
+func (c *Connection) getResponseSizeA(resp *response.Response) (err error) {
 	var data []byte
 	data, err = reader.ReadExactSize(c.netConn, proto.RS_LengthA)
 	if err != nil {
@@ -335,7 +335,7 @@ func (c *Connection) getResponseSizeA(resp *common.Response) (err error) {
 	return nil
 }
 
-func (c *Connection) getResponseSizeB(resp *common.Response) (err error) {
+func (c *Connection) getResponseSizeB(resp *response.Response) (err error) {
 	var data []byte
 	data, err = reader.ReadExactSize(c.netConn, proto.RS_LengthB)
 	if err != nil {
@@ -347,7 +347,7 @@ func (c *Connection) getResponseSizeB(resp *common.Response) (err error) {
 	return nil
 }
 
-func (c *Connection) getResponseSizeC(resp *common.Response) (err error) {
+func (c *Connection) getResponseSizeC(resp *response.Response) (err error) {
 	var data []byte
 	data, err = reader.ReadExactSize(c.netConn, proto.RS_LengthC)
 	if err != nil {
@@ -359,7 +359,7 @@ func (c *Connection) getResponseSizeC(resp *common.Response) (err error) {
 	return nil
 }
 
-func (c *Connection) getResponseMethodAndData(resp *common.Response, useBinary bool) (err error) {
+func (c *Connection) getResponseMethodAndData(resp *response.Response, useBinary bool) (err error) {
 	var respMsgLen uint
 	switch resp.SRS {
 	case proto.SRS_A:

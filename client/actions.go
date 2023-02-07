@@ -1,9 +1,9 @@
 package client
 
 import (
-	"github.com/vault-thirteen/SFRODB/common"
 	ce "github.com/vault-thirteen/SFRODB/common/error"
 	"github.com/vault-thirteen/SFRODB/common/method"
+	"github.com/vault-thirteen/SFRODB/common/response"
 )
 
 // CloseConnection_Main tells the server to close the main connection.
@@ -36,7 +36,7 @@ func (cli *Client) closeConnection_any(useMainConnection bool, normalExit bool, 
 		return nil
 	}
 
-	var resp *common.Response
+	var resp *response.Response
 	if useMainConnection {
 		resp, err = cli.mainConnection.GetResponseMessage(useBinary)
 	} else {
@@ -61,7 +61,7 @@ func (cli *Client) ShowText(uid string) (text string, err error) {
 		return "", err
 	}
 
-	var resp *common.Response
+	var resp *response.Response
 	resp, err = cli.mainConnection.GetResponseMessage(false)
 	if err != nil {
 		return "", ce.NewServerError(err.Error(), 0)
@@ -85,7 +85,7 @@ func (cli *Client) ShowBinary(uid string) (data []byte, err error) {
 		return nil, err
 	}
 
-	var resp *common.Response
+	var resp *response.Response
 	resp, err = cli.mainConnection.GetResponseMessage(true)
 	if err != nil {
 		return nil, ce.NewServerError(err.Error(), 0)
@@ -109,7 +109,7 @@ func (cli *Client) SearchTextRecord(uid string) (recExists bool, err error) {
 		return false, err
 	}
 
-	var resp *common.Response
+	var resp *response.Response
 	resp, err = cli.mainConnection.GetResponseMessage(false)
 	if err != nil {
 		return false, ce.NewServerError(err.Error(), 0)
@@ -137,7 +137,7 @@ func (cli *Client) SearchBinaryRecord(uid string) (recExists bool, err error) {
 		return false, err
 	}
 
-	var resp *common.Response
+	var resp *response.Response
 	resp, err = cli.mainConnection.GetResponseMessage(true)
 	if err != nil {
 		return false, ce.NewServerError(err.Error(), 0)
@@ -165,7 +165,7 @@ func (cli *Client) SearchTextFile(uid string) (fileExists bool, err error) {
 		return false, err
 	}
 
-	var resp *common.Response
+	var resp *response.Response
 	resp, err = cli.mainConnection.GetResponseMessage(false)
 	if err != nil {
 		return false, ce.NewServerError(err.Error(), 0)
@@ -193,7 +193,7 @@ func (cli *Client) SearchBinaryFile(uid string) (fileExists bool, err error) {
 		return false, err
 	}
 
-	var resp *common.Response
+	var resp *response.Response
 	resp, err = cli.mainConnection.GetResponseMessage(true)
 	if err != nil {
 		return false, ce.NewServerError(err.Error(), 0)
@@ -221,7 +221,7 @@ func (cli *Client) ForgetTextRecord(uid string) (err error) {
 		return err
 	}
 
-	var resp *common.Response
+	var resp *response.Response
 	resp, err = cli.auxConnection.GetResponseMessage(false)
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0)
@@ -249,7 +249,7 @@ func (cli *Client) ForgetBinaryRecord(uid string) (err error) {
 		return err
 	}
 
-	var resp *common.Response
+	var resp *response.Response
 	resp, err = cli.auxConnection.GetResponseMessage(true)
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0)
@@ -277,7 +277,7 @@ func (cli *Client) ResetTextCache() (err error) {
 		return err
 	}
 
-	var resp *common.Response
+	var resp *response.Response
 	resp, err = cli.auxConnection.GetResponseMessage(false)
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0)
@@ -305,7 +305,7 @@ func (cli *Client) ResetBinaryCache() (err error) {
 		return err
 	}
 
-	var resp *common.Response
+	var resp *response.Response
 	resp, err = cli.auxConnection.GetResponseMessage(true)
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0)
