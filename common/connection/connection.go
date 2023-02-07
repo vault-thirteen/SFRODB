@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"time"
 
 	ce "github.com/vault-thirteen/SFRODB/common/error"
 	"github.com/vault-thirteen/SFRODB/common/method"
@@ -16,14 +17,14 @@ import (
 )
 
 type Connection struct {
-	netConn                    net.Conn
+	netConn                    *net.TCPConn
 	methodNameBuffers          *map[method.Method][]byte
 	methodValues               *map[string]method.Method
 	responseMessageLengthLimit uint
 }
 
 func NewConnection(
-	netConn net.Conn,
+	netConn *net.TCPConn,
 	methodNameBuffers *map[method.Method][]byte,
 	methodValues *map[string]method.Method,
 
@@ -320,4 +321,18 @@ func (c *Connection) NewMethodFromString(s string) (m method.Method, err error) 
 	}
 
 	return m, nil
+}
+
+func EnableKeepAlives(conn *net.TCPConn) (err error) {
+	err = conn.SetKeepAlivePeriod(time.Second * proto.TcpKeepAlivePeriodSec)
+	if err != nil {
+		return err
+	}
+
+	err = conn.SetKeepAlive(proto.TcpKeepAliveIsEnabled)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -9,6 +9,7 @@ import (
 	ce "github.com/vault-thirteen/SFRODB/common/error"
 	"github.com/vault-thirteen/SFRODB/common/method"
 	"github.com/vault-thirteen/SFRODB/common/protocol"
+	"github.com/vault-thirteen/errorz"
 )
 
 // Client is client.
@@ -68,10 +69,33 @@ func (cli *Client) GetAuxDsn() (dsn string) {
 
 // Start starts the client.
 func (cli *Client) Start() (cerr *ce.CommonError) {
-	var mainConn net.Conn
+	cerr = cli.startMainConnection()
+	if cerr != nil {
+		return cerr
+	}
+
+	cerr = cli.startAuxConnection()
+	if cerr != nil {
+		return cerr
+	}
+
+	return nil
+}
+
+func (cli *Client) startMainConnection() (cerr *ce.CommonError) {
+	var mainConn *net.TCPConn
 	var err error
 	mainConn, err = net.DialTCP(proto.LowLevelProtocol, nil, cli.mainAddr)
 	if err != nil {
+		return ce.NewClientError(err.Error(), 0)
+	}
+
+	err = connection.EnableKeepAlives(mainConn)
+	if err != nil {
+		closeErr := mainConn.Close()
+		if closeErr != nil {
+			err = errorz.Combine(err, closeErr)
+		}
 		return ce.NewClientError(err.Error(), 0)
 	}
 
@@ -82,9 +106,23 @@ func (cli *Client) Start() (cerr *ce.CommonError) {
 		cli.settings.ResponseMessageLengthLimit,
 	)
 
-	var auxConn net.Conn
+	return nil
+}
+
+func (cli *Client) startAuxConnection() (cerr *ce.CommonError) {
+	var auxConn *net.TCPConn
+	var err error
 	auxConn, err = net.DialTCP(proto.LowLevelProtocol, nil, cli.auxAddr)
 	if err != nil {
+		return ce.NewClientError(err.Error(), 0)
+	}
+
+	err = connection.EnableKeepAlives(auxConn)
+	if err != nil {
+		closeErr := auxConn.Close()
+		if closeErr != nil {
+			err = errorz.Combine(err, closeErr)
+		}
 		return ce.NewClientError(err.Error(), 0)
 	}
 

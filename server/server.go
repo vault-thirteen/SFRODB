@@ -28,8 +28,11 @@ type Server struct {
 	mainDsn string
 	auxDsn  string
 
-	mainListener net.Listener
-	auxListener  net.Listener
+	mainListener     *net.TCPListener
+	mainListenerAddr *net.TCPAddr
+
+	auxListener     *net.TCPListener
+	auxListenerAddr *net.TCPAddr
 
 	cacheT *cache.Cache[string, string]
 	cacheB *cache.Cache[string, []byte]
@@ -54,6 +57,16 @@ func NewServer(stn *settings.Settings) (srv *Server, err error) {
 		settings: stn,
 		mainDsn:  fmt.Sprintf("%s:%d", stn.ServerHost, stn.MainPort),
 		auxDsn:   fmt.Sprintf("%s:%d", stn.ServerHost, stn.AuxPort),
+	}
+
+	srv.mainListenerAddr, err = net.ResolveTCPAddr(proto.LowLevelProtocol, srv.mainDsn)
+	if err != nil {
+		return nil, err
+	}
+
+	srv.auxListenerAddr, err = net.ResolveTCPAddr(proto.LowLevelProtocol, srv.auxDsn)
+	if err != nil {
+		return nil, err
 	}
 
 	srv.isRunning = new(atomic.Bool)
@@ -105,12 +118,12 @@ func (srv *Server) GetAuxDsn() (dsn string) {
 // Start starts the server.
 func (srv *Server) Start() (cerr *ce.CommonError) {
 	var err error
-	srv.mainListener, err = net.Listen(proto.LowLevelProtocol, srv.mainDsn)
+	srv.mainListener, err = net.ListenTCP(proto.LowLevelProtocol, srv.mainListenerAddr)
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0)
 	}
 
-	srv.auxListener, err = net.Listen(proto.LowLevelProtocol, srv.auxDsn)
+	srv.auxListener, err = net.ListenTCP(proto.LowLevelProtocol, srv.auxListenerAddr)
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0)
 	}
@@ -128,12 +141,23 @@ func (srv *Server) runMainLoop() {
 			break
 		}
 
-		conn, err := srv.mainListener.Accept()
+		conn, err := srv.mainListener.AcceptTCP()
 		if err != nil {
 			log.Println(ErrConnectionAccepting, err.Error())
-		} else {
-			go srv.handleMainConnection(conn)
+			continue
 		}
+
+		err = connection.EnableKeepAlives(conn)
+		if err != nil {
+			log.Println(err.Error())
+			closeErr := conn.Close()
+			if closeErr != nil {
+				log.Println(err.Error())
+			}
+			continue
+		}
+
+		go srv.handleMainConnection(conn)
 	}
 
 	log.Println("Main loop has stopped.")
@@ -145,12 +169,23 @@ func (srv *Server) runAuxLoop() {
 			break
 		}
 
-		conn, err := srv.auxListener.Accept()
+		conn, err := srv.auxListener.AcceptTCP()
 		if err != nil {
 			log.Println(ErrConnectionAccepting, err.Error())
-		} else {
-			go srv.handleAuxConnection(conn)
+			continue
 		}
+
+		err = connection.EnableKeepAlives(conn)
+		if err != nil {
+			log.Println(err.Error())
+			closeErr := conn.Close()
+			if closeErr != nil {
+				log.Println(err.Error())
+			}
+			continue
+		}
+
+		go srv.handleAuxConnection(conn)
 	}
 
 	log.Println("Auxiliary loop has stopped.")
@@ -175,7 +210,7 @@ func (srv *Server) Stop() (cerr *ce.CommonError) {
 	return nil
 }
 
-func (srv *Server) handleMainConnection(conn net.Conn) {
+func (srv *Server) handleMainConnection(conn *net.TCPConn) {
 	c := connection.NewConnection(
 		conn,
 		&srv.methodNameBuffers,
@@ -235,7 +270,7 @@ func (srv *Server) handleMainConnection(conn net.Conn) {
 	}
 }
 
-func (srv *Server) handleAuxConnection(conn net.Conn) {
+func (srv *Server) handleAuxConnection(conn *net.TCPConn) {
 	c := connection.NewConnection(
 		conn,
 		&srv.methodNameBuffers,

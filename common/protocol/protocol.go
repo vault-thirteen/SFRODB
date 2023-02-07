@@ -19,4 +19,7 @@ const (
 	ResponseMessageLengthA   = 255
 	ResponseMessageLengthB   = 65535
 	ResponseMessageLengthC   = 4294967295
+
+	TcpKeepAliveIsEnabled = true
+	TcpKeepAlivePeriodSec = 5
 )
