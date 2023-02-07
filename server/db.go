@@ -9,13 +9,14 @@ import (
 
 // getText gets the text either from cache or from file storage.
 // Returns a detailed error.
-func (srv *Server) getText(uid string) (text string, err error) {
+func (srv *Server) getText(uid string) (text string, cerr *ce.CommonError) {
 	// Check the UID.
 	if !common.IsUidValid(uid) {
 		return "", ce.NewClientError(ce.ErrUid, 0)
 	}
 
 	// Try to find the text in cache.
+	var err error
 	text, err = srv.cacheT.GetRecord(uid)
 	if err == nil {
 		return text, nil
@@ -46,13 +47,14 @@ func (srv *Server) getText(uid string) (text string, err error) {
 
 // getBinary gets the binary data either from cache or from file storage.
 // Returns a detailed error.
-func (srv *Server) getBinary(uid string) (data []byte, err error) {
+func (srv *Server) getBinary(uid string) (data []byte, cerr *ce.CommonError) {
 	// Check the UID.
 	if !common.IsUidValid(uid) {
 		return nil, ce.NewClientError(ce.ErrUid, 0)
 	}
 
 	// Try to find the data in cache.
+	var err error
 	data, err = srv.cacheB.GetRecord(uid)
 	if err == nil {
 		return data, nil

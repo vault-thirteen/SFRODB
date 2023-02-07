@@ -14,21 +14,21 @@ import (
 
 // showRecord shows a record.
 // Returns a detailed error.
-func (srv *Server) showRecord(c *connection.Connection, r *request.Request) (err error) {
+func (srv *Server) showRecord(c *connection.Connection, r *request.Request) (cerr *ce.CommonError) {
 	switch r.Method {
 	case method.ShowText:
 		var text string
-		text, err = srv.getText(r.UID)
-		if err != nil {
-			return err
+		text, cerr = srv.getText(r.UID)
+		if cerr != nil {
+			return cerr
 		}
 		return srv.showingText(c, text)
 
 	case method.ShowBinary:
 		var data []byte
-		data, err = srv.getBinary(r.UID)
-		if err != nil {
-			return err
+		data, cerr = srv.getBinary(r.UID)
+		if cerr != nil {
+			return cerr
 		}
 		return srv.showingBinary(c, data)
 
@@ -39,7 +39,7 @@ func (srv *Server) showRecord(c *connection.Connection, r *request.Request) (err
 
 // searchRecord checks existence of a record.
 // Returns a detailed error.
-func (srv *Server) searchRecord(c *connection.Connection, r *request.Request) (err error) {
+func (srv *Server) searchRecord(c *connection.Connection, r *request.Request) (cerr *ce.CommonError) {
 	// Check the UID.
 	if !common.IsUidValid(r.UID) {
 		return ce.NewClientError(ce.ErrUid, 0)
@@ -71,19 +71,18 @@ func (srv *Server) searchRecord(c *connection.Connection, r *request.Request) (e
 
 // searchFile checks existence of a file.
 // Returns a detailed error.
-func (srv *Server) searchFile(c *connection.Connection, r *request.Request) (err error) {
+func (srv *Server) searchFile(c *connection.Connection, r *request.Request) (cerr *ce.CommonError) {
 	// Check the UID.
 	if !common.IsUidValid(r.UID) {
 		return ce.NewClientError(ce.ErrUid, 0)
 	}
 
 	// Search for the file in storage.
-	var fileExists bool
 	var relPath string
 	switch r.Method {
 	case method.SearchTextFile:
 		relPath = filepath.Join(r.UID+srv.settings.TextData.FileExtension, "")
-		fileExists, err = srv.filesT.FileExists(relPath)
+		fileExists, err := srv.filesT.FileExists(relPath)
 		if err != nil {
 			return ce.NewServerError(err.Error(), 0)
 		}
@@ -95,7 +94,7 @@ func (srv *Server) searchFile(c *connection.Connection, r *request.Request) (err
 
 	case method.SearchBinaryFile:
 		relPath = filepath.Join(r.UID+srv.settings.BinaryData.FileExtension, "")
-		fileExists, err = srv.filesB.FileExists(relPath)
+		fileExists, err := srv.filesB.FileExists(relPath)
 		if err != nil {
 			return ce.NewServerError(err.Error(), 0)
 		}
@@ -112,7 +111,7 @@ func (srv *Server) searchFile(c *connection.Connection, r *request.Request) (err
 
 // forgetRecord removes a record from cache.
 // Returns a detailed error.
-func (srv *Server) forgetRecord(c *connection.Connection, r *request.Request) (err error) {
+func (srv *Server) forgetRecord(c *connection.Connection, r *request.Request) (cerr *ce.CommonError) {
 	// Check the UID.
 	if !common.IsUidValid(r.UID) {
 		return ce.NewClientError(ce.ErrUid, 0)
@@ -120,6 +119,7 @@ func (srv *Server) forgetRecord(c *connection.Connection, r *request.Request) (e
 
 	// Remove the record from the cache.
 	var recExists bool
+	var err error
 	switch r.Method {
 	case method.ForgetTextRecord:
 		recExists, err = srv.cacheT.RemoveRecord(r.UID)
@@ -140,10 +140,11 @@ func (srv *Server) forgetRecord(c *connection.Connection, r *request.Request) (e
 
 // resetCache removes all records from cache.
 // Returns a detailed error.
-func (srv *Server) resetCache(c *connection.Connection, r *request.Request) (err error) {
+func (srv *Server) resetCache(c *connection.Connection, r *request.Request) (cerr *ce.CommonError) {
 	log.Println(MsgResettingCache)
 
 	// Clear the cache.
+	var err error
 	switch r.Method {
 	case method.ResetTextCache:
 		err = srv.cacheT.Clear()
@@ -157,19 +158,4 @@ func (srv *Server) resetCache(c *connection.Connection, r *request.Request) (err
 	}
 
 	return srv.ok(c)
-}
-
-// processError processes a detailed error.
-func (srv *Server) processError(err error) (isServerError bool) {
-	detailedError, ok := err.(*ce.CommonError)
-	if !ok {
-		return false
-	}
-
-	if detailedError.IsServerError() {
-		log.Println(err)
-		return true
-	}
-
-	return false
 }

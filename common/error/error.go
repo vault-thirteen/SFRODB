@@ -52,7 +52,7 @@ type CommonError struct {
 	method method.Method
 }
 
-func newError(et cet.ErrorType, msg string, method method.Method) (err error) {
+func newCommonError(et cet.ErrorType, msg string, method method.Method) (ce *CommonError) {
 	return &CommonError{
 		type_:  et,
 		text:   msg,
@@ -60,12 +60,12 @@ func newError(et cet.ErrorType, msg string, method method.Method) (err error) {
 	}
 }
 
-func NewServerError(msg string, method method.Method) (err error) {
-	return newError(cet.ErrorTypeServer, msg, method)
+func NewServerError(msg string, method method.Method) (ce *CommonError) {
+	return newCommonError(cet.ErrorTypeServer, msg, method)
 }
 
-func NewClientError(msg string, method method.Method) (err error) {
-	return newError(cet.ErrorTypeClient, msg, method)
+func NewClientError(msg string, method method.Method) (ce *CommonError) {
+	return newCommonError(cet.ErrorTypeClient, msg, method)
 }
 
 func (ce *CommonError) Error() string {

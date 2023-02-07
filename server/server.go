@@ -174,16 +174,12 @@ func (srv *Server) Stop() (err error) {
 }
 
 func (srv *Server) handleMainConnection(conn net.Conn) {
-	c, err := connection.NewConnection(
+	c := connection.NewConnection(
 		conn,
 		&srv.methodNameBuffers,
 		&srv.methodValues,
 		0,
 	)
-	if err != nil {
-		log.Println(err)
-		return
-	}
 
 	defer func() {
 		derr := srv.finalize(c)
@@ -193,7 +189,7 @@ func (srv *Server) handleMainConnection(conn net.Conn) {
 	}()
 
 	var req *request.Request
-	var isServerError bool
+	var err *ce.CommonError
 
 	for {
 		req, err = c.GetNextRequest()
@@ -224,8 +220,7 @@ func (srv *Server) handleMainConnection(conn net.Conn) {
 			err = ce.NewClientError(msg, 0)
 		}
 		if err != nil {
-			isServerError = srv.processError(err)
-			if isServerError {
+			if err.IsServerError() {
 				break
 			} else {
 				err = srv.clientError(c)
@@ -239,16 +234,12 @@ func (srv *Server) handleMainConnection(conn net.Conn) {
 }
 
 func (srv *Server) handleAuxConnection(conn net.Conn) {
-	c, err := connection.NewConnection(
+	c := connection.NewConnection(
 		conn,
 		&srv.methodNameBuffers,
 		&srv.methodValues,
 		0,
 	)
-	if err != nil {
-		log.Println(err)
-		return
-	}
 
 	defer func() {
 		derr := srv.finalize(c)
@@ -258,7 +249,7 @@ func (srv *Server) handleAuxConnection(conn net.Conn) {
 	}()
 
 	var req *request.Request
-	var isServerError bool
+	var err *ce.CommonError
 
 	for {
 		req, err = c.GetNextRequest()
@@ -285,8 +276,7 @@ func (srv *Server) handleAuxConnection(conn net.Conn) {
 			err = ce.NewClientError(msg, 0)
 		}
 		if err != nil {
-			isServerError = srv.processError(err)
-			if isServerError {
+			if err.IsServerError() {
 				break
 			} else {
 				err = srv.clientError(c)
@@ -302,10 +292,10 @@ func (srv *Server) handleAuxConnection(conn net.Conn) {
 // finalize is a method used by a Server to finalize the client's connection.
 // This method is used either when the client requested to stop the
 // communication or when an internal error happened on the server.
-func (srv *Server) finalize(c *connection.Connection) (err error) {
-	err = srv.closingConnection(c)
-	if err != nil {
-		return err
+func (srv *Server) finalize(c *connection.Connection) (cerr *ce.CommonError) {
+	cerr = srv.closingConnection(c)
+	if cerr != nil {
+		return cerr
 	}
 
 	return c.Break()

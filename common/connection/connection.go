@@ -2,7 +2,6 @@ package connection
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"net"
 	"strings"
@@ -30,45 +29,17 @@ func NewConnection(
 
 	// This limit is used on client only.
 	responseMessageLengthLimit uint,
-) (c *Connection, err error) {
+) (c *Connection) {
 	return &Connection{
 		netConn:                    netConn,
 		methodNameBuffers:          methodNameBuffers,
 		methodValues:               methodValues,
 		responseMessageLengthLimit: responseMessageLengthLimit,
-	}, nil
-}
-
-// Break is a method used by a Client to finalize its connection.
-func (c *Connection) Break() (err error) {
-	return c.close()
+	}
 }
 
 func (c *Connection) close() (err error) {
 	return c.netConn.Close()
-}
-
-// GetNextRequest is a method used by a Server to receive a request from the
-// client.
-func (c *Connection) GetNextRequest() (r *request.Request, err error) {
-	r = &request.Request{}
-
-	r.SRS, err = c.getSRS()
-	if err != nil {
-		return nil, errors.New(ce.ErrSrsReading + err.Error())
-	}
-
-	err = c.getRequestSize(r)
-	if err != nil {
-		return nil, errors.New(ce.ErrRsReading + err.Error())
-	}
-
-	err = c.getRequestMethodAndUID(r)
-	if err != nil {
-		return nil, errors.New(ce.ErrReadingMethodAndData + err.Error())
-	}
-
-	return r, nil
 }
 
 func (c *Connection) getSRS() (srs byte, err error) {
@@ -154,27 +125,6 @@ func (c *Connection) getRequestMethodAndUID(r *request.Request) (err error) {
 	return nil
 }
 
-// SendResponseMessage is a method used by a Server to send a response to the
-// client.
-func (c *Connection) SendResponseMessage(rm *response.Response, useBinary bool) (err error) {
-	err = c.sendSRS(rm.SRS)
-	if err != nil {
-		return err
-	}
-
-	err = c.sendResponseSize(rm)
-	if err != nil {
-		return err
-	}
-
-	err = c.sendResponseMethodAndData(rm, useBinary)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (c *Connection) sendSRS(srs byte) (err error) {
 	buf := make([]byte, 1)
 	buf[0] = srs
@@ -229,27 +179,6 @@ func (c *Connection) sendResponseMethodAndData(rm *response.Response, useBinary 
 	return nil
 }
 
-// SendRequestMessage is a method used by a Client to send a request to the
-// server.
-func (c *Connection) SendRequestMessage(rm *request.Request) (err error) {
-	err = c.sendSRS(rm.SRS)
-	if err != nil {
-		return err
-	}
-
-	err = c.sendRequestSize(rm)
-	if err != nil {
-		return err
-	}
-
-	err = c.sendRequestMethodAndUid(rm)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (c *Connection) sendRequestSize(rm *request.Request) (err error) {
 	var buf []byte
 	switch rm.SRS {
@@ -285,29 +214,6 @@ func (c *Connection) sendRequestMethodAndUid(rm *request.Request) (err error) {
 	}
 
 	return nil
-}
-
-// GetResponseMessage is a method used by a Client to read a response from the
-// server.
-func (c *Connection) GetResponseMessage(useBinary bool) (resp *response.Response, err error) {
-	resp = &response.Response{}
-
-	resp.SRS, err = c.getSRS()
-	if err != nil {
-		return nil, errors.New(ce.ErrSrsReading + err.Error())
-	}
-
-	err = c.getResponseSize(resp)
-	if err != nil {
-		return nil, errors.New(ce.ErrRsReading + err.Error())
-	}
-
-	err = c.getResponseMethodAndData(resp, useBinary)
-	if err != nil {
-		return nil, errors.New(ce.ErrReadingMethodAndData + err.Error())
-	}
-
-	return resp, nil
 }
 
 func (c *Connection) getResponseSize(resp *response.Response) (err error) {

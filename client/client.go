@@ -2,7 +2,6 @@ package client
 
 import (
 	"fmt"
-	"log"
 	"net"
 
 	"github.com/vault-thirteen/SFRODB/client/settings"
@@ -74,16 +73,12 @@ func (cli *Client) Start() (err error) {
 		return err
 	}
 
-	cli.mainConnection, err = connection.NewConnection(
+	cli.mainConnection = connection.NewConnection(
 		mainConn,
 		&cli.methodNameBuffers,
 		&cli.methodValues,
 		cli.settings.ResponseMessageLengthLimit,
 	)
-	if err != nil {
-		log.Println(err)
-		return err
-	}
 
 	var auxConn net.Conn
 	auxConn, err = net.DialTCP(proto.LowLevelProtocol, nil, cli.auxAddr)
@@ -91,16 +86,12 @@ func (cli *Client) Start() (err error) {
 		return err
 	}
 
-	cli.auxConnection, err = connection.NewConnection(
+	cli.auxConnection = connection.NewConnection(
 		auxConn,
 		&cli.methodNameBuffers,
 		&cli.methodValues,
 		cli.settings.ResponseMessageLengthLimit,
 	)
-	if err != nil {
-		log.Println(err)
-		return err
-	}
 
 	return nil
 }
