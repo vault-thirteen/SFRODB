@@ -83,13 +83,13 @@ func makeSomeActions(cli *client.Client, appMustBeStopped *chan bool) {
 		}
 		if cerr != nil {
 			if cerr.IsServerError() {
-				log.Println("Server Error: " + err.Error())
+				log.Println("Server Error: " + cerr.Error())
 				break
 			} else if cerr.IsClientError() {
-				log.Println("Client Error: " + err.Error())
+				log.Println("Client Error: " + cerr.Error())
 				continue
 			} else {
-				log.Println("Anomaly: " + err.Error())
+				log.Println("Anomaly: " + cerr.Error())
 				break
 			}
 		}
