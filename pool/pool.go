@@ -67,7 +67,7 @@ func NewClientPool(size int, stn *settings.Settings) (pool *PoolOfClients, err e
 			return nil, err
 		}
 
-		pool.idleClients <- cli
+		pool.stoppedClients <- cli
 	}
 
 	return pool, nil
@@ -80,7 +80,7 @@ func (cp *PoolOfClients) Start() (cerr *ce.CommonError) {
 	// Take all the clients.
 	clientsToStart := make([]*client.Client, 0, cp.size)
 	for i := 1; i <= cp.size; i++ {
-		cli := <-cp.idleClients
+		cli := <-cp.stoppedClients
 		clientsToStart = append(clientsToStart, cli)
 	}
 
@@ -91,7 +91,7 @@ func (cp *PoolOfClients) Start() (cerr *ce.CommonError) {
 		if cerr != nil {
 			for _, cli := range clientsToStart {
 				_ = cli.Stop()
-				cp.idleClients <- cli
+				cp.stoppedClients <- cli
 			}
 		}
 	}()
