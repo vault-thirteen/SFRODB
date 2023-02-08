@@ -193,7 +193,8 @@ func (cp *PoolOfClients) Stop() {
 		log.Printf("Client [%s] was stopped.", cli.GetId())
 		cp.stoppedClients <- cli
 	}
-	for cli = range cp.usedClients {
+	for i := range cp.usedClients {
+		cli = cp.usedClients[i]
 		_ = cli.Stop()
 		log.Printf("Client [%s] was stopped.", cli.GetId())
 		cp.stoppedClients <- cli
