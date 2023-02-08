@@ -11,6 +11,7 @@ import (
 
 	"github.com/vault-thirteen/SFRODB/client"
 	"github.com/vault-thirteen/SFRODB/client/settings"
+	ce "github.com/vault-thirteen/SFRODB/common/error"
 )
 
 const (
@@ -72,7 +73,7 @@ func NewClientPool(size int, stn *settings.Settings) (pool *PoolOfClients, err e
 	return pool, nil
 }
 
-func (cp *PoolOfClients) Start() (err error) {
+func (cp *PoolOfClients) Start() (cerr *ce.CommonError) {
 	cp.clientTransfers.Lock()
 	defer cp.clientTransfers.Unlock()
 
@@ -87,7 +88,7 @@ func (cp *PoolOfClients) Start() (err error) {
 	//	- stop all the clients;
 	//	- put all the clients into the channel as before the start.
 	defer func() {
-		if err != nil {
+		if cerr != nil {
 			for _, cli := range clientsToStart {
 				_ = cli.Stop()
 				cp.idleClients <- cli
@@ -97,9 +98,9 @@ func (cp *PoolOfClients) Start() (err error) {
 
 	// Start all the clients.
 	for _, cli := range clientsToStart {
-		err = cli.Start()
-		if err != nil {
-			return err
+		cerr = cli.Start()
+		if cerr != nil {
+			return cerr
 		}
 	}
 
@@ -166,8 +167,8 @@ func (cp *PoolOfClients) clientRestarterCore() (success bool) {
 	cli := <-cp.brokenClients
 	log.Println("Re-connecting the client ...")
 	_ = cli.Stop()
-	err := cli.Start()
-	if err != nil {
+	cerr := cli.Start()
+	if cerr != nil {
 		cp.brokenClients <- cli
 		return false
 	}

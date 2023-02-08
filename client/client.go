@@ -3,6 +3,8 @@ package client
 import (
 	"fmt"
 	"net"
+	"sync"
+	"sync/atomic"
 
 	"github.com/vault-thirteen/SFRODB/client/settings"
 	"github.com/vault-thirteen/SFRODB/common/connection"
@@ -18,6 +20,11 @@ const (
 
 	// ClientIdIncoming is a client ID for a request incoming to server.
 	ClientIdIncoming = "s"
+)
+
+const (
+	ErrDoubleStartIsNotPossible = "double start is not possible"
+	ErrDoubleStopIsNotPossible  = "double stop is not possible"
 )
 
 // Client is client.
@@ -38,6 +45,10 @@ type Client struct {
 
 	mainConnection *connection.Connection
 	auxConnection  *connection.Connection
+
+	// Internal control structures.
+	startStopLock *sync.Mutex
+	isWorking     *atomic.Bool
 }
 
 // NewClient creates a client.
@@ -48,10 +59,12 @@ func NewClient(stn *settings.Settings, id string) (cli *Client, err error) {
 	}
 
 	cli = &Client{
-		id:       id,
-		settings: stn,
-		mainDsn:  fmt.Sprintf("%s:%d", stn.Host, stn.MainPort),
-		auxDsn:   fmt.Sprintf("%s:%d", stn.Host, stn.AuxPort),
+		id:            id,
+		settings:      stn,
+		mainDsn:       fmt.Sprintf("%s:%d", stn.Host, stn.MainPort),
+		auxDsn:        fmt.Sprintf("%s:%d", stn.Host, stn.AuxPort),
+		startStopLock: new(sync.Mutex),
+		isWorking:     new(atomic.Bool),
 	}
 
 	cli.mainAddr, err = net.ResolveTCPAddr(proto.LowLevelProtocol, cli.mainDsn)
@@ -86,6 +99,17 @@ func (cli *Client) GetAuxDsn() (dsn string) {
 
 // Start starts the client.
 func (cli *Client) Start() (cerr *ce.CommonError) {
+	cli.startStopLock.Lock()
+	defer cli.startStopLock.Unlock()
+
+	return cli.start()
+}
+
+func (cli *Client) start() (cerr *ce.CommonError) {
+	if cli.isWorking.Load() {
+		return ce.NewClientError(ErrDoubleStartIsNotPossible, 0, ClientIdNone)
+	}
+
 	cerr = cli.startMainConnection()
 	if cerr != nil {
 		return cerr
@@ -95,6 +119,8 @@ func (cli *Client) Start() (cerr *ce.CommonError) {
 	if cerr != nil {
 		return cerr
 	}
+
+	cli.isWorking.Store(true)
 
 	return nil
 }
@@ -157,6 +183,17 @@ func (cli *Client) startAuxConnection() (cerr *ce.CommonError) {
 
 // Stop stops the client.
 func (cli *Client) Stop() (cerr *ce.CommonError) {
+	cli.startStopLock.Lock()
+	defer cli.startStopLock.Unlock()
+
+	return cli.stop()
+}
+
+func (cli *Client) stop() (cerr *ce.CommonError) {
+	if !cli.isWorking.Load() {
+		return ce.NewClientError(ErrDoubleStopIsNotPossible, 0, ClientIdNone)
+	}
+
 	cerr = cli.mainConnection.Break()
 	if cerr != nil {
 		return cerr
@@ -167,19 +204,28 @@ func (cli *Client) Stop() (cerr *ce.CommonError) {
 		return cerr
 	}
 
+	cli.isWorking.Store(false)
+
 	return nil
 }
 
 // Restart re-starts the client.
 func (cli *Client) Restart(forcibly bool) (cerr *ce.CommonError) {
+	cli.startStopLock.Lock()
+	defer cli.startStopLock.Unlock()
+
+	return cli.restart(forcibly)
+}
+
+func (cli *Client) restart(forcibly bool) (cerr *ce.CommonError) {
 	if forcibly {
-		_ = cli.Stop()
+		_ = cli.stop()
 	} else {
-		cerr = cli.Stop()
+		cerr = cli.stop()
 		if cerr != nil {
 			return cerr
 		}
 	}
 
-	return cli.Start()
+	return cli.start()
 }
