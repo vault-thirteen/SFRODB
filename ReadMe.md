@@ -27,6 +27,11 @@ operations and for non-read operations. By non-read operations we mean methods
 for removing a single item from cache and methods for cache cleaning, i.e. 
 resetting the cache to an empty state.
 
+## Pool of Clients
+The library provides not only a single client for this database. A pool of 
+clients is also available. The pool is able to fix broken connections 
+automatically and has an adjustable size.
+
 ## Building
 Use the `build.bat` script included with the source code.
 
