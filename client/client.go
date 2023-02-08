@@ -12,6 +12,14 @@ import (
 	"github.com/vault-thirteen/errorz"
 )
 
+const (
+	// ClientIdNone is a client ID for a non-network operations.
+	ClientIdNone = ""
+
+	// ClientIdIncoming is a client ID for a request incoming to server.
+	ClientIdIncoming = "s"
+)
+
 // Client is client.
 type Client struct {
 	// All the clients must have unique IDs.
@@ -96,7 +104,7 @@ func (cli *Client) startMainConnection() (cerr *ce.CommonError) {
 	var err error
 	mainConn, err = net.DialTCP(proto.LowLevelProtocol, nil, cli.mainAddr)
 	if err != nil {
-		return ce.NewClientError(err.Error(), 0)
+		return ce.NewClientError(err.Error(), 0, cli.id)
 	}
 
 	err = connection.EnableKeepAlives(mainConn)
@@ -105,7 +113,7 @@ func (cli *Client) startMainConnection() (cerr *ce.CommonError) {
 		if closeErr != nil {
 			err = errorz.Combine(err, closeErr)
 		}
-		return ce.NewClientError(err.Error(), 0)
+		return ce.NewClientError(err.Error(), 0, cli.id)
 	}
 
 	cli.mainConnection = connection.NewConnection(
@@ -113,6 +121,7 @@ func (cli *Client) startMainConnection() (cerr *ce.CommonError) {
 		&cli.methodNameBuffers,
 		&cli.methodValues,
 		cli.settings.ResponseMessageLengthLimit,
+		cli.id,
 	)
 
 	return nil
@@ -123,7 +132,7 @@ func (cli *Client) startAuxConnection() (cerr *ce.CommonError) {
 	var err error
 	auxConn, err = net.DialTCP(proto.LowLevelProtocol, nil, cli.auxAddr)
 	if err != nil {
-		return ce.NewClientError(err.Error(), 0)
+		return ce.NewClientError(err.Error(), 0, cli.id)
 	}
 
 	err = connection.EnableKeepAlives(auxConn)
@@ -132,7 +141,7 @@ func (cli *Client) startAuxConnection() (cerr *ce.CommonError) {
 		if closeErr != nil {
 			err = errorz.Combine(err, closeErr)
 		}
-		return ce.NewClientError(err.Error(), 0)
+		return ce.NewClientError(err.Error(), 0, cli.id)
 	}
 
 	cli.auxConnection = connection.NewConnection(
@@ -140,6 +149,7 @@ func (cli *Client) startAuxConnection() (cerr *ce.CommonError) {
 		&cli.methodNameBuffers,
 		&cli.methodValues,
 		cli.settings.ResponseMessageLengthLimit,
+		cli.id,
 	)
 
 	return nil

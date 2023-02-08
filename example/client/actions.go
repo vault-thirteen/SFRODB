@@ -135,7 +135,7 @@ func processGKeys(cli *client.Client, bt byte, uid string) (cerr *ce.CommonError
 	if itemLen > ItemLenLimit {
 		ch, err = getUserInputChar(HintDataSize)
 		if err != nil {
-			return ce.NewClientError(err.Error(), 0)
+			return ce.NewClientError(err.Error(), 0, cli.GetId())
 		}
 
 		if (ch == 'Y') || (ch == 'y') {
@@ -164,7 +164,7 @@ func getRecord(cli *client.Client, bt byte, uid string) (item any, cerr *ce.Comm
 		return cli.ShowBinary(uid)
 	}
 
-	return nil, ce.NewClientError(ErrUnsupportedKey+string(bt), 0)
+	return nil, ce.NewClientError(ErrUnsupportedKey+string(bt), 0, cli.GetId())
 }
 
 func processEKeys(cli *client.Client, bt byte, uid string) (cerr *ce.CommonError) {
@@ -192,7 +192,7 @@ func searchRecord(cli *client.Client, bt byte, uid string) (exists bool, cerr *c
 		return cli.SearchBinaryRecord(uid)
 	}
 
-	return false, ce.NewClientError(ErrUnsupportedKey+string(bt), 0)
+	return false, ce.NewClientError(ErrUnsupportedKey+string(bt), 0, cli.GetId())
 }
 
 func processSKeys(cli *client.Client, bt byte, uid string) (cerr *ce.CommonError) {
@@ -220,7 +220,7 @@ func searchFile(cli *client.Client, bt byte, uid string) (exists bool, cerr *ce.
 		return cli.SearchBinaryFile(uid)
 	}
 
-	return false, ce.NewClientError(ErrUnsupportedKey+string(bt), 0)
+	return false, ce.NewClientError(ErrUnsupportedKey+string(bt), 0, cli.GetId())
 }
 
 func processFKeys(cli *client.Client, bt byte, uid string) (cerr *ce.CommonError) {
@@ -236,7 +236,7 @@ func forgetRecord(cli *client.Client, bt byte, uid string) (cerr *ce.CommonError
 		return cli.ForgetBinaryRecord(uid)
 	}
 
-	return ce.NewClientError(ErrUnsupportedKey+string(bt), 0)
+	return ce.NewClientError(ErrUnsupportedKey+string(bt), 0, cli.GetId())
 }
 
 func processRKeys(cli *client.Client, bt byte) (cerr *ce.CommonError) {
@@ -252,5 +252,5 @@ func resetCache(cli *client.Client, bt byte) (cerr *ce.CommonError) {
 		return cli.ResetBinaryCache()
 	}
 
-	return ce.NewClientError(ErrUnsupportedKey+string(bt), 0)
+	return ce.NewClientError(ErrUnsupportedKey+string(bt), 0, cli.GetId())
 }

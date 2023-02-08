@@ -48,32 +48,39 @@ type CommonError struct {
 	typeOfError cet.ErrorType
 	text        string
 	method      method.Method
+
+	// ID of a client that created this error.
+	clientId string
 }
 
 func newCommonError(
 	et cet.ErrorType,
 	msg string,
 	method method.Method,
+	clientId string,
 ) (ce *CommonError) {
 	return &CommonError{
 		typeOfError: et,
 		text:        msg,
 		method:      method,
+		clientId:    clientId,
 	}
 }
 
 func NewServerError(
 	msg string,
 	method method.Method,
+	clientId string,
 ) (ce *CommonError) {
-	return newCommonError(cet.ErrorTypeServer, msg, method)
+	return newCommonError(cet.ErrorTypeServer, msg, method, clientId)
 }
 
 func NewClientError(
 	msg string,
 	method method.Method,
+	clientId string,
 ) (ce *CommonError) {
-	return newCommonError(cet.ErrorTypeClient, msg, method)
+	return newCommonError(cet.ErrorTypeClient, msg, method, clientId)
 }
 
 func (ce *CommonError) Error() string {
@@ -90,4 +97,8 @@ func (ce *CommonError) IsServerError() bool {
 
 func (ce *CommonError) IsClientError() bool {
 	return ce.typeOfError == cet.ErrorTypeClient
+}
+
+func (ce *CommonError) GetClientId() (clientId string) {
+	return ce.clientId
 }

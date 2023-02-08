@@ -14,35 +14,35 @@ import (
 
 // showRecord shows a record.
 // Returns a detailed error.
-func (srv *Server) showRecord(c *connection.Connection, r *request.Request) (cerr *ce.CommonError) {
+func (srv *Server) showRecord(con *connection.Connection, r *request.Request) (cerr *ce.CommonError) {
 	switch r.Method {
 	case method.ShowText:
 		var text string
-		text, cerr = srv.getText(r.UID)
+		text, cerr = srv.getText(r.UID, con.GetClientId())
 		if cerr != nil {
 			return cerr
 		}
-		return srv.showingText(c, text)
+		return srv.showingText(con, text)
 
 	case method.ShowBinary:
 		var data []byte
-		data, cerr = srv.getBinary(r.UID)
+		data, cerr = srv.getBinary(r.UID, con.GetClientId())
 		if cerr != nil {
 			return cerr
 		}
-		return srv.showingBinary(c, data)
+		return srv.showingBinary(con, data)
 
 	default:
-		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0)
+		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0, con.GetClientId())
 	}
 }
 
 // searchRecord checks existence of a record.
 // Returns a detailed error.
-func (srv *Server) searchRecord(c *connection.Connection, r *request.Request) (cerr *ce.CommonError) {
+func (srv *Server) searchRecord(con *connection.Connection, r *request.Request) (cerr *ce.CommonError) {
 	// Check the UID.
 	if !common.IsUidValid(r.UID) {
-		return ce.NewClientError(ce.ErrUid, 0)
+		return ce.NewClientError(ce.ErrUid, 0, con.GetClientId())
 	}
 
 	// Search for the record in cache.
@@ -51,30 +51,30 @@ func (srv *Server) searchRecord(c *connection.Connection, r *request.Request) (c
 	case method.SearchTextRecord:
 		recExists = srv.cacheT.RecordExists(r.UID)
 		if recExists {
-			return srv.textRecordExists(c)
+			return srv.textRecordExists(con)
 		} else {
-			return srv.textRecordDoesNotExist(c)
+			return srv.textRecordDoesNotExist(con)
 		}
 
 	case method.SearchBinaryRecord:
 		recExists = srv.cacheB.RecordExists(r.UID)
 		if recExists {
-			return srv.binaryRecordExists(c)
+			return srv.binaryRecordExists(con)
 		} else {
-			return srv.binaryRecordDoesNotExist(c)
+			return srv.binaryRecordDoesNotExist(con)
 		}
 
 	default:
-		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0)
+		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0, con.GetClientId())
 	}
 }
 
 // searchFile checks existence of a file.
 // Returns a detailed error.
-func (srv *Server) searchFile(c *connection.Connection, r *request.Request) (cerr *ce.CommonError) {
+func (srv *Server) searchFile(con *connection.Connection, r *request.Request) (cerr *ce.CommonError) {
 	// Check the UID.
 	if !common.IsUidValid(r.UID) {
-		return ce.NewClientError(ce.ErrUid, 0)
+		return ce.NewClientError(ce.ErrUid, 0, con.GetClientId())
 	}
 
 	// Search for the file in storage.
@@ -84,37 +84,37 @@ func (srv *Server) searchFile(c *connection.Connection, r *request.Request) (cer
 		relPath = filepath.Join(r.UID+srv.settings.TextData.FileExtension, "")
 		fileExists, err := srv.filesT.FileExists(relPath)
 		if err != nil {
-			return ce.NewServerError(err.Error(), 0)
+			return ce.NewServerError(err.Error(), 0, con.GetClientId())
 		}
 		if fileExists {
-			return srv.textFileExists(c)
+			return srv.textFileExists(con)
 		} else {
-			return srv.textFileDoesNotExist(c)
+			return srv.textFileDoesNotExist(con)
 		}
 
 	case method.SearchBinaryFile:
 		relPath = filepath.Join(r.UID+srv.settings.BinaryData.FileExtension, "")
 		fileExists, err := srv.filesB.FileExists(relPath)
 		if err != nil {
-			return ce.NewServerError(err.Error(), 0)
+			return ce.NewServerError(err.Error(), 0, con.GetClientId())
 		}
 		if fileExists {
-			return srv.binaryFileExists(c)
+			return srv.binaryFileExists(con)
 		} else {
-			return srv.binaryFileDoesNotExist(c)
+			return srv.binaryFileDoesNotExist(con)
 		}
 
 	default:
-		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0)
+		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0, con.GetClientId())
 	}
 }
 
 // forgetRecord removes a record from cache.
 // Returns a detailed error.
-func (srv *Server) forgetRecord(c *connection.Connection, r *request.Request) (cerr *ce.CommonError) {
+func (srv *Server) forgetRecord(con *connection.Connection, r *request.Request) (cerr *ce.CommonError) {
 	// Check the UID.
 	if !common.IsUidValid(r.UID) {
-		return ce.NewClientError(ce.ErrUid, 0)
+		return ce.NewClientError(ce.ErrUid, 0, con.GetClientId())
 	}
 
 	// Remove the record from the cache.
@@ -126,21 +126,21 @@ func (srv *Server) forgetRecord(c *connection.Connection, r *request.Request) (c
 	case method.ForgetBinaryRecord:
 		recExists, err = srv.cacheB.RemoveRecord(r.UID)
 	default:
-		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0)
+		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0, con.GetClientId())
 	}
 	if !recExists {
-		return ce.NewClientError(err.Error(), 0)
+		return ce.NewClientError(err.Error(), 0, con.GetClientId())
 	}
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0, con.GetClientId())
 	}
 
-	return srv.ok(c)
+	return srv.ok(con)
 }
 
 // resetCache removes all records from cache.
 // Returns a detailed error.
-func (srv *Server) resetCache(c *connection.Connection, r *request.Request) (cerr *ce.CommonError) {
+func (srv *Server) resetCache(con *connection.Connection, r *request.Request) (cerr *ce.CommonError) {
 	log.Println(MsgResettingCache)
 
 	// Clear the cache.
@@ -151,11 +151,11 @@ func (srv *Server) resetCache(c *connection.Connection, r *request.Request) (cer
 	case method.ResetBinaryCache:
 		err = srv.cacheB.Clear()
 	default:
-		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0)
+		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0, con.GetClientId())
 	}
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0, con.GetClientId())
 	}
 
-	return srv.ok(c)
+	return srv.ok(con)
 }

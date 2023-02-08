@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 
 	"github.com/vault-thirteen/Cache"
+	"github.com/vault-thirteen/SFRODB/client"
 	"github.com/vault-thirteen/SFRODB/common/connection"
 	ce "github.com/vault-thirteen/SFRODB/common/error"
 	"github.com/vault-thirteen/SFRODB/common/method"
@@ -120,12 +121,12 @@ func (srv *Server) Start() (cerr *ce.CommonError) {
 	var err error
 	srv.mainListener, err = net.ListenTCP(proto.LowLevelProtocol, srv.mainListenerAddr)
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0, client.ClientIdNone)
 	}
 
 	srv.auxListener, err = net.ListenTCP(proto.LowLevelProtocol, srv.auxListenerAddr)
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0, client.ClientIdNone)
 	}
 
 	srv.isRunning.Store(true)
@@ -196,12 +197,12 @@ func (srv *Server) Stop() (cerr *ce.CommonError) {
 	var err error
 	err = srv.mainListener.Close()
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0, client.ClientIdNone)
 	}
 
 	err = srv.auxListener.Close()
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0, client.ClientIdNone)
 	}
 
 	srv.isRunning.Store(false)
@@ -211,15 +212,16 @@ func (srv *Server) Stop() (cerr *ce.CommonError) {
 }
 
 func (srv *Server) handleMainConnection(conn *net.TCPConn) {
-	c := connection.NewConnection(
+	con := connection.NewConnection(
 		conn,
 		&srv.methodNameBuffers,
 		&srv.methodValues,
 		0,
+		client.ClientIdIncoming,
 	)
 
 	defer func() {
-		derr := srv.finalize(c)
+		derr := srv.finalize(con)
 		if derr != nil {
 			log.Println(derr)
 		}
@@ -229,7 +231,7 @@ func (srv *Server) handleMainConnection(conn *net.TCPConn) {
 	var err *ce.CommonError
 
 	for {
-		req, err = c.GetNextRequest()
+		req, err = con.GetNextRequest()
 		if err != nil {
 			log.Println(err)
 			break
@@ -242,25 +244,25 @@ func (srv *Server) handleMainConnection(conn *net.TCPConn) {
 		switch req.Method {
 		case method.ShowText,
 			method.ShowBinary:
-			err = srv.showRecord(c, req)
+			err = srv.showRecord(con, req)
 
 		case method.SearchTextRecord,
 			method.SearchBinaryRecord:
-			err = srv.searchRecord(c, req)
+			err = srv.searchRecord(con, req)
 
 		case method.SearchTextFile,
 			method.SearchBinaryFile:
-			err = srv.searchFile(c, req)
+			err = srv.searchFile(con, req)
 
 		default:
 			msg := fmt.Sprintf(ce.ErrUnsupportedMethodValue, req.Method)
-			err = ce.NewClientError(msg, 0)
+			err = ce.NewClientError(msg, 0, con.GetClientId())
 		}
 		if err != nil {
 			if err.IsServerError() {
 				break
 			} else {
-				err = srv.clientError(c)
+				err = srv.clientError(con)
 				if err != nil {
 					break
 				}
@@ -271,15 +273,16 @@ func (srv *Server) handleMainConnection(conn *net.TCPConn) {
 }
 
 func (srv *Server) handleAuxConnection(conn *net.TCPConn) {
-	c := connection.NewConnection(
+	con := connection.NewConnection(
 		conn,
 		&srv.methodNameBuffers,
 		&srv.methodValues,
 		0,
+		client.ClientIdIncoming,
 	)
 
 	defer func() {
-		derr := srv.finalize(c)
+		derr := srv.finalize(con)
 		if derr != nil {
 			log.Println(derr)
 		}
@@ -289,7 +292,7 @@ func (srv *Server) handleAuxConnection(conn *net.TCPConn) {
 	var err *ce.CommonError
 
 	for {
-		req, err = c.GetNextRequest()
+		req, err = con.GetNextRequest()
 		if err != nil {
 			log.Println(err)
 			break
@@ -302,21 +305,21 @@ func (srv *Server) handleAuxConnection(conn *net.TCPConn) {
 		switch req.Method {
 		case method.ForgetTextRecord,
 			method.ForgetBinaryRecord:
-			err = srv.forgetRecord(c, req)
+			err = srv.forgetRecord(con, req)
 
 		case method.ResetTextCache,
 			method.ResetBinaryCache:
-			err = srv.resetCache(c, req)
+			err = srv.resetCache(con, req)
 
 		default:
 			msg := fmt.Sprintf(ce.ErrUnsupportedMethodValue, req.Method)
-			err = ce.NewClientError(msg, 0)
+			err = ce.NewClientError(msg, 0, con.GetClientId())
 		}
 		if err != nil {
 			if err.IsServerError() {
 				break
 			} else {
-				err = srv.clientError(c)
+				err = srv.clientError(con)
 				if err != nil {
 					break
 				}
@@ -329,11 +332,11 @@ func (srv *Server) handleAuxConnection(conn *net.TCPConn) {
 // finalize is a method used by a Server to finalize the client's connection.
 // This method is used either when the client requested to stop the
 // communication or when an internal error happened on the server.
-func (srv *Server) finalize(c *connection.Connection) (cerr *ce.CommonError) {
-	cerr = srv.closingConnection(c)
+func (srv *Server) finalize(con *connection.Connection) (cerr *ce.CommonError) {
+	cerr = srv.closingConnection(con)
 	if cerr != nil {
 		return cerr
 	}
 
-	return c.Break()
+	return con.Break()
 }

@@ -7,10 +7,10 @@ import (
 )
 
 // Break is a method used by a Client to finalize its connection.
-func (c *Connection) Break() (cerr *ce.CommonError) {
-	err := c.close()
+func (con *Connection) Break() (cerr *ce.CommonError) {
+	err := con.close()
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0, con.clientId)
 	}
 
 	return nil
@@ -18,21 +18,21 @@ func (c *Connection) Break() (cerr *ce.CommonError) {
 
 // SendRequestMessage is a method used by a Client to send a request to the
 // server.
-func (c *Connection) SendRequestMessage(rm *request.Request) (cerr *ce.CommonError) {
+func (con *Connection) SendRequestMessage(rm *request.Request) (cerr *ce.CommonError) {
 	var err error
-	err = c.sendSRS(rm.SRS)
+	err = con.sendSRS(rm.SRS)
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0, con.clientId)
 	}
 
-	err = c.sendRequestSize(rm)
+	err = con.sendRequestSize(rm)
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0, con.clientId)
 	}
 
-	err = c.sendRequestMethodAndUid(rm)
+	err = con.sendRequestMethodAndUid(rm)
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0, con.clientId)
 	}
 
 	return nil
@@ -40,23 +40,23 @@ func (c *Connection) SendRequestMessage(rm *request.Request) (cerr *ce.CommonErr
 
 // GetResponseMessage is a method used by a Client to read a response from the
 // server.
-func (c *Connection) GetResponseMessage(useBinary bool) (resp *response.Response, cerr *ce.CommonError) {
+func (con *Connection) GetResponseMessage(useBinary bool) (resp *response.Response, cerr *ce.CommonError) {
 	resp = &response.Response{}
 
 	var err error
-	resp.SRS, err = c.getSRS()
+	resp.SRS, err = con.getSRS()
 	if err != nil {
-		return nil, ce.NewServerError(ce.ErrSrsReading+err.Error(), 0)
+		return nil, ce.NewServerError(ce.ErrSrsReading+err.Error(), 0, con.clientId)
 	}
 
-	err = c.getResponseSize(resp)
+	err = con.getResponseSize(resp)
 	if err != nil {
-		return nil, ce.NewServerError(ce.ErrRsReading+err.Error(), 0)
+		return nil, ce.NewServerError(ce.ErrRsReading+err.Error(), 0, con.clientId)
 	}
 
-	err = c.getResponseMethodAndData(resp, useBinary)
+	err = con.getResponseMethodAndData(resp, useBinary)
 	if err != nil {
-		return nil, ce.NewServerError(ce.ErrReadingMethodAndData+err.Error(), 0)
+		return nil, ce.NewServerError(ce.ErrReadingMethodAndData+err.Error(), 0, con.clientId)
 	}
 
 	return resp, nil

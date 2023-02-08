@@ -21,6 +21,7 @@ type Connection struct {
 	methodNameBuffers          *map[method.Method][]byte
 	methodValues               *map[string]method.Method
 	responseMessageLengthLimit uint
+	clientId                   string
 }
 
 func NewConnection(
@@ -30,22 +31,24 @@ func NewConnection(
 
 	// This limit is used on client only.
 	responseMessageLengthLimit uint,
-) (c *Connection) {
+	clientId string,
+) (con *Connection) {
 	return &Connection{
 		netConn:                    netConn,
 		methodNameBuffers:          methodNameBuffers,
 		methodValues:               methodValues,
 		responseMessageLengthLimit: responseMessageLengthLimit,
+		clientId:                   clientId,
 	}
 }
 
-func (c *Connection) close() (err error) {
-	return c.netConn.Close()
+func (con *Connection) close() (err error) {
+	return con.netConn.Close()
 }
 
-func (c *Connection) getSRS() (srs byte, err error) {
+func (con *Connection) getSRS() (srs byte, err error) {
 	var data []byte
-	data, err = reader.ReadExactSize(c.netConn, 1)
+	data, err = reader.ReadExactSize(con.netConn, 1)
 	if err != nil {
 		return 0, err
 	}
@@ -64,20 +67,20 @@ func (c *Connection) getSRS() (srs byte, err error) {
 	return 0, fmt.Errorf(ce.ErrSrsIsNotSupported, srs)
 }
 
-func (c *Connection) getRequestSize(r *request.Request) (err error) {
+func (con *Connection) getRequestSize(r *request.Request) (err error) {
 	switch r.SRS {
 	case proto.SRS_A:
-		return c.getRequestSizeA(r)
+		return con.getRequestSizeA(r)
 	case proto.SRS_B:
-		return c.getRequestSizeB(r)
+		return con.getRequestSizeB(r)
 	}
 
 	return fmt.Errorf(ce.ErrSrsIsNotSupported, r.SRS)
 }
 
-func (c *Connection) getRequestSizeA(r *request.Request) (err error) {
+func (con *Connection) getRequestSizeA(r *request.Request) (err error) {
 	var data []byte
-	data, err = reader.ReadExactSize(c.netConn, proto.RS_LengthA)
+	data, err = reader.ReadExactSize(con.netConn, proto.RS_LengthA)
 	if err != nil {
 		return err
 	}
@@ -87,9 +90,9 @@ func (c *Connection) getRequestSizeA(r *request.Request) (err error) {
 	return nil
 }
 
-func (c *Connection) getRequestSizeB(r *request.Request) (err error) {
+func (con *Connection) getRequestSizeB(r *request.Request) (err error) {
 	var data []byte
-	data, err = reader.ReadExactSize(c.netConn, proto.RS_LengthB)
+	data, err = reader.ReadExactSize(con.netConn, proto.RS_LengthB)
 	if err != nil {
 		return err
 	}
@@ -99,7 +102,7 @@ func (c *Connection) getRequestSizeB(r *request.Request) (err error) {
 	return nil
 }
 
-func (c *Connection) getRequestMethodAndUID(r *request.Request) (err error) {
+func (con *Connection) getRequestMethodAndUID(r *request.Request) (err error) {
 	var reqMsgLen uint
 	switch r.SRS {
 	case proto.SRS_A:
@@ -111,12 +114,12 @@ func (c *Connection) getRequestMethodAndUID(r *request.Request) (err error) {
 	}
 
 	var data []byte
-	data, err = reader.ReadExactSize(c.netConn, reqMsgLen)
+	data, err = reader.ReadExactSize(con.netConn, reqMsgLen)
 	if err != nil {
 		return err
 	}
 
-	r.Method, err = c.NewMethodFromBytes(data[0:3])
+	r.Method, err = con.NewMethodFromBytes(data[0:3])
 	if err != nil {
 		return err
 	}
@@ -126,11 +129,11 @@ func (c *Connection) getRequestMethodAndUID(r *request.Request) (err error) {
 	return nil
 }
 
-func (c *Connection) sendSRS(srs byte) (err error) {
+func (con *Connection) sendSRS(srs byte) (err error) {
 	buf := make([]byte, 1)
 	buf[0] = srs
 
-	_, err = c.netConn.Write(buf)
+	_, err = con.netConn.Write(buf)
 	if err != nil {
 		return err
 	}
@@ -138,7 +141,7 @@ func (c *Connection) sendSRS(srs byte) (err error) {
 	return nil
 }
 
-func (c *Connection) sendResponseSize(rm *response.Response) (err error) {
+func (con *Connection) sendResponseSize(rm *response.Response) (err error) {
 	var buf []byte
 	switch rm.SRS {
 	case proto.SRS_A:
@@ -154,7 +157,7 @@ func (c *Connection) sendResponseSize(rm *response.Response) (err error) {
 		binary.BigEndian.PutUint32(buf, rm.ResponseSizeC)
 	}
 
-	_, err = c.netConn.Write(buf)
+	_, err = con.netConn.Write(buf)
 	if err != nil {
 		return err
 	}
@@ -162,16 +165,16 @@ func (c *Connection) sendResponseSize(rm *response.Response) (err error) {
 	return nil
 }
 
-func (c *Connection) sendResponseMethodAndData(rm *response.Response, useBinary bool) (err error) {
-	_, err = c.netConn.Write((*c.methodNameBuffers)[rm.Method])
+func (con *Connection) sendResponseMethodAndData(rm *response.Response, useBinary bool) (err error) {
+	_, err = con.netConn.Write((*con.methodNameBuffers)[rm.Method])
 	if err != nil {
 		return err
 	}
 
 	if useBinary {
-		_, err = c.netConn.Write(rm.Data)
+		_, err = con.netConn.Write(rm.Data)
 	} else {
-		_, err = c.netConn.Write([]byte(rm.Text))
+		_, err = con.netConn.Write([]byte(rm.Text))
 	}
 	if err != nil {
 		return err
@@ -180,7 +183,7 @@ func (c *Connection) sendResponseMethodAndData(rm *response.Response, useBinary 
 	return nil
 }
 
-func (c *Connection) sendRequestSize(rm *request.Request) (err error) {
+func (con *Connection) sendRequestSize(rm *request.Request) (err error) {
 	var buf []byte
 	switch rm.SRS {
 	case proto.SRS_A:
@@ -195,7 +198,7 @@ func (c *Connection) sendRequestSize(rm *request.Request) (err error) {
 		return fmt.Errorf(ce.ErrSrsIsNotSupported, rm.SRS)
 	}
 
-	_, err = c.netConn.Write(buf)
+	_, err = con.netConn.Write(buf)
 	if err != nil {
 		return err
 	}
@@ -203,13 +206,13 @@ func (c *Connection) sendRequestSize(rm *request.Request) (err error) {
 	return nil
 }
 
-func (c *Connection) sendRequestMethodAndUid(rm *request.Request) (err error) {
-	_, err = c.netConn.Write((*c.methodNameBuffers)[rm.Method])
+func (con *Connection) sendRequestMethodAndUid(rm *request.Request) (err error) {
+	_, err = con.netConn.Write((*con.methodNameBuffers)[rm.Method])
 	if err != nil {
 		return err
 	}
 
-	_, err = c.netConn.Write([]byte(rm.UID))
+	_, err = con.netConn.Write([]byte(rm.UID))
 	if err != nil {
 		return err
 	}
@@ -217,22 +220,22 @@ func (c *Connection) sendRequestMethodAndUid(rm *request.Request) (err error) {
 	return nil
 }
 
-func (c *Connection) getResponseSize(resp *response.Response) (err error) {
+func (con *Connection) getResponseSize(resp *response.Response) (err error) {
 	switch resp.SRS {
 	case proto.SRS_A:
-		return c.getResponseSizeA(resp)
+		return con.getResponseSizeA(resp)
 	case proto.SRS_B:
-		return c.getResponseSizeB(resp)
+		return con.getResponseSizeB(resp)
 	case proto.SRS_C:
-		return c.getResponseSizeC(resp)
+		return con.getResponseSizeC(resp)
 	}
 
 	return fmt.Errorf(ce.ErrSrsIsNotSupported, resp.SRS)
 }
 
-func (c *Connection) getResponseSizeA(resp *response.Response) (err error) {
+func (con *Connection) getResponseSizeA(resp *response.Response) (err error) {
 	var data []byte
-	data, err = reader.ReadExactSize(c.netConn, proto.RS_LengthA)
+	data, err = reader.ReadExactSize(con.netConn, proto.RS_LengthA)
 	if err != nil {
 		return err
 	}
@@ -242,9 +245,9 @@ func (c *Connection) getResponseSizeA(resp *response.Response) (err error) {
 	return nil
 }
 
-func (c *Connection) getResponseSizeB(resp *response.Response) (err error) {
+func (con *Connection) getResponseSizeB(resp *response.Response) (err error) {
 	var data []byte
-	data, err = reader.ReadExactSize(c.netConn, proto.RS_LengthB)
+	data, err = reader.ReadExactSize(con.netConn, proto.RS_LengthB)
 	if err != nil {
 		return err
 	}
@@ -254,9 +257,9 @@ func (c *Connection) getResponseSizeB(resp *response.Response) (err error) {
 	return nil
 }
 
-func (c *Connection) getResponseSizeC(resp *response.Response) (err error) {
+func (con *Connection) getResponseSizeC(resp *response.Response) (err error) {
 	var data []byte
-	data, err = reader.ReadExactSize(c.netConn, proto.RS_LengthC)
+	data, err = reader.ReadExactSize(con.netConn, proto.RS_LengthC)
 	if err != nil {
 		return err
 	}
@@ -266,7 +269,7 @@ func (c *Connection) getResponseSizeC(resp *response.Response) (err error) {
 	return nil
 }
 
-func (c *Connection) getResponseMethodAndData(resp *response.Response, useBinary bool) (err error) {
+func (con *Connection) getResponseMethodAndData(resp *response.Response, useBinary bool) (err error) {
 	var respMsgLen uint
 	switch resp.SRS {
 	case proto.SRS_A:
@@ -279,17 +282,17 @@ func (c *Connection) getResponseMethodAndData(resp *response.Response, useBinary
 		return fmt.Errorf(ce.ErrSrsIsNotSupported, resp.SRS)
 	}
 
-	if respMsgLen > c.responseMessageLengthLimit {
-		return fmt.Errorf(ce.ErrMessageIsTooLong, c.responseMessageLengthLimit, respMsgLen)
+	if respMsgLen > con.responseMessageLengthLimit {
+		return fmt.Errorf(ce.ErrMessageIsTooLong, con.responseMessageLengthLimit, respMsgLen)
 	}
 
 	var data []byte
-	data, err = reader.ReadExactSize(c.netConn, respMsgLen)
+	data, err = reader.ReadExactSize(con.netConn, respMsgLen)
 	if err != nil {
 		return err
 	}
 
-	resp.Method, err = c.NewMethodFromBytes(data[0:3])
+	resp.Method, err = con.NewMethodFromBytes(data[0:3])
 	if err != nil {
 		return err
 	}
@@ -303,19 +306,23 @@ func (c *Connection) getResponseMethodAndData(resp *response.Response, useBinary
 	return nil
 }
 
-func (c *Connection) NewMethodFromBytes(b []byte) (m method.Method, err error) {
-	if len(b) == 3 {
-		return c.NewMethodFromString(string(b))
-	}
-
-	return c.NewMethodFromString(string(b[0:3]))
+func (con *Connection) GetClientId() (clientId string) {
+	return con.clientId
 }
 
-func (c *Connection) NewMethodFromString(s string) (m method.Method, err error) {
+func (con *Connection) NewMethodFromBytes(b []byte) (m method.Method, err error) {
+	if len(b) == 3 {
+		return con.NewMethodFromString(string(b))
+	}
+
+	return con.NewMethodFromString(string(b[0:3]))
+}
+
+func (con *Connection) NewMethodFromString(s string) (m method.Method, err error) {
 	methodStr := strings.TrimSuffix(s, mn.Spacer)
 
 	var ok bool
-	m, ok = (*c.methodValues)[methodStr]
+	m, ok = (*con.methodValues)[methodStr]
 	if !ok {
 		return 0, fmt.Errorf(ce.ErrUnknownMethodName, methodStr)
 	}

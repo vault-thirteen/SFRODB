@@ -9,7 +9,7 @@ const (
 	ErrUnexpectedExtraData = "unexpected extra data"
 )
 
-func ReadExactSize(conn *net.TCPConn, bytesCountToRead uint) (data []byte, err error) {
+func ReadExactSize(tc *net.TCPConn, bytesCountToRead uint) (data []byte, err error) {
 	data = make([]byte, 0, bytesCountToRead)
 	var (
 		bytesReceived uint = 0
@@ -21,7 +21,7 @@ func ReadExactSize(conn *net.TCPConn, bytesCountToRead uint) (data []byte, err e
 	for {
 		bytesExpected = bytesCountToRead - bytesReceived
 		buf = make([]byte, bytesExpected)
-		chunkSize, err = conn.Read(buf)
+		chunkSize, err = tc.Read(buf)
 		if err != nil {
 			return data, err
 		}

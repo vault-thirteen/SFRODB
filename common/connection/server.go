@@ -8,23 +8,23 @@ import (
 
 // GetNextRequest is a method used by a Server to receive a request from the
 // client.
-func (c *Connection) GetNextRequest() (r *request.Request, cerr *ce.CommonError) {
+func (con *Connection) GetNextRequest() (r *request.Request, cerr *ce.CommonError) {
 	r = &request.Request{}
 
 	var err error
-	r.SRS, err = c.getSRS()
+	r.SRS, err = con.getSRS()
 	if err != nil {
-		return nil, ce.NewServerError(ce.ErrSrsReading+err.Error(), 0)
+		return nil, ce.NewServerError(ce.ErrSrsReading+err.Error(), 0, con.clientId)
 	}
 
-	err = c.getRequestSize(r)
+	err = con.getRequestSize(r)
 	if err != nil {
-		return nil, ce.NewServerError(ce.ErrRsReading+err.Error(), 0)
+		return nil, ce.NewServerError(ce.ErrRsReading+err.Error(), 0, con.clientId)
 	}
 
-	err = c.getRequestMethodAndUID(r)
+	err = con.getRequestMethodAndUID(r)
 	if err != nil {
-		return nil, ce.NewServerError(ce.ErrReadingMethodAndData+err.Error(), 0)
+		return nil, ce.NewServerError(ce.ErrReadingMethodAndData+err.Error(), 0, con.clientId)
 	}
 
 	return r, nil
@@ -32,21 +32,21 @@ func (c *Connection) GetNextRequest() (r *request.Request, cerr *ce.CommonError)
 
 // SendResponseMessage is a method used by a Server to send a response to the
 // client.
-func (c *Connection) SendResponseMessage(rm *response.Response, useBinary bool) (cerr *ce.CommonError) {
+func (con *Connection) SendResponseMessage(rm *response.Response, useBinary bool) (cerr *ce.CommonError) {
 	var err error
-	err = c.sendSRS(rm.SRS)
+	err = con.sendSRS(rm.SRS)
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0, con.clientId)
 	}
 
-	err = c.sendResponseSize(rm)
+	err = con.sendResponseSize(rm)
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0, con.clientId)
 	}
 
-	err = c.sendResponseMethodAndData(rm, useBinary)
+	err = con.sendResponseMethodAndData(rm, useBinary)
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0)
+		return ce.NewServerError(err.Error(), 0, con.clientId)
 	}
 
 	return nil
