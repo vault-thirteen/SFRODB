@@ -9,8 +9,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/vault-thirteen/auxie/file"
 	"github.com/vault-thirteen/errorz"
-	"github.com/vault-thirteen/file"
 )
 
 const (
