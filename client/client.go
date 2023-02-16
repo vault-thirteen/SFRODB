@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 
 	"github.com/vault-thirteen/SFRODB/client/settings"
+	"github.com/vault-thirteen/SFRODB/common"
 	"github.com/vault-thirteen/SFRODB/common/connection"
 	ce "github.com/vault-thirteen/SFRODB/common/error"
 	"github.com/vault-thirteen/SFRODB/common/method"
@@ -228,4 +229,9 @@ func (cli *Client) restart(forcibly bool) (cerr *ce.CommonError) {
 	}
 
 	return cli.start()
+}
+
+// LibVersion returns the version of this library.
+func (cli *Client) LibVersion() (ver string) {
+	return common.LibVersion
 }

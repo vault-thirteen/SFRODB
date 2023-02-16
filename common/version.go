@@ -7,7 +7,7 @@ import (
 
 const (
 	LibName    = "SFRODB"
-	LibVersion = "0.13.0"
+	LibVersion = "0.13.1"
 
 	ProductServer     = "Server"
 	ProductTestClient = "Test Client"

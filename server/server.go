@@ -8,6 +8,7 @@ import (
 
 	"github.com/vault-thirteen/Cache"
 	"github.com/vault-thirteen/SFRODB/client"
+	"github.com/vault-thirteen/SFRODB/common"
 	"github.com/vault-thirteen/SFRODB/common/connection"
 	ce "github.com/vault-thirteen/SFRODB/common/error"
 	"github.com/vault-thirteen/SFRODB/common/method"
@@ -339,4 +340,9 @@ func (srv *Server) finalize(con *connection.Connection) (cerr *ce.CommonError) {
 	}
 
 	return con.Break()
+}
+
+// LibVersion returns the version of this library.
+func (srv *Server) LibVersion() (ver string) {
+	return common.LibVersion
 }
