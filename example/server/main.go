@@ -8,11 +8,16 @@ import (
 	"syscall"
 	"time"
 
+	cache "github.com/vault-thirteen/Cache"
+	"github.com/vault-thirteen/SFRODB/common"
 	"github.com/vault-thirteen/SFRODB/server"
 	"github.com/vault-thirteen/SFRODB/server/settings"
 )
 
 func main() {
+	common.ShowIntroText(common.ProductServer)
+	common.ShowComponentInfoText(common.ComponentCache, cache.LibVersion)
+
 	cla, err := readCLA()
 	mustBeNoError(err)
 

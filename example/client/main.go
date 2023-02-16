@@ -9,9 +9,12 @@ import (
 
 	"github.com/vault-thirteen/SFRODB/client"
 	"github.com/vault-thirteen/SFRODB/client/settings"
+	"github.com/vault-thirteen/SFRODB/common"
 )
 
 func main() {
+	common.ShowIntroText(common.ProductTestClient)
+
 	cla, err := readCLA()
 	mustBeNoError(err)
 
