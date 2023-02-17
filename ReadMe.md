@@ -36,8 +36,8 @@ automatically and has an adjustable size.
 Use the `build.bat` script included with the source code.
 
 ## Installation
-`go install github.com/vault-thirteen/SFRODB/cmd/client@latest`
-`go install github.com/vault-thirteen/SFRODB/cmd/server@latest`
+`go install github.com/vault-thirteen/SFRODB/cmd/client@latest`  
+`go install github.com/vault-thirteen/SFRODB/cmd/server@latest`  
 
 ## Startup Parameters
 
