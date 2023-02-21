@@ -12,7 +12,7 @@ also very simple – the database uses its own very simple network protocol base
 on the TCP/IP. Only data retrieval operations are supported making this engine 
 suitable for sharing of static content.  
 
-An example of a client can be found in the `example\client` folder.
+An example of a client can be found in the `cmd\client` folder.
 
 ## Caching
 
@@ -42,10 +42,16 @@ Use the `build.bat` script included with the source code.
 ## Startup Parameters
 
 ### Server
-`server.exe <path-to-configuration-file>`
+`server.exe <path-to-configuration-file>`  
+`server.exe`  
 
 Example:  
-`server.exe "settings.dat"`
+`server.exe "settings.txt"`  
+`server.exe`  
+
+**Notes**:  
+If the path to a configuration file is omitted, the default one is used.  
+Default name of the configuration file is `settings.txt`.  
 
 ### Sample Client
 `client.exe <server's host name> <server's main port> <server's aux port>`
@@ -54,4 +60,28 @@ Example:
 `client.exe localhost 12345 12346`
 
 ## Settings
-Format of the settings' file can be learned by studying the source code.
+Format of the settings' file for a server is quite simple. It uses line 
+breaks as a separator between parameters. Inside a parameter, sub-parameters 
+are separated with a single space symbol (" "). Described below are meanings 
+of each line.
+
+1. Hostname.
+2. Main port.
+3. Auxiliary port.
+4. Folder for text items.
+5. Parameters of the cache of textual items:
+   1. File extension for text items;
+   2. Maximum cache volume for text items (in bytes);
+   3. Maximum volume of a single text item (in bytes);
+   4. Item's TTL (in seconds).
+6. Folder for binary items.
+7. Parameters of the cache of binary items:
+   1. File extension for binary items;
+   2. Maximum cache volume for binary items (in bytes);
+   3. Maximum volume of a single binary item (in bytes);
+   4. Item's TTL (in seconds).
+
+**Notes**:
+* File extension here is used as a normal extension with a dot (period) prefix, 
+because Go language uses such format for file extensions. This is not good, but 
+this is how Golang works.

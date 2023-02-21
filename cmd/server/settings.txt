@@ -1,7 +1,7 @@
 localhost
-2020
-2021
-D:\Temp\data\txt 
+2001
+3001
+data
 .txt 128000000 1000000 60
-D:\Temp\data\bin 
+data
 .bin 128000000 1000000 60
