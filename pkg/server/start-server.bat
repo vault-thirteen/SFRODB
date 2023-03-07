@@ -1,1 +1,1 @@
-server.exe ".\settings.dat"
+server.exe ".\settings.txt"

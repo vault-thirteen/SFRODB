@@ -2,34 +2,24 @@ package mn
 
 // Method names.
 const (
-	ClientError       = "EEE"
-	OK                = "KKK"
+	ClientError       = "SER"
+	OK                = "SOK"
 	CloseConnection   = "CCC"
-	ClosingConnection = "YYY"
+	ClosingConnection = "SCC"
 
-	ShowText      = "ST"
-	ShowBinary    = "SB"
-	ShowingText   = "GT"
-	ShowingBinary = "GB"
+	ShowData    = "CSD"
+	ShowingData = "SSD"
 
-	SearchTextRecord         = "FRT"
-	SearchBinaryRecord       = "FRB"
-	TextRecordExists         = "RET"
-	BinaryRecordExists       = "REB"
-	TextRecordDoesNotExist   = "RNT"
-	BinaryRecordDoesNotExist = "RNB"
+	SearchRecord       = "CSR"
+	RecordExists       = "SRE"
+	RecordDoesNotExist = "SRN"
 
-	SearchTextFile         = "FFT"
-	SearchBinaryFile       = "FFB"
-	TextFileExists         = "FET"
-	BinaryFileExists       = "FEB"
-	TextFileDoesNotExist   = "FNT"
-	BinaryFileDoesNotExist = "FNB"
+	SearchFile       = "CSF"
+	FileExists       = "SFE"
+	FileDoesNotExist = "SFN"
 
-	ForgetTextRecord   = "RRT"
-	ForgetBinaryRecord = "RRB"
-	ResetTextCache     = "RST"
-	ResetBinaryCache   = "RSB"
+	ForgetRecord = "CFR"
+	ResetCache   = "CRS"
 )
 
 // Method name settings.

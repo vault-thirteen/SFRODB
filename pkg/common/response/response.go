@@ -22,8 +22,7 @@ type Response struct {
 	// Response Method.
 	Method method.Method
 
-	// Response Data: Textual and Binary.
-	Text string
+	// Response Data.
 	Data []byte
 }
 
@@ -47,59 +46,34 @@ func NewResponse_ClosingConnection() (resp *Response, err error) {
 	return newSimpleResponse(method.ClosingConnection)
 }
 
-func NewResponse_TextRecordExists() (resp *Response, err error) {
-	return newSimpleResponse(method.TextRecordExists)
+func NewResponse_RecordExists() (resp *Response, err error) {
+	return newSimpleResponse(method.RecordExists)
 }
 
-func NewResponse_BinaryRecordExists() (resp *Response, err error) {
-	return newSimpleResponse(method.BinaryRecordExists)
+func NewResponse_RecordDoesNotExist() (resp *Response, err error) {
+	return newSimpleResponse(method.RecordDoesNotExist)
 }
 
-func NewResponse_TextRecordDoesNotExist() (resp *Response, err error) {
-	return newSimpleResponse(method.TextRecordDoesNotExist)
+func NewResponse_FileExists() (resp *Response, err error) {
+	return newSimpleResponse(method.FileExists)
 }
 
-func NewResponse_BinaryRecordDoesNotExist() (resp *Response, err error) {
-	return newSimpleResponse(method.BinaryRecordDoesNotExist)
-}
-
-func NewResponse_TextFileExists() (resp *Response, err error) {
-	return newSimpleResponse(method.TextFileExists)
-}
-
-func NewResponse_BinaryFileExists() (resp *Response, err error) {
-	return newSimpleResponse(method.BinaryFileExists)
-}
-
-func NewResponse_TextFileDoesNotExist() (resp *Response, err error) {
-	return newSimpleResponse(method.TextFileDoesNotExist)
-}
-
-func NewResponse_BinaryFileDoesNotExist() (resp *Response, err error) {
-	return newSimpleResponse(method.BinaryFileDoesNotExist)
+func NewResponse_FileDoesNotExist() (resp *Response, err error) {
+	return newSimpleResponse(method.FileDoesNotExist)
 }
 
 func newNormalResponse(
-	text string,
 	data []byte,
-	useBinary bool,
 	method method.Method,
 ) (resp *Response, err error) {
 	resp = &Response{
 		SRS:           0, // Will be automatically calculated.
 		ResponseSizeC: 0, // Will be automatically calculated.
 		Method:        method,
+		Data:          data,
 	}
 
-	// Content.
-	var contentLen int
-	if useBinary {
-		resp.Data = data
-		contentLen = len(data)
-	} else {
-		resp.Text = text
-		contentLen = len(text)
-	}
+	var contentLen = len(data)
 
 	// SRS.
 	if contentLen > proto.ResponseMessageLengthC-mn.LengthLimit {
@@ -128,10 +102,6 @@ func newNormalResponse(
 	return resp, nil
 }
 
-func NewResponse_ShowingText(text string) (resp *Response, err error) {
-	return newNormalResponse(text, nil, false, method.ShowingText)
-}
-
-func NewResponse_ShowingBinary(data []byte) (resp *Response, err error) {
-	return newNormalResponse("", data, true, method.ShowingBinary)
+func NewResponse_ShowingData(data []byte) (resp *Response, err error) {
+	return newNormalResponse(data, method.ShowingData)
 }

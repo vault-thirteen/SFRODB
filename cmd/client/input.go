@@ -15,7 +15,6 @@ const (
 		"[F] = Forget/Remove a Record from Cache;\r\n" +
 		"[R] = Reset/Clear the Cache;\r\n" +
 		"[Q] = Quit/Exit.\r\n> "
-	HintTB       = "[T] = Text; [B] = Binary; [C] = Cancel/Quit. \r\n> "
 	HintUid      = "Enter the UID > "
 	HintDataSize = "Data is quite large. Do you want to see it ? [Y] = Yes; [N] = No. > "
 )

@@ -32,7 +32,7 @@ func (con *Connection) GetNextRequest() (r *request.Request, cerr *ce.CommonErro
 
 // SendResponseMessage is a method used by a Server to send a response to the
 // client.
-func (con *Connection) SendResponseMessage(rm *response.Response, useBinary bool) (cerr *ce.CommonError) {
+func (con *Connection) SendResponseMessage(rm *response.Response) (cerr *ce.CommonError) {
 	var err error
 	err = con.sendSRS(rm.SRS)
 	if err != nil {
@@ -44,7 +44,7 @@ func (con *Connection) SendResponseMessage(rm *response.Response, useBinary bool
 		return ce.NewServerError(err.Error(), 0, con.clientId)
 	}
 
-	err = con.sendResponseMethodAndData(rm, useBinary)
+	err = con.sendResponseMethodAndData(rm)
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0, con.clientId)
 	}

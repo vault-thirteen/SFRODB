@@ -6,34 +6,26 @@ import (
 
 // Method values.
 const (
-	ClientError       = Method(1)
-	OK                = Method(2)
-	CloseConnection   = Method(4 + 0)
-	ClosingConnection = Method(4 + 2 + 1)
+	ClientError = Method(1)
+	OK          = Method(255)
 
-	ShowText      = Method(8 + 1)
-	ShowBinary    = Method(8 + 2)
-	ShowingText   = Method(8 + 4 + 1)
-	ShowingBinary = Method(8 + 4 + 2)
+	CloseConnection   = Method(2 + 0)
+	ClosingConnection = Method(2 + 1)
 
-	SearchTextRecord         = Method(16 + 1)
-	SearchBinaryRecord       = Method(16 + 2)
-	TextRecordExists         = Method(16 + 4 + 1)
-	BinaryRecordExists       = Method(16 + 4 + 2)
-	TextRecordDoesNotExist   = Method(16 + 8 + 1)
-	BinaryRecordDoesNotExist = Method(16 + 8 + 2)
+	ShowData    = Method(4 + 0)
+	ShowingData = Method(4 + 2 + 1)
 
-	SearchTextFile         = Method(32 + 1)
-	SearchBinaryFile       = Method(32 + 2)
-	TextFileExists         = Method(32 + 4 + 1)
-	BinaryFileExists       = Method(32 + 4 + 2)
-	TextFileDoesNotExist   = Method(32 + 8 + 1)
-	BinaryFileDoesNotExist = Method(32 + 8 + 2)
+	SearchRecord       = Method(8 + 0)
+	RecordExists       = Method(8 + 4 + 2)
+	RecordDoesNotExist = Method(8 + 1)
 
-	ForgetTextRecord   = Method(64 + 1)
-	ForgetBinaryRecord = Method(64 + 2)
-	ResetTextCache     = Method(64 + 32 + 16 + 1)
-	ResetBinaryCache   = Method(64 + 32 + 16 + 2)
+	SearchFile       = Method(16)
+	FileExists       = Method(16 + 8 + 4)
+	FileDoesNotExist = Method(16 + 2 + 1)
+
+	ForgetRecord = Method(32)
+
+	ResetCache = Method(64)
 )
 
 // Method is a hybrid of action type and status code, as opposed to the HTTP
@@ -46,26 +38,16 @@ func MethodNames() []string {
 		mn.OK,
 		mn.CloseConnection,
 		mn.ClosingConnection,
-		mn.ShowText,
-		mn.ShowBinary,
-		mn.ShowingText,
-		mn.ShowingBinary,
-		mn.SearchTextRecord,
-		mn.SearchBinaryRecord,
-		mn.TextRecordExists,
-		mn.BinaryRecordExists,
-		mn.TextRecordDoesNotExist,
-		mn.BinaryRecordDoesNotExist,
-		mn.SearchTextFile,
-		mn.SearchBinaryFile,
-		mn.TextFileExists,
-		mn.BinaryFileExists,
-		mn.TextFileDoesNotExist,
-		mn.BinaryFileDoesNotExist,
-		mn.ForgetTextRecord,
-		mn.ForgetBinaryRecord,
-		mn.ResetTextCache,
-		mn.ResetBinaryCache,
+		mn.ShowData,
+		mn.ShowingData,
+		mn.SearchRecord,
+		mn.RecordExists,
+		mn.RecordDoesNotExist,
+		mn.SearchFile,
+		mn.FileExists,
+		mn.FileDoesNotExist,
+		mn.ForgetRecord,
+		mn.ResetCache,
 	}
 }
 
@@ -75,26 +57,16 @@ func MethodValues() []Method {
 		OK,
 		CloseConnection,
 		ClosingConnection,
-		ShowText,
-		ShowBinary,
-		ShowingText,
-		ShowingBinary,
-		SearchTextRecord,
-		SearchBinaryRecord,
-		TextRecordExists,
-		BinaryRecordExists,
-		TextRecordDoesNotExist,
-		BinaryRecordDoesNotExist,
-		SearchTextFile,
-		SearchBinaryFile,
-		TextFileExists,
-		BinaryFileExists,
-		TextFileDoesNotExist,
-		BinaryFileDoesNotExist,
-		ForgetTextRecord,
-		ForgetBinaryRecord,
-		ResetTextCache,
-		ResetBinaryCache,
+		ShowData,
+		ShowingData,
+		SearchRecord,
+		RecordExists,
+		RecordDoesNotExist,
+		SearchFile,
+		FileExists,
+		FileDoesNotExist,
+		ForgetRecord,
+		ResetCache,
 	}
 }
 

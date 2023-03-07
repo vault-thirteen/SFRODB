@@ -35,14 +35,11 @@ type Server struct {
 	auxListener     *net.TCPListener
 	auxListenerAddr *net.TCPAddr
 
-	cacheT *cache.Cache[string, string]
-	cacheB *cache.Cache[string, []byte]
-
 	methodNameBuffers map[method.Method][]byte
 	methodValues      map[string]method.Method
 
-	filesT *ff.FilesFolder
-	filesB *ff.FilesFolder
+	cache *cache.Cache[string, []byte] // UID is string, Data is a byte array.
+	files *ff.FilesFolder              // Data files.
 
 	isRunning *atomic.Bool
 }
@@ -73,30 +70,16 @@ func NewServer(stn *settings.Settings) (srv *Server, err error) {
 	srv.isRunning = new(atomic.Bool)
 	srv.isRunning.Store(false)
 
-	srv.cacheT = cache.NewCache[string, string](
+	srv.cache = cache.NewCache[string, []byte](
 		0,
-		srv.settings.TextData.CacheVolumeMax,
-		srv.settings.TextData.CachedItemTTL,
+		srv.settings.Data.CacheVolumeMax,
+		srv.settings.Data.CachedItemTTL,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	srv.cacheB = cache.NewCache[string, []byte](
-		0,
-		srv.settings.BinaryData.CacheVolumeMax,
-		srv.settings.BinaryData.CachedItemTTL,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	srv.filesT, err = ff.NewFilesFolder(srv.settings.TextData.Folder)
-	if err != nil {
-		return nil, err
-	}
-
-	srv.filesB, err = ff.NewFilesFolder(srv.settings.BinaryData.Folder)
+	srv.files, err = ff.NewFilesFolder(srv.settings.Data.Folder)
 	if err != nil {
 		return nil, err
 	}
@@ -228,12 +211,12 @@ func (srv *Server) handleMainConnection(conn *net.TCPConn) {
 	}()
 
 	var req *request.Request
-	var err *ce.CommonError
+	var cerr *ce.CommonError
 
 	for {
-		req, err = con.GetNextRequest()
-		if err != nil {
-			log.Println(err)
+		req, cerr = con.GetNextRequest()
+		if cerr != nil {
+			log.Println(cerr)
 			break
 		}
 
@@ -242,28 +225,22 @@ func (srv *Server) handleMainConnection(conn *net.TCPConn) {
 		}
 
 		switch req.Method {
-		case method.ShowText,
-			method.ShowBinary:
-			err = srv.showRecord(con, req)
-
-		case method.SearchTextRecord,
-			method.SearchBinaryRecord:
-			err = srv.searchRecord(con, req)
-
-		case method.SearchTextFile,
-			method.SearchBinaryFile:
-			err = srv.searchFile(con, req)
-
+		case method.ShowData:
+			cerr = srv.showData(con, req)
+		case method.SearchRecord:
+			cerr = srv.searchRecord(con, req)
+		case method.SearchFile:
+			cerr = srv.searchFile(con, req)
 		default:
 			msg := fmt.Sprintf(ce.ErrUnsupportedMethodValue, req.Method)
-			err = ce.NewClientError(msg, 0, con.GetClientId())
+			cerr = ce.NewClientError(msg, 0, con.GetClientId())
 		}
-		if err != nil {
-			if err.IsServerError() {
+		if cerr != nil {
+			if cerr.IsServerError() {
 				break
 			} else {
-				err = srv.clientError(con)
-				if err != nil {
+				cerr = srv.clientError(con)
+				if cerr != nil {
 					break
 				}
 				continue
@@ -289,12 +266,12 @@ func (srv *Server) handleAuxConnection(conn *net.TCPConn) {
 	}()
 
 	var req *request.Request
-	var err *ce.CommonError
+	var cerr *ce.CommonError
 
 	for {
-		req, err = con.GetNextRequest()
-		if err != nil {
-			log.Println(err)
+		req, cerr = con.GetNextRequest()
+		if cerr != nil {
+			log.Println(cerr)
 			break
 		}
 
@@ -303,24 +280,20 @@ func (srv *Server) handleAuxConnection(conn *net.TCPConn) {
 		}
 
 		switch req.Method {
-		case method.ForgetTextRecord,
-			method.ForgetBinaryRecord:
-			err = srv.forgetRecord(con, req)
-
-		case method.ResetTextCache,
-			method.ResetBinaryCache:
-			err = srv.resetCache(con, req)
-
+		case method.ForgetRecord:
+			cerr = srv.forgetRecord(con, req)
+		case method.ResetCache:
+			cerr = srv.resetCache(con, req)
 		default:
 			msg := fmt.Sprintf(ce.ErrUnsupportedMethodValue, req.Method)
-			err = ce.NewClientError(msg, 0, con.GetClientId())
+			cerr = ce.NewClientError(msg, 0, con.GetClientId())
 		}
-		if err != nil {
-			if err.IsServerError() {
+		if cerr != nil {
+			if cerr.IsServerError() {
 				break
 			} else {
-				err = srv.clientError(con)
-				if err != nil {
+				cerr = srv.clientError(con)
+				if cerr != nil {
 					break
 				}
 				continue

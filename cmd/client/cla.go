@@ -4,7 +4,7 @@ import (
 	"errors"
 	"os"
 
-	"github.com/vault-thirteen/SFRODB/pkg/common/helper"
+	"github.com/vault-thirteen/auxie/number"
 )
 
 const ErrSyntax = "syntax error"
@@ -24,12 +24,12 @@ func readCLA() (cla *CommandLineArguments, err error) {
 		Host: os.Args[1],
 	}
 
-	cla.MainPort, err = helper.ParseUint16(os.Args[2])
+	cla.MainPort, err = number.ParseUint16(os.Args[2])
 	if err != nil {
 		return nil, err
 	}
 
-	cla.AuxPort, err = helper.ParseUint16(os.Args[3])
+	cla.AuxPort, err = number.ParseUint16(os.Args[3])
 	if err != nil {
 		return nil, err
 	}

@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/vault-thirteen/SFRODB/pkg/common/error"
-	"github.com/vault-thirteen/SFRODB/pkg/common/helper"
+	"github.com/vault-thirteen/auxie/number"
 	"github.com/vault-thirteen/auxie/reader"
 	"github.com/vault-thirteen/errorz"
 )
@@ -28,9 +28,8 @@ type Settings struct {
 	// A port which is used for non-read operations.
 	AuxPort uint16
 
-	// Textual and binary data use separate caches.
-	TextData   *DataSettings
-	BinaryData *DataSettings
+	// Data settings.
+	Data *DataSettings
 }
 
 func NewSettingsFromFile(filePath string) (stn *Settings, err error) {
@@ -51,7 +50,7 @@ func NewSettingsFromFile(filePath string) (stn *Settings, err error) {
 	}()
 
 	rdr := reader.NewReader(file)
-	var buf = make([][]byte, 7)
+	var buf = make([][]byte, 5)
 
 	for i := range buf {
 		buf[i], err = rdr.ReadLineEndingWithCRLF()
@@ -63,24 +62,18 @@ func NewSettingsFromFile(filePath string) (stn *Settings, err error) {
 	// Server Host & Port.
 	stn.ServerHost = strings.TrimSpace(string(buf[0]))
 
-	stn.MainPort, err = helper.ParseUint16(strings.TrimSpace(string(buf[1])))
+	stn.MainPort, err = number.ParseUint16(strings.TrimSpace(string(buf[1])))
 	if err != nil {
 		return stn, err
 	}
 
-	stn.AuxPort, err = helper.ParseUint16(strings.TrimSpace(string(buf[2])))
+	stn.AuxPort, err = number.ParseUint16(strings.TrimSpace(string(buf[2])))
 	if err != nil {
 		return stn, err
 	}
 
-	// Text Cache Settings.
-	stn.TextData, err = ParseDataSettings(string(buf[3]), string(buf[4]))
-	if err != nil {
-		return stn, err
-	}
-
-	// Binary Cache Settings.
-	stn.BinaryData, err = ParseDataSettings(string(buf[5]), string(buf[6]))
+	// Cache Data Settings.
+	stn.Data, err = ParseDataSettings(string(buf[3]), string(buf[4]))
 	if err != nil {
 		return stn, err
 	}
@@ -105,12 +98,7 @@ func (stn *Settings) Check() (err error) {
 		return errors.New(ce.ErrServerPortIsNotSet)
 	}
 
-	err = stn.TextData.Check()
-	if err != nil {
-		return err
-	}
-
-	err = stn.BinaryData.Check()
+	err = stn.Data.Check()
 	if err != nil {
 		return err
 	}

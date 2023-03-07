@@ -12,25 +12,17 @@ import (
 	"github.com/vault-thirteen/SFRODB/pkg/common/request"
 )
 
-// showRecord shows a record.
+// showData shows a data record.
 // Returns a detailed error.
-func (srv *Server) showRecord(con *connection.Connection, r *request.Request) (cerr *ce.CommonError) {
+func (srv *Server) showData(con *connection.Connection, r *request.Request) (cerr *ce.CommonError) {
 	switch r.Method {
-	case method.ShowText:
-		var text string
-		text, cerr = srv.getText(r.UID, con.GetClientId())
-		if cerr != nil {
-			return cerr
-		}
-		return srv.showingText(con, text)
-
-	case method.ShowBinary:
+	case method.ShowData:
 		var data []byte
-		data, cerr = srv.getBinary(r.UID, con.GetClientId())
+		data, cerr = srv.getData(r.UID, con.GetClientId())
 		if cerr != nil {
 			return cerr
 		}
-		return srv.showingBinary(con, data)
+		return srv.showingData(con, data)
 
 	default:
 		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0, con.GetClientId())
@@ -46,22 +38,13 @@ func (srv *Server) searchRecord(con *connection.Connection, r *request.Request) 
 	}
 
 	// Search for the record in cache.
-	var recExists bool
 	switch r.Method {
-	case method.SearchTextRecord:
-		recExists = srv.cacheT.RecordExists(r.UID)
+	case method.SearchRecord:
+		var recExists = srv.cache.RecordExists(r.UID)
 		if recExists {
-			return srv.textRecordExists(con)
+			return srv.recordExists(con)
 		} else {
-			return srv.textRecordDoesNotExist(con)
-		}
-
-	case method.SearchBinaryRecord:
-		recExists = srv.cacheB.RecordExists(r.UID)
-		if recExists {
-			return srv.binaryRecordExists(con)
-		} else {
-			return srv.binaryRecordDoesNotExist(con)
+			return srv.recordDoesNotExist(con)
 		}
 
 	default:
@@ -78,30 +61,17 @@ func (srv *Server) searchFile(con *connection.Connection, r *request.Request) (c
 	}
 
 	// Search for the file in storage.
-	var relPath string
 	switch r.Method {
-	case method.SearchTextFile:
-		relPath = filepath.Join(r.UID+srv.settings.TextData.FileExtension, "")
-		fileExists, err := srv.filesT.FileExists(relPath)
+	case method.SearchFile:
+		var relPath = filepath.Join(r.UID+srv.settings.Data.FileExtension, "")
+		fileExists, err := srv.files.FileExists(relPath)
 		if err != nil {
 			return ce.NewServerError(err.Error(), 0, con.GetClientId())
 		}
 		if fileExists {
-			return srv.textFileExists(con)
+			return srv.fileExists(con)
 		} else {
-			return srv.textFileDoesNotExist(con)
-		}
-
-	case method.SearchBinaryFile:
-		relPath = filepath.Join(r.UID+srv.settings.BinaryData.FileExtension, "")
-		fileExists, err := srv.filesB.FileExists(relPath)
-		if err != nil {
-			return ce.NewServerError(err.Error(), 0, con.GetClientId())
-		}
-		if fileExists {
-			return srv.binaryFileExists(con)
-		} else {
-			return srv.binaryFileDoesNotExist(con)
+			return srv.fileDoesNotExist(con)
 		}
 
 	default:
@@ -121,10 +91,8 @@ func (srv *Server) forgetRecord(con *connection.Connection, r *request.Request) 
 	var recExists bool
 	var err error
 	switch r.Method {
-	case method.ForgetTextRecord:
-		recExists, err = srv.cacheT.RemoveRecord(r.UID)
-	case method.ForgetBinaryRecord:
-		recExists, err = srv.cacheB.RemoveRecord(r.UID)
+	case method.ForgetRecord:
+		recExists, err = srv.cache.RemoveRecord(r.UID)
 	default:
 		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0, con.GetClientId())
 	}
@@ -146,10 +114,8 @@ func (srv *Server) resetCache(con *connection.Connection, r *request.Request) (c
 	// Clear the cache.
 	var err error
 	switch r.Method {
-	case method.ResetTextCache:
-		err = srv.cacheT.Clear()
-	case method.ResetBinaryCache:
-		err = srv.cacheB.Clear()
+	case method.ResetCache:
+		err = srv.cache.Clear()
 	default:
 		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0, con.GetClientId())
 	}

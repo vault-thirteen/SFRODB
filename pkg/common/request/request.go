@@ -44,12 +44,8 @@ func NewRequest_CloseConnection() (req *Request, err error) {
 	return newSimpleRequest(method.CloseConnection)
 }
 
-func NewRequest_ResetTextCache() (req *Request, err error) {
-	return newSimpleRequest(method.ResetTextCache)
-}
-
-func NewRequest_ResetBinaryCache() (req *Request, err error) {
-	return newSimpleRequest(method.ResetBinaryCache)
+func NewRequest_ResetCache() (req *Request, err error) {
+	return newSimpleRequest(method.ResetCache)
 }
 
 func newNormalRequest(method method.Method, uid string) (req *Request, err error) {
@@ -90,34 +86,18 @@ func newNormalRequest(method method.Method, uid string) (req *Request, err error
 	return req, nil
 }
 
-func NewRequest_ShowText(uid string) (req *Request, err error) {
-	return newNormalRequest(method.ShowText, uid)
+func NewRequest_ShowData(uid string) (req *Request, err error) {
+	return newNormalRequest(method.ShowData, uid)
 }
 
-func NewRequest_ShowBinary(uid string) (req *Request, err error) {
-	return newNormalRequest(method.ShowBinary, uid)
+func NewRequest_SearchRecord(uid string) (req *Request, err error) {
+	return newNormalRequest(method.SearchRecord, uid)
 }
 
-func NewRequest_SearchTextRecord(uid string) (req *Request, err error) {
-	return newNormalRequest(method.SearchTextRecord, uid)
+func NewRequest_SearchFile(uid string) (req *Request, err error) {
+	return newNormalRequest(method.SearchFile, uid)
 }
 
-func NewRequest_SearchBinaryRecord(uid string) (req *Request, err error) {
-	return newNormalRequest(method.SearchBinaryRecord, uid)
-}
-
-func NewRequest_SearchTextFile(uid string) (req *Request, err error) {
-	return newNormalRequest(method.SearchTextFile, uid)
-}
-
-func NewRequest_SearchBinaryFile(uid string) (req *Request, err error) {
-	return newNormalRequest(method.SearchBinaryFile, uid)
-}
-
-func NewRequest_ForgetTextRecord(uid string) (req *Request, err error) {
-	return newNormalRequest(method.ForgetTextRecord, uid)
-}
-
-func NewRequest_ForgetBinaryRecord(uid string) (req *Request, err error) {
-	return newNormalRequest(method.ForgetBinaryRecord, uid)
+func NewRequest_ForgetRecord(uid string) (req *Request, err error) {
+	return newNormalRequest(method.ForgetRecord, uid)
 }

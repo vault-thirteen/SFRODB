@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/vault-thirteen/SFRODB/pkg/common/error"
-	"github.com/vault-thirteen/SFRODB/pkg/common/helper"
+	"github.com/vault-thirteen/auxie/number"
 )
 
 const ErrSyntax = "syntax error"
@@ -43,17 +43,17 @@ func ParseDataSettings(line1, line2 string) (ds *DataSettings, err error) {
 
 	ds.FileExtension = parts[0]
 
-	ds.CacheVolumeMax, err = helper.ParseInt(parts[1])
+	ds.CacheVolumeMax, err = number.ParseInt(parts[1])
 	if err != nil {
 		return nil, err
 	}
 
-	ds.CachedItemVolumeMax, err = helper.ParseInt(parts[2])
+	ds.CachedItemVolumeMax, err = number.ParseInt(parts[2])
 	if err != nil {
 		return nil, err
 	}
 
-	ds.CachedItemTTL, err = helper.ParseUint(parts[3])
+	ds.CachedItemTTL, err = number.ParseUint(parts[3])
 	if err != nil {
 		return nil, err
 	}

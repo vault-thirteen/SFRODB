@@ -14,7 +14,7 @@ func (srv *Server) clientError(con *connection.Connection) (cerr *ce.CommonError
 		return ce.NewServerError(err.Error(), 0, con.GetClientId())
 	}
 
-	return con.SendResponseMessage(rm, false)
+	return con.SendResponseMessage(rm)
 }
 
 // ok tells the client about its (client's) success.
@@ -25,7 +25,7 @@ func (srv *Server) ok(con *connection.Connection) (cerr *ce.CommonError) {
 		return ce.NewServerError(err.Error(), 0, con.GetClientId())
 	}
 
-	return con.SendResponseMessage(rm, false)
+	return con.SendResponseMessage(rm)
 }
 
 // closingConnection tells the client that server is going to close the
@@ -37,115 +37,60 @@ func (srv *Server) closingConnection(con *connection.Connection) (cerr *ce.Commo
 		return ce.NewServerError(err.Error(), 0, con.GetClientId())
 	}
 
-	return con.SendResponseMessage(rm, false)
+	return con.SendResponseMessage(rm)
 }
 
-// showingText tells the client that server is showing text.
+// showingData tells the client that server is showing data.
 // Returns a detailed error.
-func (srv *Server) showingText(con *connection.Connection, text string) (cerr *ce.CommonError) {
-	rm, err := response.NewResponse_ShowingText(text)
+func (srv *Server) showingData(con *connection.Connection, data []byte) (cerr *ce.CommonError) {
+	rm, err := response.NewResponse_ShowingData(data)
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0, con.GetClientId())
 	}
 
-	return con.SendResponseMessage(rm, false)
+	return con.SendResponseMessage(rm)
 }
 
-// showingBinary tells the client that server is showing binary data.
+// recordExists tells the client that a record exists.
 // Returns a detailed error.
-func (srv *Server) showingBinary(con *connection.Connection, data []byte) (cerr *ce.CommonError) {
-	rm, err := response.NewResponse_ShowingBinary(data)
+func (srv *Server) recordExists(con *connection.Connection) (cerr *ce.CommonError) {
+	rm, err := response.NewResponse_RecordExists()
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0, con.GetClientId())
 	}
 
-	return con.SendResponseMessage(rm, true)
+	return con.SendResponseMessage(rm)
 }
 
-// textRecordExists tells the client that a text record exists.
+// recordDoesNotExist tells the client that a record does not exist.
 // Returns a detailed error.
-func (srv *Server) textRecordExists(con *connection.Connection) (cerr *ce.CommonError) {
-	rm, err := response.NewResponse_TextRecordExists()
+func (srv *Server) recordDoesNotExist(con *connection.Connection) (cerr *ce.CommonError) {
+	rm, err := response.NewResponse_RecordDoesNotExist()
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0, con.GetClientId())
 	}
 
-	return con.SendResponseMessage(rm, false)
+	return con.SendResponseMessage(rm)
 }
 
-// binaryRecordExists tells the client that a binary record exists.
+// fileExists tells the client that a file exists.
 // Returns a detailed error.
-func (srv *Server) binaryRecordExists(con *connection.Connection) (cerr *ce.CommonError) {
-	rm, err := response.NewResponse_BinaryRecordExists()
+func (srv *Server) fileExists(con *connection.Connection) (cerr *ce.CommonError) {
+	rm, err := response.NewResponse_FileExists()
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0, con.GetClientId())
 	}
 
-	return con.SendResponseMessage(rm, true)
+	return con.SendResponseMessage(rm)
 }
 
-// textRecordDoesNotExist tells the client that a text record does not exist.
+// fileDoesNotExist tells the client that a file does not exist.
 // Returns a detailed error.
-func (srv *Server) textRecordDoesNotExist(con *connection.Connection) (cerr *ce.CommonError) {
-	rm, err := response.NewResponse_TextRecordDoesNotExist()
+func (srv *Server) fileDoesNotExist(con *connection.Connection) (cerr *ce.CommonError) {
+	rm, err := response.NewResponse_FileDoesNotExist()
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0, con.GetClientId())
 	}
 
-	return con.SendResponseMessage(rm, false)
-}
-
-// binaryRecordDoesNotExist tells the client that a binary record does not exist.
-// Returns a detailed error.
-func (srv *Server) binaryRecordDoesNotExist(con *connection.Connection) (cerr *ce.CommonError) {
-	rm, err := response.NewResponse_BinaryRecordDoesNotExist()
-	if err != nil {
-		return ce.NewServerError(err.Error(), 0, con.GetClientId())
-	}
-
-	return con.SendResponseMessage(rm, true)
-}
-
-// textFileExists tells the client that a text file exists.
-// Returns a detailed error.
-func (srv *Server) textFileExists(con *connection.Connection) (cerr *ce.CommonError) {
-	rm, err := response.NewResponse_TextFileExists()
-	if err != nil {
-		return ce.NewServerError(err.Error(), 0, con.GetClientId())
-	}
-
-	return con.SendResponseMessage(rm, false)
-}
-
-// binaryFileExists tells the client that a binary file exists.
-// Returns a detailed error.
-func (srv *Server) binaryFileExists(con *connection.Connection) (cerr *ce.CommonError) {
-	rm, err := response.NewResponse_BinaryFileExists()
-	if err != nil {
-		return ce.NewServerError(err.Error(), 0, con.GetClientId())
-	}
-
-	return con.SendResponseMessage(rm, true)
-}
-
-// textFileDoesNotExist tells the client that a text file does not exist.
-// Returns a detailed error.
-func (srv *Server) textFileDoesNotExist(con *connection.Connection) (cerr *ce.CommonError) {
-	rm, err := response.NewResponse_TextFileDoesNotExist()
-	if err != nil {
-		return ce.NewServerError(err.Error(), 0, con.GetClientId())
-	}
-
-	return con.SendResponseMessage(rm, false)
-}
-
-// binaryFileDoesNotExist tells the client that a binary file does not exist.
-// Returns a detailed error.
-func (srv *Server) binaryFileDoesNotExist(con *connection.Connection) (cerr *ce.CommonError) {
-	rm, err := response.NewResponse_BinaryFileDoesNotExist()
-	if err != nil {
-		return ce.NewServerError(err.Error(), 0, con.GetClientId())
-	}
-
-	return con.SendResponseMessage(rm, true)
+	return con.SendResponseMessage(rm)
 }

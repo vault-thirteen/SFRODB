@@ -165,17 +165,13 @@ func (con *Connection) sendResponseSize(rm *response.Response) (err error) {
 	return nil
 }
 
-func (con *Connection) sendResponseMethodAndData(rm *response.Response, useBinary bool) (err error) {
+func (con *Connection) sendResponseMethodAndData(rm *response.Response) (err error) {
 	_, err = con.netConn.Write((*con.methodNameBuffers)[rm.Method])
 	if err != nil {
 		return err
 	}
 
-	if useBinary {
-		_, err = con.netConn.Write(rm.Data)
-	} else {
-		_, err = con.netConn.Write([]byte(rm.Text))
-	}
+	_, err = con.netConn.Write(rm.Data)
 	if err != nil {
 		return err
 	}
@@ -269,7 +265,7 @@ func (con *Connection) getResponseSizeC(resp *response.Response) (err error) {
 	return nil
 }
 
-func (con *Connection) getResponseMethodAndData(resp *response.Response, useBinary bool) (err error) {
+func (con *Connection) getResponseMethodAndData(resp *response.Response) (err error) {
 	var respMsgLen uint
 	switch resp.SRS {
 	case proto.SRS_A:
@@ -297,11 +293,7 @@ func (con *Connection) getResponseMethodAndData(resp *response.Response, useBina
 		return err
 	}
 
-	if useBinary {
-		resp.Data = data[3:respMsgLen]
-	} else {
-		resp.Text = strings.TrimSpace(string(data[3:respMsgLen]))
-	}
+	resp.Data = data[3:respMsgLen]
 
 	return nil
 }

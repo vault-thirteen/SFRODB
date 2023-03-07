@@ -9,18 +9,18 @@ import (
 // CloseConnection_Main tells the server to close the main connection.
 // Returns a detailed error.
 func (cli *Client) CloseConnection_Main(normalExit bool) (cerr *ce.CommonError) {
-	return cli.closeConnection_any(true, normalExit, false)
+	return cli.closeConnection_any(true, normalExit)
 }
 
 // CloseConnection_Aux tells the server to close the auxiliary connection.
 // Returns a detailed error.
 func (cli *Client) CloseConnection_Aux(normalExit bool) (cerr *ce.CommonError) {
-	return cli.closeConnection_any(false, normalExit, false)
+	return cli.closeConnection_any(false, normalExit)
 }
 
 // closeConnection_any tells the server to close the connection.
 // Returns a detailed error.
-func (cli *Client) closeConnection_any(useMainConnection bool, normalExit bool, useBinary bool) (cerr *ce.CommonError) {
+func (cli *Client) closeConnection_any(useMainConnection bool, normalExit bool) (cerr *ce.CommonError) {
 	if useMainConnection {
 		cerr = cli.closeConnection(cli.mainConnection)
 	} else {
@@ -38,9 +38,9 @@ func (cli *Client) closeConnection_any(useMainConnection bool, normalExit bool, 
 
 	var resp *response.Response
 	if useMainConnection {
-		resp, cerr = cli.mainConnection.GetResponseMessage(useBinary)
+		resp, cerr = cli.mainConnection.GetResponseMessage()
 	} else {
-		resp, cerr = cli.auxConnection.GetResponseMessage(useBinary)
+		resp, cerr = cli.auxConnection.GetResponseMessage()
 	}
 	if cerr != nil {
 		return cerr
@@ -53,40 +53,16 @@ func (cli *Client) closeConnection_any(useMainConnection bool, normalExit bool, 
 	return ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method, cli.id)
 }
 
-// ShowText requests a text from server and returns it.
+// ShowData requests a data record from server and returns it.
 // Returns a detailed error.
-func (cli *Client) ShowText(uid string) (text string, cerr *ce.CommonError) {
-	cerr = cli.showText(cli.mainConnection, uid)
-	if cerr != nil {
-		return "", cerr
-	}
-
-	var resp *response.Response
-	resp, cerr = cli.mainConnection.GetResponseMessage(false)
-	if cerr != nil {
-		return "", cerr
-	}
-
-	switch resp.Method {
-	case method.ClientError:
-		return "", ce.NewClientError(ce.ErrSomethingWentWrong, resp.Method, cli.id)
-	case method.ClosingConnection:
-		return "", ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method, cli.id)
-	}
-
-	return resp.Text, nil
-}
-
-// ShowBinary requests a binary data from server and returns it.
-// Returns a detailed error.
-func (cli *Client) ShowBinary(uid string) (data []byte, cerr *ce.CommonError) {
-	cerr = cli.showBinary(cli.mainConnection, uid)
+func (cli *Client) ShowData(uid string) (data []byte, cerr *ce.CommonError) {
+	cerr = cli.showData(cli.mainConnection, uid)
 	if cerr != nil {
 		return nil, cerr
 	}
 
 	var resp *response.Response
-	resp, cerr = cli.mainConnection.GetResponseMessage(true)
+	resp, cerr = cli.mainConnection.GetResponseMessage()
 	if cerr != nil {
 		return nil, cerr
 	}
@@ -101,24 +77,24 @@ func (cli *Client) ShowBinary(uid string) (data []byte, cerr *ce.CommonError) {
 	return resp.Data, nil
 }
 
-// SearchTextRecord asks server to check existence of a text record in cache.
+// SearchRecord asks server to check existence of a data record in cache.
 // Returns a detailed error.
-func (cli *Client) SearchTextRecord(uid string) (recExists bool, cerr *ce.CommonError) {
-	cerr = cli.searchTextRecord(cli.mainConnection, uid)
+func (cli *Client) SearchRecord(uid string) (recExists bool, cerr *ce.CommonError) {
+	cerr = cli.searchRecord(cli.mainConnection, uid)
 	if cerr != nil {
 		return false, cerr
 	}
 
 	var resp *response.Response
-	resp, cerr = cli.mainConnection.GetResponseMessage(false)
+	resp, cerr = cli.mainConnection.GetResponseMessage()
 	if cerr != nil {
 		return false, cerr
 	}
 
 	switch resp.Method {
-	case method.TextRecordExists:
+	case method.RecordExists:
 		return true, nil
-	case method.TextRecordDoesNotExist:
+	case method.RecordDoesNotExist:
 		return false, nil
 	case method.ClientError:
 		return false, ce.NewClientError(ce.ErrSomethingWentWrong, resp.Method, cli.id)
@@ -129,24 +105,24 @@ func (cli *Client) SearchTextRecord(uid string) (recExists bool, cerr *ce.Common
 	}
 }
 
-// SearchBinaryRecord asks server to check existence of a binary record in cache.
+// SearchFile asks server to check existence of a file.
 // Returns a detailed error.
-func (cli *Client) SearchBinaryRecord(uid string) (recExists bool, cerr *ce.CommonError) {
-	cerr = cli.searchBinaryRecord(cli.mainConnection, uid)
+func (cli *Client) SearchFile(uid string) (fileExists bool, cerr *ce.CommonError) {
+	cerr = cli.searchFile(cli.mainConnection, uid)
 	if cerr != nil {
 		return false, cerr
 	}
 
 	var resp *response.Response
-	resp, cerr = cli.mainConnection.GetResponseMessage(true)
+	resp, cerr = cli.mainConnection.GetResponseMessage()
 	if cerr != nil {
 		return false, cerr
 	}
 
 	switch resp.Method {
-	case method.BinaryRecordExists:
+	case method.FileExists:
 		return true, nil
-	case method.BinaryRecordDoesNotExist:
+	case method.FileDoesNotExist:
 		return false, nil
 	case method.ClientError:
 		return false, ce.NewClientError(ce.ErrSomethingWentWrong, resp.Method, cli.id)
@@ -157,72 +133,16 @@ func (cli *Client) SearchBinaryRecord(uid string) (recExists bool, cerr *ce.Comm
 	}
 }
 
-// SearchTextFile asks server to check existence of a text file.
+// ForgetRecord requests the server to remove a data entry from cache.
 // Returns a detailed error.
-func (cli *Client) SearchTextFile(uid string) (fileExists bool, cerr *ce.CommonError) {
-	cerr = cli.searchTextFile(cli.mainConnection, uid)
-	if cerr != nil {
-		return false, cerr
-	}
-
-	var resp *response.Response
-	resp, cerr = cli.mainConnection.GetResponseMessage(false)
-	if cerr != nil {
-		return false, cerr
-	}
-
-	switch resp.Method {
-	case method.TextFileExists:
-		return true, nil
-	case method.TextFileDoesNotExist:
-		return false, nil
-	case method.ClientError:
-		return false, ce.NewClientError(ce.ErrSomethingWentWrong, resp.Method, cli.id)
-	case method.ClosingConnection:
-		return false, ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method, cli.id)
-	default:
-		return false, ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method, cli.id)
-	}
-}
-
-// SearchBinaryFile asks server to check existence of a binary file.
-// Returns a detailed error.
-func (cli *Client) SearchBinaryFile(uid string) (fileExists bool, cerr *ce.CommonError) {
-	cerr = cli.searchBinaryFile(cli.mainConnection, uid)
-	if cerr != nil {
-		return false, cerr
-	}
-
-	var resp *response.Response
-	resp, cerr = cli.mainConnection.GetResponseMessage(true)
-	if cerr != nil {
-		return false, cerr
-	}
-
-	switch resp.Method {
-	case method.BinaryFileExists:
-		return true, nil
-	case method.BinaryFileDoesNotExist:
-		return false, nil
-	case method.ClientError:
-		return false, ce.NewClientError(ce.ErrSomethingWentWrong, resp.Method, cli.id)
-	case method.ClosingConnection:
-		return false, ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method, cli.id)
-	default:
-		return false, ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method, cli.id)
-	}
-}
-
-// ForgetTextRecord requests the server to remove a text entry from cache.
-// Returns a detailed error.
-func (cli *Client) ForgetTextRecord(uid string) (cerr *ce.CommonError) {
-	cerr = cli.forgetTextRecord(cli.auxConnection, uid)
+func (cli *Client) ForgetRecord(uid string) (cerr *ce.CommonError) {
+	cerr = cli.forgetRecord(cli.auxConnection, uid)
 	if cerr != nil {
 		return cerr
 	}
 
 	var resp *response.Response
-	resp, cerr = cli.auxConnection.GetResponseMessage(false)
+	resp, cerr = cli.auxConnection.GetResponseMessage()
 	if cerr != nil {
 		return cerr
 	}
@@ -241,72 +161,16 @@ func (cli *Client) ForgetTextRecord(uid string) (cerr *ce.CommonError) {
 	}
 }
 
-// ForgetBinaryRecord requests the server to remove a binary entry from cache.
+// ResetCache requests the server to remove all entries from cache.
 // Returns a detailed error.
-func (cli *Client) ForgetBinaryRecord(uid string) (cerr *ce.CommonError) {
-	cerr = cli.forgetBinaryRecord(cli.auxConnection, uid)
+func (cli *Client) ResetCache() (cerr *ce.CommonError) {
+	cerr = cli.resetCache(cli.auxConnection)
 	if cerr != nil {
 		return cerr
 	}
 
 	var resp *response.Response
-	resp, cerr = cli.auxConnection.GetResponseMessage(true)
-	if cerr != nil {
-		return cerr
-	}
-
-	if resp.Method == method.OK {
-		return nil
-	}
-
-	switch resp.Method {
-	case method.ClientError:
-		return ce.NewClientError(ce.ErrSomethingWentWrong, resp.Method, cli.id)
-	case method.ClosingConnection:
-		return ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method, cli.id)
-	default:
-		return ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method, cli.id)
-	}
-}
-
-// ResetTextCache requests the server to remove all text entries from cache.
-// Returns a detailed error.
-func (cli *Client) ResetTextCache() (cerr *ce.CommonError) {
-	cerr = cli.resetTextCache(cli.auxConnection)
-	if cerr != nil {
-		return cerr
-	}
-
-	var resp *response.Response
-	resp, cerr = cli.auxConnection.GetResponseMessage(false)
-	if cerr != nil {
-		return cerr
-	}
-
-	if resp.Method == method.OK {
-		return nil
-	}
-
-	switch resp.Method {
-	case method.ClientError:
-		return ce.NewClientError(ce.ErrSomethingWentWrong, resp.Method, cli.id)
-	case method.ClosingConnection:
-		return ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method, cli.id)
-	default:
-		return ce.NewServerError(ce.ErrSomethingWentWrong, resp.Method, cli.id)
-	}
-}
-
-// ResetBinaryCache requests the server to remove all binary entries from cache.
-// Returns a detailed error.
-func (cli *Client) ResetBinaryCache() (cerr *ce.CommonError) {
-	cerr = cli.resetBinaryCache(cli.auxConnection)
-	if cerr != nil {
-		return cerr
-	}
-
-	var resp *response.Response
-	resp, cerr = cli.auxConnection.GetResponseMessage(true)
+	resp, cerr = cli.auxConnection.GetResponseMessage()
 	if cerr != nil {
 		return cerr
 	}

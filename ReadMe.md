@@ -68,18 +68,12 @@ of each line.
 1. Hostname.
 2. Main port.
 3. Auxiliary port.
-4. Folder for text items.
-5. Parameters of the cache of textual items:
-   1. File extension for text items;
-   2. Maximum cache volume for text items (in bytes);
-   3. Maximum volume of a single text item (in bytes);
-   4. Item's TTL (in seconds).
-6. Folder for binary items.
-7. Parameters of the cache of binary items:
-   1. File extension for binary items;
-   2. Maximum cache volume for binary items (in bytes);
-   3. Maximum volume of a single binary item (in bytes);
-   4. Item's TTL (in seconds).
+4. Data folder.
+5. Parameters of the cache:
+   * File extension for data items;
+   * Maximum cache volume for data items (in bytes);
+   * Maximum volume of a single data item (in bytes);
+   * Item's TTL (in seconds).
 
 **Notes**:
 * File extension here is used as a normal extension with a dot (period) prefix, 
