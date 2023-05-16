@@ -1,6 +1,7 @@
 package connection
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"net"
@@ -129,91 +130,77 @@ func (con *Connection) getRequestMethodAndUID(r *request.Request) (err error) {
 	return nil
 }
 
-func (con *Connection) sendSRS(srs byte) (err error) {
-	buf := make([]byte, 1)
-	buf[0] = srs
-
-	_, err = con.netConn.Write(buf)
-	if err != nil {
-		return err
-	}
-
-	return nil
+func (con *Connection) writeSRS(srs byte) (ba []byte) {
+	return []byte{srs}
 }
 
-func (con *Connection) sendResponseSize(rm *response.Response) (err error) {
-	var buf []byte
+func (con *Connection) writeResponseSize(rm *response.Response) (ba []byte) {
 	switch rm.SRS {
 	case proto.SRS_A:
-		buf = make([]byte, proto.RS_LengthA)
-		buf[0] = rm.ResponseSizeA
+		ba = make([]byte, proto.RS_LengthA)
+		ba[0] = rm.ResponseSizeA
+		return ba
 
 	case proto.SRS_B:
-		buf = make([]byte, proto.RS_LengthB)
-		binary.BigEndian.PutUint16(buf, rm.ResponseSizeB)
+		ba = make([]byte, proto.RS_LengthB)
+		binary.BigEndian.PutUint16(ba, rm.ResponseSizeB)
+		return ba
 
 	case proto.SRS_C:
-		buf = make([]byte, proto.RS_LengthC)
-		binary.BigEndian.PutUint32(buf, rm.ResponseSizeC)
-	}
-
-	_, err = con.netConn.Write(buf)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (con *Connection) sendResponseMethodAndData(rm *response.Response) (err error) {
-	_, err = con.netConn.Write((*con.methodNameBuffers)[rm.Method])
-	if err != nil {
-		return err
-	}
-
-	_, err = con.netConn.Write(rm.Data)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (con *Connection) sendRequestSize(rm *request.Request) (err error) {
-	var buf []byte
-	switch rm.SRS {
-	case proto.SRS_A:
-		buf = make([]byte, proto.RS_LengthA)
-		buf[0] = rm.RequestSizeA
-
-	case proto.SRS_B:
-		buf = make([]byte, proto.RS_LengthB)
-		binary.BigEndian.PutUint16(buf, rm.RequestSizeB)
+		ba = make([]byte, proto.RS_LengthC)
+		binary.BigEndian.PutUint32(ba, rm.ResponseSizeC)
+		return ba
 
 	default:
-		return fmt.Errorf(ce.ErrSrsIsNotSupported, rm.SRS)
+		return nil
 	}
-
-	_, err = con.netConn.Write(buf)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
-func (con *Connection) sendRequestMethodAndUid(rm *request.Request) (err error) {
-	_, err = con.netConn.Write((*con.methodNameBuffers)[rm.Method])
+func (con *Connection) writeResponseMethodAndData(rm *response.Response) (ba []byte, err error) {
+	var buf bytes.Buffer
+	_, err = buf.Write((*con.methodNameBuffers)[rm.Method])
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	_, err = con.netConn.Write([]byte(rm.UID))
+	_, err = buf.Write(rm.Data)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return buf.Bytes(), nil
+}
+
+func (con *Connection) writeRequestSize(rm *request.Request) (ba []byte) {
+	switch rm.SRS {
+	case proto.SRS_A:
+		ba = make([]byte, proto.RS_LengthA)
+		ba[0] = rm.RequestSizeA
+		return ba
+
+	case proto.SRS_B:
+		ba = make([]byte, proto.RS_LengthB)
+		binary.BigEndian.PutUint16(ba, rm.RequestSizeB)
+		return ba
+
+	default:
+		return nil
+	}
+}
+
+func (con *Connection) writeRequestMethodAndUid(rm *request.Request) (ba []byte, err error) {
+	var buf bytes.Buffer
+	_, err = buf.Write((*con.methodNameBuffers)[rm.Method])
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = buf.Write([]byte(rm.UID))
+	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
 }
 
 func (con *Connection) getResponseSize(resp *response.Response) (err error) {
@@ -298,7 +285,7 @@ func (con *Connection) getResponseMethodAndData(resp *response.Response) (err er
 	return nil
 }
 
-func (con *Connection) GetClientId() (clientId string) {
+func (con *Connection) ClientId() (clientId string) {
 	return con.clientId
 }
 
@@ -329,6 +316,15 @@ func EnableKeepAlives(conn *net.TCPConn) (err error) {
 	}
 
 	err = conn.SetKeepAlive(proto.TcpKeepAliveIsEnabled)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (con *Connection) sendData(data []byte) (err error) {
+	_, err = con.netConn.Write(data)
 	if err != nil {
 		return err
 	}

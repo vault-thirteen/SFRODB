@@ -233,7 +233,7 @@ func (srv *Server) handleMainConnection(conn *net.TCPConn) {
 			cerr = srv.searchFile(con, req)
 		default:
 			msg := fmt.Sprintf(ce.ErrUnsupportedMethodValue, req.Method)
-			cerr = ce.NewClientError(msg, 0, con.GetClientId())
+			cerr = ce.NewClientError(msg, 0, con.ClientId())
 		}
 		if cerr != nil {
 			if cerr.IsServerError() {
@@ -286,7 +286,7 @@ func (srv *Server) handleAuxConnection(conn *net.TCPConn) {
 			cerr = srv.resetCache(con, req)
 		default:
 			msg := fmt.Sprintf(ce.ErrUnsupportedMethodValue, req.Method)
-			cerr = ce.NewClientError(msg, 0, con.GetClientId())
+			cerr = ce.NewClientError(msg, 0, con.ClientId())
 		}
 		if cerr != nil {
 			if cerr.IsServerError() {

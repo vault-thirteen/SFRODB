@@ -18,14 +18,14 @@ func (srv *Server) showData(con *connection.Connection, r *request.Request) (cer
 	switch r.Method {
 	case method.ShowData:
 		var data []byte
-		data, cerr = srv.getData(r.UID, con.GetClientId())
+		data, cerr = srv.getData(r.UID, con.ClientId())
 		if cerr != nil {
 			return cerr
 		}
 		return srv.showingData(con, data)
 
 	default:
-		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0, con.GetClientId())
+		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0, con.ClientId())
 	}
 }
 
@@ -34,7 +34,7 @@ func (srv *Server) showData(con *connection.Connection, r *request.Request) (cer
 func (srv *Server) searchRecord(con *connection.Connection, r *request.Request) (cerr *ce.CommonError) {
 	// Check the UID.
 	if !common.IsUidValid(r.UID) {
-		return ce.NewClientError(ce.ErrUid, 0, con.GetClientId())
+		return ce.NewClientError(ce.ErrUid, 0, con.ClientId())
 	}
 
 	// Search for the record in cache.
@@ -48,7 +48,7 @@ func (srv *Server) searchRecord(con *connection.Connection, r *request.Request) 
 		}
 
 	default:
-		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0, con.GetClientId())
+		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0, con.ClientId())
 	}
 }
 
@@ -57,7 +57,7 @@ func (srv *Server) searchRecord(con *connection.Connection, r *request.Request) 
 func (srv *Server) searchFile(con *connection.Connection, r *request.Request) (cerr *ce.CommonError) {
 	// Check the UID.
 	if !common.IsUidValid(r.UID) {
-		return ce.NewClientError(ce.ErrUid, 0, con.GetClientId())
+		return ce.NewClientError(ce.ErrUid, 0, con.ClientId())
 	}
 
 	// Search for the file in storage.
@@ -66,7 +66,7 @@ func (srv *Server) searchFile(con *connection.Connection, r *request.Request) (c
 		var relPath = filepath.Join(r.UID+srv.settings.Data.FileExtension, "")
 		fileExists, err := srv.files.FileExists(relPath)
 		if err != nil {
-			return ce.NewServerError(err.Error(), 0, con.GetClientId())
+			return ce.NewServerError(err.Error(), 0, con.ClientId())
 		}
 		if fileExists {
 			return srv.fileExists(con)
@@ -75,7 +75,7 @@ func (srv *Server) searchFile(con *connection.Connection, r *request.Request) (c
 		}
 
 	default:
-		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0, con.GetClientId())
+		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0, con.ClientId())
 	}
 }
 
@@ -84,7 +84,7 @@ func (srv *Server) searchFile(con *connection.Connection, r *request.Request) (c
 func (srv *Server) forgetRecord(con *connection.Connection, r *request.Request) (cerr *ce.CommonError) {
 	// Check the UID.
 	if !common.IsUidValid(r.UID) {
-		return ce.NewClientError(ce.ErrUid, 0, con.GetClientId())
+		return ce.NewClientError(ce.ErrUid, 0, con.ClientId())
 	}
 
 	// Remove the record from the cache.
@@ -94,13 +94,13 @@ func (srv *Server) forgetRecord(con *connection.Connection, r *request.Request) 
 	case method.ForgetRecord:
 		recExists, err = srv.cache.RemoveRecord(r.UID)
 	default:
-		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0, con.GetClientId())
+		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0, con.ClientId())
 	}
 	if !recExists {
-		return ce.NewClientError(err.Error(), 0, con.GetClientId())
+		return ce.NewClientError(err.Error(), 0, con.ClientId())
 	}
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0, con.GetClientId())
+		return ce.NewServerError(err.Error(), 0, con.ClientId())
 	}
 
 	return srv.ok(con)
@@ -117,10 +117,10 @@ func (srv *Server) resetCache(con *connection.Connection, r *request.Request) (c
 	case method.ResetCache:
 		err = srv.cache.Clear()
 	default:
-		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0, con.GetClientId())
+		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0, con.ClientId())
 	}
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0, con.GetClientId())
+		return ce.NewServerError(err.Error(), 0, con.ClientId())
 	}
 
 	return srv.ok(con)

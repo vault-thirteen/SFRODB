@@ -11,7 +11,7 @@ import (
 func (srv *Server) clientError(con *connection.Connection) (cerr *ce.CommonError) {
 	rm, err := response.NewResponse_ClientError()
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0, con.GetClientId())
+		return ce.NewServerError(err.Error(), 0, con.ClientId())
 	}
 
 	return con.SendResponseMessage(rm)
@@ -22,7 +22,7 @@ func (srv *Server) clientError(con *connection.Connection) (cerr *ce.CommonError
 func (srv *Server) ok(con *connection.Connection) (cerr *ce.CommonError) {
 	rm, err := response.NewResponse_OK()
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0, con.GetClientId())
+		return ce.NewServerError(err.Error(), 0, con.ClientId())
 	}
 
 	return con.SendResponseMessage(rm)
@@ -34,7 +34,7 @@ func (srv *Server) ok(con *connection.Connection) (cerr *ce.CommonError) {
 func (srv *Server) closingConnection(con *connection.Connection) (cerr *ce.CommonError) {
 	rm, err := response.NewResponse_ClosingConnection()
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0, con.GetClientId())
+		return ce.NewServerError(err.Error(), 0, con.ClientId())
 	}
 
 	return con.SendResponseMessage(rm)
@@ -45,7 +45,7 @@ func (srv *Server) closingConnection(con *connection.Connection) (cerr *ce.Commo
 func (srv *Server) showingData(con *connection.Connection, data []byte) (cerr *ce.CommonError) {
 	rm, err := response.NewResponse_ShowingData(data)
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0, con.GetClientId())
+		return ce.NewServerError(err.Error(), 0, con.ClientId())
 	}
 
 	return con.SendResponseMessage(rm)
@@ -56,7 +56,7 @@ func (srv *Server) showingData(con *connection.Connection, data []byte) (cerr *c
 func (srv *Server) recordExists(con *connection.Connection) (cerr *ce.CommonError) {
 	rm, err := response.NewResponse_RecordExists()
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0, con.GetClientId())
+		return ce.NewServerError(err.Error(), 0, con.ClientId())
 	}
 
 	return con.SendResponseMessage(rm)
@@ -67,7 +67,7 @@ func (srv *Server) recordExists(con *connection.Connection) (cerr *ce.CommonErro
 func (srv *Server) recordDoesNotExist(con *connection.Connection) (cerr *ce.CommonError) {
 	rm, err := response.NewResponse_RecordDoesNotExist()
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0, con.GetClientId())
+		return ce.NewServerError(err.Error(), 0, con.ClientId())
 	}
 
 	return con.SendResponseMessage(rm)
@@ -78,7 +78,7 @@ func (srv *Server) recordDoesNotExist(con *connection.Connection) (cerr *ce.Comm
 func (srv *Server) fileExists(con *connection.Connection) (cerr *ce.CommonError) {
 	rm, err := response.NewResponse_FileExists()
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0, con.GetClientId())
+		return ce.NewServerError(err.Error(), 0, con.ClientId())
 	}
 
 	return con.SendResponseMessage(rm)
@@ -89,7 +89,7 @@ func (srv *Server) fileExists(con *connection.Connection) (cerr *ce.CommonError)
 func (srv *Server) fileDoesNotExist(con *connection.Connection) (cerr *ce.CommonError) {
 	rm, err := response.NewResponse_FileDoesNotExist()
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0, con.GetClientId())
+		return ce.NewServerError(err.Error(), 0, con.ClientId())
 	}
 
 	return con.SendResponseMessage(rm)

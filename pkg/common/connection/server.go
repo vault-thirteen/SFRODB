@@ -1,6 +1,8 @@
 package connection
 
 import (
+	"bytes"
+
 	"github.com/vault-thirteen/SFRODB/pkg/common/error"
 	"github.com/vault-thirteen/SFRODB/pkg/common/request"
 	"github.com/vault-thirteen/SFRODB/pkg/common/response"
@@ -33,18 +35,31 @@ func (con *Connection) GetNextRequest() (r *request.Request, cerr *ce.CommonErro
 // SendResponseMessage is a method used by a Server to send a response to the
 // client.
 func (con *Connection) SendResponseMessage(rm *response.Response) (cerr *ce.CommonError) {
+	var buf bytes.Buffer
+	var ba []byte
 	var err error
-	err = con.sendSRS(rm.SRS)
+	ba = con.writeSRS(rm.SRS)
+	_, err = buf.Write(ba)
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0, con.clientId)
 	}
 
-	err = con.sendResponseSize(rm)
+	ba = con.writeResponseSize(rm)
+	_, err = buf.Write(ba)
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0, con.clientId)
 	}
 
-	err = con.sendResponseMethodAndData(rm)
+	ba, err = con.writeResponseMethodAndData(rm)
+	if err != nil {
+		return ce.NewServerError(err.Error(), 0, con.clientId)
+	}
+	_, err = buf.Write(ba)
+	if err != nil {
+		return ce.NewServerError(err.Error(), 0, con.clientId)
+	}
+
+	err = con.sendData(buf.Bytes())
 	if err != nil {
 		return ce.NewServerError(err.Error(), 0, con.clientId)
 	}
