@@ -9,7 +9,7 @@ import (
 
 	"github.com/vault-thirteen/SFRODB/pkg/client"
 	"github.com/vault-thirteen/SFRODB/pkg/client/settings"
-	"github.com/vault-thirteen/Versioneer"
+	"github.com/vault-thirteen/auxie/Versioneer"
 )
 
 func main() {

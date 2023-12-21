@@ -9,8 +9,8 @@ import (
 	"strings"
 	"sync"
 
+	ae "github.com/vault-thirteen/auxie/errors"
 	"github.com/vault-thirteen/auxie/file"
-	"github.com/vault-thirteen/errorz"
 )
 
 const (
@@ -67,7 +67,7 @@ func (ff *FilesFolder) GetFileContents(relPath string) (fileExists bool, data []
 	defer func() {
 		derr := f.Close()
 		if derr != nil {
-			err = errorz.Combine(err, derr)
+			err = ae.Combine(err, derr)
 		}
 	}()
 

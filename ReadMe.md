@@ -1,5 +1,7 @@
 # SFRODB
+
 ## Simple File Read-Only DataBase
+
 A very simplistic database engine which stores information in files and 
 provides read-only access to data. 
 
@@ -22,26 +24,31 @@ storage, the cached data must be removed from the cache, the API provides such
 functionality.  
 
 ## Dual Port Architecture
+
 To provide additional protection, database uses separate ports for read 
 operations and for non-read operations. By non-read operations we mean methods 
 for removing a single item from cache and methods for cache cleaning, i.e. 
 resetting the cache to an empty state.
 
 ## Pool of Clients
+
 The library provides not only a single client for this database. A pool of 
 clients is also available. The pool is able to fix broken connections 
 automatically and has an adjustable size.
 
 ## Building
+
 Use the `build.bat` script included with the source code.
 
 ## Installation
+
 `go install github.com/vault-thirteen/SFRODB/cmd/client@latest`  
 `go install github.com/vault-thirteen/SFRODB/cmd/server@latest`  
 
 ## Startup Parameters
 
 ### Server
+
 `server.exe <path-to-configuration-file>`  
 `server.exe`  
 
@@ -54,12 +61,14 @@ If the path to a configuration file is omitted, the default one is used.
 Default name of the configuration file is `settings.txt`.  
 
 ### Sample Client
+
 `client.exe <server's host name> <server's main port> <server's aux port>`
 
 Example:  
 `client.exe localhost 12345 12346`
 
 ## Settings
+
 Format of the settings' file for a server is quite simple. It uses line 
 breaks as a separator between parameters. Inside a parameter, sub-parameters 
 are separated with a single space symbol (" "). Described below are meanings 
@@ -77,5 +86,5 @@ of each line.
 
 **Notes**:
 * File extension here is used as a normal extension with a dot (period) prefix, 
-because Go language uses such format for file extensions. This is not good, but 
-this is how Golang works.
+because _Go_ language uses such format for file extensions. This is not good, 
+but this is how _Golang_ works.

@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/vault-thirteen/SFRODB/pkg/common/error"
+	ae "github.com/vault-thirteen/auxie/errors"
 	"github.com/vault-thirteen/auxie/number"
 	"github.com/vault-thirteen/auxie/reader"
-	"github.com/vault-thirteen/errorz"
 )
 
 // Settings is Server's settings.
@@ -45,7 +45,7 @@ func NewSettingsFromFile(filePath string) (stn *Settings, err error) {
 	defer func() {
 		derr := file.Close()
 		if derr != nil {
-			err = errorz.Combine(err, derr)
+			err = ae.Combine(err, derr)
 		}
 	}()
 

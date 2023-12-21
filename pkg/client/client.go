@@ -11,7 +11,7 @@ import (
 	"github.com/vault-thirteen/SFRODB/pkg/common/error"
 	"github.com/vault-thirteen/SFRODB/pkg/common/method"
 	"github.com/vault-thirteen/SFRODB/pkg/common/protocol"
-	"github.com/vault-thirteen/errorz"
+	ae "github.com/vault-thirteen/auxie/errors"
 )
 
 const (
@@ -137,7 +137,7 @@ func (cli *Client) startMainConnection() (cerr *ce.CommonError) {
 	if err != nil {
 		closeErr := mainConn.Close()
 		if closeErr != nil {
-			err = errorz.Combine(err, closeErr)
+			err = ae.Combine(err, closeErr)
 		}
 		return ce.NewClientError(err.Error(), 0, cli.id)
 	}
@@ -165,7 +165,7 @@ func (cli *Client) startAuxConnection() (cerr *ce.CommonError) {
 	if err != nil {
 		closeErr := auxConn.Close()
 		if closeErr != nil {
-			err = errorz.Combine(err, closeErr)
+			err = ae.Combine(err, closeErr)
 		}
 		return ce.NewClientError(err.Error(), 0, cli.id)
 	}
