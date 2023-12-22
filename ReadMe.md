@@ -13,3 +13,10 @@ The second product is an _HTTP_ front-end part for the _SFRODB_ database.
 Each of these two products has its own description file.
 1. [SFRODB](doc/SFRODB/ReadMe.md)
 2. [SFHS](doc/SFHS/ReadMe.md)
+
+## Notes
+
+Please, do note that earlier in the past time, _SFRODB_ and _SFHS_ were stored 
+in two separate repositories. At present time, two these interdependent 
+products are stored in a single repository. All files of the _SFHS_ repository 
+were merged into the _SFRODB_ repository.
