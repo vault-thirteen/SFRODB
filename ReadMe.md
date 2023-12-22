@@ -17,7 +17,7 @@ Each of these two products has its own description file.
 ## Notes
 
 Please, do note that earlier in the past time, _SFRODB_ and _SFHS_ were stored 
-in two separate repositories. At present time, two these interdependent 
+in two separate repositories. At present time, two these inter-dependent 
 products are stored in a single repository. All files of the _SFHS_ repository 
 were merged into the _SFRODB_ repository.
 
