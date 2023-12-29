@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/vault-thirteen/Cache v0.12.2
-	github.com/vault-thirteen/auxie v0.21.0
+	github.com/vault-thirteen/auxie v0.22.0
 )
 
 require (
