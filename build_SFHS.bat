@@ -11,6 +11,7 @@ MKDIR "%build_dir%"
 :: Build the server.
 CD "%exe_dir%\%server_dir%"
 go build
+IF %Errorlevel% NEQ 0 EXIT /b %Errorlevel%
 MOVE "%server_dir%.exe" ".\..\..\..\%build_dir%\"
 CD ".\..\..\..\"
 
