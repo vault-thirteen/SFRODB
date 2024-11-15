@@ -6,7 +6,7 @@ import (
 	"net"
 	"sync/atomic"
 
-	"github.com/vault-thirteen/Cache"
+	"github.com/vault-thirteen/Cache/VL"
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/client"
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/common/connection"
 	ce "github.com/vault-thirteen/SFRODB/pkg/SFRODB/common/error"
@@ -38,8 +38,8 @@ type Server struct {
 	methodNameBuffers map[method.Method][]byte
 	methodValues      map[string]method.Method
 
-	cache *cache.Cache[string, []byte] // UID is string, Data is a byte array.
-	files *ff.FilesFolder              // Data files.
+	cache *vl.Cache[string, []byte] // UID is string, Data is a byte array.
+	files *ff.FilesFolder           // Data files.
 
 	isRunning *atomic.Bool
 }
@@ -70,14 +70,11 @@ func NewServer(stn *settings.Settings) (srv *Server, err error) {
 	srv.isRunning = new(atomic.Bool)
 	srv.isRunning.Store(false)
 
-	srv.cache = cache.NewCache[string, []byte](
+	srv.cache = vl.NewCache[string, []byte](
 		0,
 		srv.settings.Data.CacheVolumeMax,
 		srv.settings.Data.CachedItemTTL,
 	)
-	if err != nil {
-		return nil, err
-	}
 
 	srv.files, err = ff.NewFilesFolder(srv.settings.Data.Folder)
 	if err != nil {
