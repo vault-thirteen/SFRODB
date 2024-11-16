@@ -88,19 +88,11 @@ func (srv *Server) forgetRecord(con *connection.Connection, r *request.Request) 
 	}
 
 	// Remove the record from the cache.
-	var recExists bool
-	var err error
 	switch r.Method {
 	case method.ForgetRecord:
-		recExists, err = srv.cache.RemoveRecord(r.UID)
+		srv.cache.RemoveRecord(r.UID)
 	default:
 		return ce.NewServerError(fmt.Sprintf(ce.ErrUnsupportedMethodValue, r.Method), 0, con.ClientId())
-	}
-	if !recExists {
-		return ce.NewClientError(err.Error(), 0, con.ClientId())
-	}
-	if err != nil {
-		return ce.NewServerError(err.Error(), 0, con.ClientId())
 	}
 
 	return srv.ok(con)
