@@ -42,6 +42,12 @@ func ParseDataSettings(line1, line2 string) (ds *DataSettings, err error) {
 	}
 
 	ds.FileExtension = parts[0]
+	if len(ds.FileExtension) == 0 {
+		return nil, errors.New(ErrSyntax)
+	}
+	if ds.FileExtension[0] != '.' {
+		ds.FileExtension = `.` + ds.FileExtension
+	}
 
 	ds.CacheVolumeMax, err = number.ParseInt(parts[1])
 	if err != nil {

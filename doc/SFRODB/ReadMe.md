@@ -85,6 +85,5 @@ of each line.
    * Item's TTL (in seconds).
 
 **Notes**:
-* File extension here is used as a normal extension together with a dot 
-(period) prefix, because _Go_ language uses such format for file extensions. 
-This is not good, but this is how _Golang_ works.
+* File extension here may be set without a leading dot symbol. Dot symbol is 
+appended to the start of the extension automatically.
