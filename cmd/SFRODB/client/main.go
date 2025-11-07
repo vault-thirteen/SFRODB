@@ -11,7 +11,7 @@ import (
 
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Client"
 	cs "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/ClientSettings"
-	"github.com/vault-thirteen/auxie/Versioneer"
+	ver "github.com/vault-thirteen/auxie/Versioneer/classes/Versioneer"
 	"github.com/vault-thirteen/auxie/random"
 )
 

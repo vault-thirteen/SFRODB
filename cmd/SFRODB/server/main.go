@@ -10,7 +10,7 @@ import (
 
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Server"
 	ss "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/ServerSettings"
-	"github.com/vault-thirteen/auxie/Versioneer"
+	ver "github.com/vault-thirteen/auxie/Versioneer/classes/Versioneer"
 )
 
 func main() {
