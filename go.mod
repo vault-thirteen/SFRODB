@@ -1,10 +1,10 @@
 module github.com/vault-thirteen/SFRODB
 
-go 1.24.9
+go 1.24.11
 
 require (
-	github.com/vault-thirteen/Cache v0.17.6
-	github.com/vault-thirteen/auxie v0.30.0
+	github.com/vault-thirteen/Cache v0.17.7
+	github.com/vault-thirteen/auxie v0.31.1
 )
 
 require (
