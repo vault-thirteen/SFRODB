@@ -9,10 +9,11 @@ import (
 	"strconv"
 	"syscall"
 
-	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Client"
-	cs "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/ClientSettings"
 	ver "github.com/vault-thirteen/auxie/Versioneer/classes/Versioneer"
 	"github.com/vault-thirteen/auxie/random"
+
+	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Client"
+	cs "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/ClientSettings"
 )
 
 func main() {
@@ -60,7 +61,7 @@ func mustBeNoError(err error) {
 }
 
 func showIntro() {
-	versioneer, err := ver.New()
+	versioneer, err := ver.New(false)
 	mustBeNoError(err)
 	versioneer.ShowIntroText("Test Client")
 	versioneer.ShowComponentsInfoText()
