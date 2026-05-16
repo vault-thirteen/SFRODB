@@ -3,8 +3,8 @@ module github.com/vault-thirteen/SFRODB
 go 1.25.10
 
 require (
-	github.com/vault-thirteen/Cache v0.17.12
-	github.com/vault-thirteen/auxie v0.36.4
+	github.com/vault-thirteen/Cache v0.17.13
+	github.com/vault-thirteen/auxie v0.36.5
 )
 
 require (
