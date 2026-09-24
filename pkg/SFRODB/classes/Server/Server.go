@@ -6,8 +6,7 @@ import (
 	"net"
 	"sync/atomic"
 
-	"github.com/vault-thirteen/Cache/VL"
-	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Client"
+	client "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Client"
 	ce "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/CommonError"
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Connection"
 	ff "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/FilesFolder"
@@ -16,6 +15,7 @@ import (
 	ss "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/ServerSettings"
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/protocol"
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/std/tcp"
+	"github.com/vault-thirteen/auxie/Cache/VL"
 )
 
 const (
