@@ -11,6 +11,8 @@ import (
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Connection"
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/protocol"
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/std/tcp"
+	"github.com/vault-thirteen/SFRODB/pkg/common"
+
 	ae "github.com/vault-thirteen/auxie/errors"
 )
 
@@ -59,8 +61,8 @@ func New(stn *cs.ClientSettings, id string) (cli *Client, err error) {
 	cli = &Client{
 		id:            id,
 		settings:      stn,
-		mainDsn:       fmt.Sprintf("%s:%d", stn.Host, stn.MainPort),
-		auxDsn:        fmt.Sprintf("%s:%d", stn.Host, stn.AuxPort),
+		mainDsn:       fmt.Sprintf(common.HostPortFormat, stn.Host, stn.MainPort),
+		auxDsn:        fmt.Sprintf(common.HostPortFormat, stn.Host, stn.AuxPort),
 		startStopLock: new(sync.Mutex),
 		isWorking:     new(atomic.Bool),
 	}

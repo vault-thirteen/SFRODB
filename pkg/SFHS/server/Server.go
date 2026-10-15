@@ -14,10 +14,24 @@ import (
 	cs "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/ClientSettings"
 	ce "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/CommonError"
 	poc "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/PoolOfClients"
+	"github.com/vault-thirteen/SFRODB/pkg/common"
 )
 
 const (
 	ServerName = "SFHS"
+)
+
+const (
+	HttpHdrCacheControlFormat = "max-age=%d, must-revalidate"
+)
+
+const (
+	Msg_HttpErrorListenerStopped = "HTTP error listener has stopped."
+	Msg_DbErrorListenerStopped   = "DB error listener has stopped."
+)
+
+const (
+	Err_DbError = "DB error: "
 )
 
 type Server struct {
@@ -56,9 +70,9 @@ func NewServer(stn *ss.Settings) (srv *Server, err error) {
 
 	srv = &Server{
 		settings:      stn,
-		listenDsn:     fmt.Sprintf("%s:%d", stn.ServerHost, stn.ServerPort),
-		dbDsnA:        fmt.Sprintf("%s:%d", stn.DbHost, stn.DbPortA),
-		dbDsnB:        fmt.Sprintf("%s:%d", stn.DbHost, stn.DbPortB),
+		listenDsn:     fmt.Sprintf(common.HostPortFormat, stn.ServerHost, stn.ServerPort),
+		dbDsnA:        fmt.Sprintf(common.HostPortFormat, stn.DbHost, stn.DbPortA),
+		dbDsnB:        fmt.Sprintf(common.HostPortFormat, stn.DbHost, stn.DbPortB),
 		dbClientLock:  new(sync.Mutex),
 		mustBeStopped: make(chan bool, 2),
 		subRoutines:   new(sync.WaitGroup),
@@ -66,7 +80,7 @@ func NewServer(stn *ss.Settings) (srv *Server, err error) {
 		httpErrors:    make(chan error, 8),
 		dbErrors:      make(chan *ce.CommonError, 8),
 
-		httpHdrCacheControl: fmt.Sprintf("max-age=%d, must-revalidate", stn.HttpCacheControlMaxAge),
+		httpHdrCacheControl: fmt.Sprintf(HttpHdrCacheControlFormat, stn.HttpCacheControlMaxAge),
 	}
 	srv.mustStop.Store(false)
 
@@ -171,19 +185,19 @@ func (srv *Server) listenForHttpErrors() {
 	defer srv.subRoutines.Done()
 
 	for err := range srv.httpErrors {
-		log.Println("Server error: " + err.Error())
+		log.Println(common.Msg_ServerError + err.Error())
 		srv.mustBeStopped <- true
 	}
 
-	log.Println("HTTP error listener has stopped.")
+	log.Println(Msg_HttpErrorListenerStopped)
 }
 
 func (srv *Server) listenForDbErrors() {
 	defer srv.subRoutines.Done()
 
 	for cerr := range srv.dbErrors {
-		log.Println("DB error: " + cerr.Error())
+		log.Println(Err_DbError + cerr.Error())
 	}
 
-	log.Println("DB error listener has stopped.")
+	log.Println(Msg_DbErrorListenerStopped)
 }

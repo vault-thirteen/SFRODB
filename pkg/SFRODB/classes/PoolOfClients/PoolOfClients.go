@@ -17,10 +17,23 @@ import (
 const (
 	ClientRestarterSuccessPauseSec = 5
 	ClientRestarterFailurePauseSec = 15
+)
 
-	ErrDuplicateClientId       = "duplicate client id: %v"
-	ErrNoIdleClientIsAvailable = "no idle client is available"
-	ErrClientIsNotBeingUsed    = "client is not being used: %v"
+const (
+	Err_DuplicateClientId       = "duplicate client id: %v"
+	Err_NoIdleClientIsAvailable = "no idle client is available"
+	Err_ClientIsNotBeingUsed    = "client is not being used: %v"
+)
+
+const (
+	Msgf_ClientsPoolStart           = "A pool of %d clients has been started."
+	Msg_ClientRestarterStopped      = "Client restarter has stopped."
+	Msg_ReconnectingClient          = "Re-connecting the client ..."
+	Msg_BrokenClientReconnected     = "A broken client was successfully reconnected."
+	Msg_StoppingAllClients          = "Stopping all the clients ..."
+	Msgf_ClientStopped              = "Client [%s] was stopped."
+	Msg_WaitingForSubroutinesToStop = "Waiting for subroutines to stop ..."
+	Msg_ClientPoolStopped           = "Client pool has been stopped."
 )
 
 type PoolOfClients struct {
@@ -112,7 +125,7 @@ func (cp *PoolOfClients) Start() (cerr *ce.CommonError) {
 	cp.subRoutines.Add(1)
 	go cp.clientRestarter()
 
-	log.Printf("A pool of %d clients has been started.\r\n", cp.size)
+	log.Println(fmt.Sprintf(Msgf_ClientsPoolStart, cp.size))
 
 	return nil
 }
@@ -149,7 +162,7 @@ func (cp *PoolOfClients) clientRestarter() {
 		continue
 	}
 
-	log.Println("Client restarter has stopped.")
+	log.Println(Msg_ClientRestarterStopped)
 }
 
 // clientRestarterCore is a critical part of the client restarter which
@@ -165,7 +178,7 @@ func (cp *PoolOfClients) clientRestarterCore() (success bool) {
 	}
 
 	cli := <-cp.brokenClients
-	log.Println("Re-connecting the client ...")
+	log.Println(Msg_ReconnectingClient)
 	_ = cli.Stop()
 	cerr := cli.Start()
 	if cerr != nil {
@@ -173,7 +186,7 @@ func (cp *PoolOfClients) clientRestarterCore() (success bool) {
 		return false
 	}
 
-	log.Println("A broken client was successfully reconnected.")
+	log.Println(Msg_BrokenClientReconnected)
 	cp.idleClients <- cli
 	return true
 }
@@ -186,32 +199,32 @@ func (cp *PoolOfClients) Stop() {
 
 	// Drain all the channels except the 'stoppedClients' channel and stop all
 	// the clients.
-	log.Println("Stopping all the clients ...")
+	log.Println(Msg_StoppingAllClients)
 	var cli *client.Client
 	for len(cp.idleClients) > 0 {
 		cli = <-cp.idleClients
 		_ = cli.Stop()
-		log.Printf("Client [%s] was stopped.", cli.GetId())
+		log.Println(fmt.Sprintf(Msgf_ClientStopped, cli.GetId()))
 		cp.stoppedClients <- cli
 	}
 	for i := range cp.usedClients {
 		cli = cp.usedClients[i]
 		_ = cli.Stop()
-		log.Printf("Client [%s] was stopped.", cli.GetId())
+		log.Println(fmt.Sprintf(Msgf_ClientStopped, cli.GetId()))
 		cp.stoppedClients <- cli
 		delete(cp.usedClients, cli.GetId())
 	}
 	for len(cp.brokenClients) > 0 {
 		cli = <-cp.brokenClients
 		_ = cli.Stop()
-		log.Printf("Client [%s] was stopped.", cli.GetId())
+		log.Println(fmt.Sprintf(Msgf_ClientStopped, cli.GetId()))
 		cp.stoppedClients <- cli
 	}
 
-	log.Println("Waiting for subroutines to stop ...")
+	log.Println(Msg_WaitingForSubroutinesToStop)
 	cp.subRoutines.Wait()
 
-	log.Println("Client pool has been stopped.")
+	log.Println(Msg_ClientPoolStopped)
 }
 
 // GiveIdleClient provides an idle client. If no clients are idle, an error is
@@ -221,7 +234,7 @@ func (cp *PoolOfClients) GiveIdleClient() (cli *client.Client, err error) {
 	defer cp.clientTransfers.Unlock()
 
 	if len(cp.idleClients) == 0 {
-		return nil, errors.New(ErrNoIdleClientIsAvailable)
+		return nil, errors.New(Err_NoIdleClientIsAvailable)
 	}
 
 	cli = <-cp.idleClients
@@ -229,7 +242,7 @@ func (cp *PoolOfClients) GiveIdleClient() (cli *client.Client, err error) {
 	if idExists {
 		// Clients may not have same IDs !
 		cp.idleClients <- cli
-		return nil, fmt.Errorf(ErrDuplicateClientId, cli.GetId())
+		return nil, fmt.Errorf(Err_DuplicateClientId, cli.GetId())
 	}
 
 	cp.usedClients[cli.GetId()] = cli
@@ -253,7 +266,7 @@ func (cp *PoolOfClients) TakeIdleClient(clientId string, isBroken bool) (err err
 	cli, idExists := cp.usedClients[clientId]
 	if !idExists {
 		// Client is not being used !
-		return fmt.Errorf(ErrClientIsNotBeingUsed, cli.GetId())
+		return fmt.Errorf(Err_ClientIsNotBeingUsed, cli.GetId())
 	}
 
 	if isBroken {

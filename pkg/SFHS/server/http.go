@@ -7,6 +7,8 @@ import (
 
 	ss "github.com/vault-thirteen/SFRODB/pkg/SFHS/server/Settings"
 	ce "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/CommonError"
+	"github.com/vault-thirteen/SFRODB/pkg/common"
+
 	hdr "github.com/vault-thirteen/auxie/header"
 )
 
@@ -67,11 +69,11 @@ func (srv *Server) processError(rw http.ResponseWriter, cerr *ce.CommonError) {
 		return
 	}
 
-	log.Println("Anomaly: " + cerr.Error())
+	log.Println(common.Msg_Anomaly + cerr.Error())
 	rw.WriteHeader(http.StatusInternalServerError)
 }
 
 func (srv *Server) getContentDisposition(uid string) string {
 	return ss.ContentDispositionInline +
-		`; filename="` + filepath.Base(uid) + srv.settings.FileExtension + `""`
+		`; filename="` + filepath.Base(uid) + srv.settings.FileExtension + `"`
 }

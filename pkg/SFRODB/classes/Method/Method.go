@@ -18,8 +18,8 @@ const (
 )
 
 const (
-	ErrUnknownMethodName = "unknown method name: %s"
-	ErrUnsupportedMethod = "unsupported method: %s"
+	ErrUnknownMethodName = "unknown method name: %v"
+	ErrUnsupportedMethod = "unsupported method: %v"
 )
 
 type Method byte

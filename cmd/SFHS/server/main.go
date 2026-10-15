@@ -12,6 +12,21 @@ import (
 
 	"github.com/vault-thirteen/SFRODB/pkg/SFHS/server"
 	"github.com/vault-thirteen/SFRODB/pkg/SFHS/server/Settings"
+	"github.com/vault-thirteen/SFRODB/pkg/common"
+)
+
+const (
+	Msg_ServerIsStarting = "Server is starting ..."
+	Msg_StoppingServer   = "Stopping the server ..."
+	Msg_ServerStopped    = "Server was stopped."
+	Msg_HttpServer       = "HTTP Server: "
+	Msg_HttpsServer      = "HTTPS Server: "
+	Msg_DbClientA        = "DB Client A: "
+	Msg_DbClientB        = "DB Client B: "
+)
+
+const (
+	App = "Server"
 )
 
 func main() {
@@ -20,14 +35,14 @@ func main() {
 	cla, err := readCLA()
 	mustBeNoError(err)
 	if cla.IsDefaultFile() {
-		log.Println("Using the default configuration file.")
+		log.Println(common.Msg_UsingDefaultConfigurationFile)
 	}
 
 	var stn *Settings.Settings
 	stn, err = Settings.NewSettingsFromFile(cla.ConfigurationFilePath)
 	mustBeNoError(err)
 
-	log.Println("Server is starting ...")
+	log.Println(Msg_ServerIsStarting)
 	var srv *server.Server
 	srv, err = server.NewServer(stn)
 	mustBeNoError(err)
@@ -38,23 +53,23 @@ func main() {
 	}
 	switch srv.GetWorkMode() {
 	case Settings.ServerModeIdHttp:
-		fmt.Println("HTTP Server: " + srv.GetListenDsn())
+		fmt.Println(Msg_HttpServer + srv.GetListenDsn())
 	case Settings.ServerModeIdHttps:
-		fmt.Println("HTTPS Server: " + srv.GetListenDsn())
+		fmt.Println(Msg_HttpsServer + srv.GetListenDsn())
 	}
-	fmt.Println("DB Client A: " + srv.GetDbDsnA())
-	fmt.Println("DB Client B: " + srv.GetDbDsnB())
+	fmt.Println(Msg_DbClientA + srv.GetDbDsnA())
+	fmt.Println(Msg_DbClientB + srv.GetDbDsnB())
 
 	serverMustBeStopped := srv.GetStopChannel()
 	waitForQuitSignalFromOS(serverMustBeStopped)
 	<-*serverMustBeStopped
 
-	log.Println("Stopping the server ...")
+	log.Println(Msg_StoppingServer)
 	cerr = srv.Stop()
 	if cerr != nil {
 		log.Println(cerr)
 	}
-	log.Println("Server was stopped.")
+	log.Println(Msg_ServerStopped)
 	time.Sleep(time.Second)
 }
 
@@ -67,7 +82,7 @@ func mustBeNoError(err error) {
 func showIntro() {
 	versioneer, err := ver.New(false)
 	mustBeNoError(err)
-	versioneer.ShowIntroText("Server")
+	versioneer.ShowIntroText(App)
 	versioneer.ShowComponentsInfoText()
 	fmt.Println()
 }
@@ -81,7 +96,7 @@ func waitForQuitSignalFromOS(serverMustBeStopped *chan bool) {
 			switch sig {
 			case syscall.SIGINT,
 				syscall.SIGTERM:
-				log.Println("quit signal from OS has been received: ", sig)
+				log.Println(common.Msg_OsQuitSignal, sig)
 				*serverMustBeStopped <- true
 			}
 		}

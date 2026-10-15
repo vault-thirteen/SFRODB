@@ -14,6 +14,16 @@ import (
 
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Client"
 	cs "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/ClientSettings"
+	"github.com/vault-thirteen/SFRODB/pkg/common"
+)
+
+const (
+	Msg_Settings    = "Settings:"
+	Msg_ConnectedTo = "Connected to "
+)
+
+const (
+	App = "Test Client"
 )
 
 func main() {
@@ -25,7 +35,7 @@ func main() {
 	var stn *cs.ClientSettings
 	stn, err = cs.New(cla.Host, cla.MainPort, cla.AuxPort, 0)
 	mustBeNoError(err)
-	log.Println("Settings:", stn)
+	log.Println(Msg_Settings, stn)
 
 	var clientId uint
 	clientId, err = random.Uint(1, math.MaxUint32)
@@ -39,8 +49,8 @@ func main() {
 	if cerr != nil {
 		log.Fatal(cerr)
 	}
-	fmt.Println("Connected to " + cli.GetMainDsn())
-	fmt.Println("Connected to " + cli.GetAuxDsn())
+	fmt.Println(Msg_ConnectedTo + cli.GetMainDsn())
+	fmt.Println(Msg_ConnectedTo + cli.GetAuxDsn())
 
 	appMustBeStopped := make(chan bool, 1)
 	go makeSomeActions(cli, &appMustBeStopped)
@@ -63,7 +73,7 @@ func mustBeNoError(err error) {
 func showIntro() {
 	versioneer, err := ver.New(false)
 	mustBeNoError(err)
-	versioneer.ShowIntroText("Test Client")
+	versioneer.ShowIntroText(App)
 	versioneer.ShowComponentsInfoText()
 	fmt.Println()
 }
@@ -74,7 +84,7 @@ func waitForQuitSignalFromOS(quitChan *chan bool) {
 
 	go func() {
 		sig := <-osSignals
-		log.Println("quit signal from OS has been received: ", sig)
+		log.Println(common.Msg_OsQuitSignal, sig)
 		*quitChan <- true
 	}()
 }

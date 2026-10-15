@@ -15,7 +15,7 @@ const (
 	MethodNameLen   = 3
 	StatusNameLen   = 3
 	UidLenMax       = 255
-	ContentLenMax   = 4_294_967_295 - StatusNameLen
+	ContentLenMax   = 4_294_967_295 - StatusNameLen // (2^(4x8)-1)-3.
 )
 
 // Method strings.

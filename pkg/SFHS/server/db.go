@@ -3,9 +3,10 @@ package server
 import (
 	"time"
 
+	ae "github.com/vault-thirteen/auxie/errors"
+
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Client"
 	ce "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/CommonError"
-	ae "github.com/vault-thirteen/auxie/errors"
 )
 
 const (

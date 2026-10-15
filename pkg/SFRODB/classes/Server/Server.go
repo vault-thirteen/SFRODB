@@ -6,6 +6,8 @@ import (
 	"net"
 	"sync/atomic"
 
+	"github.com/vault-thirteen/auxie/Cache/VL"
+
 	client "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Client"
 	ce "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/CommonError"
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Connection"
@@ -15,12 +17,17 @@ import (
 	ss "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/ServerSettings"
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/protocol"
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/std/tcp"
-	"github.com/vault-thirteen/auxie/Cache/VL"
+	"github.com/vault-thirteen/SFRODB/pkg/common"
 )
 
 const (
-	ErrConnectionAccepting = "error accepting a connection: "
-	MsgResettingCache      = "Resetting the Cache ..."
+	Errf_ConnectionAccepting = "error accepting a connection: %w"
+)
+
+const (
+	Msg_ResettingCache = "Resetting the Cache ..."
+	Msg_MainLoopStop   = "Main loop has stopped."
+	Msg_AuxLoopStop    = "Auxiliary loop has stopped."
 )
 
 // Server is server.
@@ -50,8 +57,8 @@ func New(stn *ss.ServerSettings) (srv *Server, err error) {
 
 	srv = &Server{
 		settings: stn,
-		mainDsn:  fmt.Sprintf("%s:%d", stn.Hostname, stn.MainPort),
-		auxDsn:   fmt.Sprintf("%s:%d", stn.Hostname, stn.AuxPort),
+		mainDsn:  fmt.Sprintf(common.HostPortFormat, stn.Hostname, stn.MainPort),
+		auxDsn:   fmt.Sprintf(common.HostPortFormat, stn.Hostname, stn.AuxPort),
 	}
 
 	srv.mainListenerAddr, err = net.ResolveTCPAddr(protocol.LowLevelProtocol, srv.mainDsn)
@@ -119,24 +126,27 @@ func (srv *Server) runMainLoop() {
 
 		conn, err := srv.mainListener.AcceptTCP()
 		if err != nil {
-			log.Println(ErrConnectionAccepting, err.Error())
+			connErr := fmt.Errorf(Errf_ConnectionAccepting, err)
+			srv.logError(connErr)
 			continue
 		}
 
 		err = tcp.EnableKeepAlives(conn, protocol.TcpKeepAliveIsEnabled, protocol.TcpKeepAlivePeriodSec)
 		if err != nil {
-			log.Println(err.Error())
+			srv.logError(err)
+
 			closeErr := conn.Close()
 			if closeErr != nil {
-				log.Println(err.Error())
+				srv.logError(closeErr)
 			}
+
 			continue
 		}
 
 		go srv.handleMainConnection(conn)
 	}
 
-	log.Println("Main loop has stopped.")
+	srv.logMessage(Msg_MainLoopStop)
 }
 
 func (srv *Server) runAuxLoop() {
@@ -147,24 +157,27 @@ func (srv *Server) runAuxLoop() {
 
 		conn, err := srv.auxListener.AcceptTCP()
 		if err != nil {
-			log.Println(ErrConnectionAccepting, err.Error())
+			connErr := fmt.Errorf(Errf_ConnectionAccepting, err)
+			srv.logError(connErr)
 			continue
 		}
 
 		err = tcp.EnableKeepAlives(conn, protocol.TcpKeepAliveIsEnabled, protocol.TcpKeepAlivePeriodSec)
 		if err != nil {
-			log.Println(err.Error())
+			srv.logError(err)
+
 			closeErr := conn.Close()
 			if closeErr != nil {
-				log.Println(err.Error())
+				srv.logError(closeErr)
 			}
+
 			continue
 		}
 
 		go srv.handleAuxConnection(conn)
 	}
 
-	log.Println("Auxiliary loop has stopped.")
+	srv.logMessage(Msg_AuxLoopStop)
 }
 
 // Stop stops the server.
@@ -192,7 +205,7 @@ func (srv *Server) handleMainConnection(conn *net.TCPConn) {
 	defer func() {
 		derr := srv.finaliseConnection(con)
 		if derr != nil {
-			log.Println(derr)
+			srv.logError(derr)
 		}
 	}()
 
@@ -202,7 +215,7 @@ func (srv *Server) handleMainConnection(conn *net.TCPConn) {
 	for {
 		req, cerr = con.GetNextRequest()
 		if cerr != nil {
-			log.Println(cerr)
+			srv.logError(cerr)
 			break
 		}
 
@@ -240,7 +253,7 @@ func (srv *Server) handleAuxConnection(conn *net.TCPConn) {
 	defer func() {
 		derr := srv.finaliseConnection(con)
 		if derr != nil {
-			log.Println(derr)
+			srv.logError(derr)
 		}
 	}()
 
@@ -250,7 +263,7 @@ func (srv *Server) handleAuxConnection(conn *net.TCPConn) {
 	for {
 		req, cerr = con.GetNextRequest()
 		if cerr != nil {
-			log.Println(cerr)
+			srv.logError(cerr)
 			break
 		}
 
@@ -290,4 +303,12 @@ func (srv *Server) finaliseConnection(con *connection.Connection) (cerr *ce.Comm
 	}
 
 	return con.Break()
+}
+
+func (srv *Server) logError(err error) {
+	log.Println(err.Error())
+}
+
+func (srv *Server) logMessage(msg string) {
+	log.Println(msg)
 }

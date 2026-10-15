@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"log"
 	"path/filepath"
 
 	ce "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/CommonError"
@@ -82,7 +81,7 @@ func (srv *Server) act_resetCache(con *connection.Connection, req *request.Reque
 		return ce.NewServerError(fmt.Sprintf(method.ErrUnsupportedMethod, req.Method), req.Method, 0, con.ClientId())
 	}
 
-	log.Println(MsgResettingCache)
+	srv.logMessage(Msg_ResettingCache)
 
 	err := srv.cache.Clear()
 	if err != nil {

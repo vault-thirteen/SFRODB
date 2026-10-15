@@ -12,6 +12,16 @@ import (
 
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Server"
 	ss "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/ServerSettings"
+	"github.com/vault-thirteen/SFRODB/pkg/common"
+)
+
+const (
+	Msg_MainListener      = "Main Listener: "
+	Msg_AuxiliaryListener = "Auxiliary Listener: "
+)
+
+const (
+	App = "Server"
 )
 
 func main() {
@@ -20,7 +30,7 @@ func main() {
 	cla, err := readCLA()
 	mustBeNoError(err)
 	if cla.IsDefaultFile() {
-		log.Println("Using the default configuration file.")
+		log.Println(common.Msg_UsingDefaultConfigurationFile)
 	}
 
 	var stn *ss.ServerSettings
@@ -35,8 +45,8 @@ func main() {
 	if cerr != nil {
 		log.Fatal(cerr)
 	}
-	fmt.Println("Main Listener: " + srv.GetMainDsn())
-	fmt.Println("Auxiliary Listener: " + srv.GetAuxDsn())
+	fmt.Println(Msg_MainListener + srv.GetMainDsn())
+	fmt.Println(Msg_AuxiliaryListener + srv.GetAuxDsn())
 
 	appMustBeStopped := make(chan bool, 1)
 	waitForQuitSignalFromOS(&appMustBeStopped)
@@ -58,7 +68,7 @@ func mustBeNoError(err error) {
 func showIntro() {
 	versioneer, err := ver.New(false)
 	mustBeNoError(err)
-	versioneer.ShowIntroText("Server")
+	versioneer.ShowIntroText(App)
 	versioneer.ShowComponentsInfoText()
 	fmt.Println()
 }
@@ -69,7 +79,7 @@ func waitForQuitSignalFromOS(quitChan *chan bool) {
 
 	go func() {
 		sig := <-osSignals
-		log.Println("quit signal from OS has been received: ", sig)
+		log.Println(common.Msg_OsQuitSignal, sig)
 		*quitChan <- true
 	}()
 }

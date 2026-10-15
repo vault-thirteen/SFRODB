@@ -7,11 +7,21 @@ import (
 
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Client"
 	ce "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/CommonError"
+	"github.com/vault-thirteen/SFRODB/pkg/common"
 )
 
 const (
 	HorizontalLine = "------------------------------------------------------------"
 	ItemLenLimit   = 60
+)
+
+const (
+	Msgf_RequestDuration   = "Request Duration: %d µs. Data Size: %d Bytes."
+	Msg_Item               = "Item:"
+	Msg_RecordExists       = "Record exists."
+	Msg_RecordDoesNotExist = "Record does not exist."
+	Msg_FileExists         = "File exists."
+	Msg_FileDoesNotExist   = "File does not exist."
 )
 
 func makeSomeActions(cli *client.Client, appMustBeStopped *chan bool) {
@@ -61,13 +71,13 @@ func makeSomeActions(cli *client.Client, appMustBeStopped *chan bool) {
 		}
 		if cerr != nil {
 			if cerr.IsServerError() {
-				log.Println("Server Error: " + cerr.Error())
+				log.Println(common.Msg_ServerError + cerr.Error())
 				break
 			} else if cerr.IsClientError() {
-				log.Println("Client Error: " + cerr.Error())
+				log.Println(common.Msg_ClientError + cerr.Error())
 				continue
 			} else {
-				log.Println("Anomaly: " + cerr.Error())
+				log.Println(common.Msg_Anomaly + cerr.Error())
 				break
 			}
 		}
@@ -99,8 +109,7 @@ func processGKeys(cli *client.Client, uid string) (cerr *ce.CommonError) {
 
 	t1e := time.Now().Sub(t1)
 
-	fmt.Printf("Request Duration: %d µs. Data Size: %d Bytes.\r\n",
-		t1e.Microseconds(), itemLen)
+	fmt.Println(fmt.Sprintf(Msgf_RequestDuration, t1e.Microseconds(), itemLen))
 
 	var mustShowData = false
 	var ch byte
@@ -119,7 +128,7 @@ func processGKeys(cli *client.Client, uid string) (cerr *ce.CommonError) {
 	}
 
 	if mustShowData {
-		fmt.Println("Item:")
+		fmt.Println(Msg_Item)
 		fmt.Println(HorizontalLine)
 		fmt.Println(string(data))
 		fmt.Println(HorizontalLine)
@@ -136,9 +145,9 @@ func processEKeys(cli *client.Client, uid string) (cerr *ce.CommonError) {
 	}
 
 	if recExists {
-		fmt.Println("Record exists.")
+		fmt.Println(Msg_RecordExists)
 	} else {
-		fmt.Println("Record does not exist.")
+		fmt.Println(Msg_RecordDoesNotExist)
 	}
 
 	return nil
@@ -152,9 +161,9 @@ func processSKeys(cli *client.Client, uid string) (cerr *ce.CommonError) {
 	}
 
 	if fileExists {
-		fmt.Println("File exists.")
+		fmt.Println(Msg_FileExists)
 	} else {
-		fmt.Println("File does not exist.")
+		fmt.Println(Msg_FileDoesNotExist)
 	}
 
 	return nil

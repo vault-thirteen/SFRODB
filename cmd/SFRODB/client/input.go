@@ -8,13 +8,15 @@ import (
 )
 
 const (
-	HintMain = "\r\n" +
-		"[G] = Get/Show a Record;\r\n" +
-		"[E] = Check Record's Existence;\r\n" +
-		"[S] = Check File's Existence;\r\n" +
-		"[F] = Forget/Remove a Record from Cache;\r\n" +
-		"[R] = Reset/Clear the Cache;\r\n" +
-		"[Q] = Quit/Exit.\r\n> "
+	CRLF     = "\r\n"
+	HintMain = CRLF +
+		"[G] = Get/Show a Record;" + CRLF +
+		"[E] = Check Record's Existence;" + CRLF +
+		"[S] = Check File's Existence;" + CRLF +
+		"[F] = Forget/Remove a Record from Cache;" + CRLF +
+		"[R] = Reset/Clear the Cache;" + CRLF +
+		"[Q] = Quit/Exit." + CRLF +
+		"> "
 	HintUid      = "Enter the UID > "
 	HintDataSize = "Data is quite large. Do you want to see it ? [Y] = Yes; [N] = No. > "
 )
