@@ -1,40 +1,46 @@
 package Settings
 
 import (
-	"errors"
 	"os"
 	"strings"
 
-	cs "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/ClientSettings"
 	ae "github.com/vault-thirteen/auxie/errors"
 	"github.com/vault-thirteen/auxie/number"
 	"github.com/vault-thirteen/auxie/reader"
+
+	cs "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/ClientSettings"
 )
 
 const (
-	ErrServerModeIsNotSet     = "server mode is not set"
-	ErrServerMode             = "server mode error"
-	ErrCertFileIsNotSet       = "certificate file is not set"
-	ErrKeyFileIsNotSet        = "key file is not set"
-	ErrFileExtensionIsNotSet  = "file extension is not set"
-	ErrMimeTypeIsNotSet       = "MIME type is not set"
-	ErrDbClientPoolSize       = "DB client pool size is not set"
-	ErrHttpCacheControlMaxAge = "HTTP cache control max-age error"
-	ErrFileIsNotSet           = "file is not set"
-	ErrServerHostIsNotSet     = "server host is not set"
-	ErrServerPortIsNotSet     = "server port is not set"
+	Err_ServerModeIsNotSet     = "server mode is not set"
+	Err_ServerMode             = "server mode error"
+	Err_CertFileIsNotSet       = "certificate file is not set"
+	Err_KeyFileIsNotSet        = "key file is not set"
+	Err_FileExtensionIsNotSet  = "file extension is not set"
+	Err_MimeTypeIsNotSet       = "MIME type is not set"
+	Err_DbClientPoolSize       = "DB client pool size is not set"
+	Err_HttpCacheControlMaxAge = "HTTP cache control max-age error"
+	Err_FileIsNotSet           = "file is not set"
+	Err_ServerHostIsNotSet     = "server host is not set"
+	Err_ServerPortIsNotSet     = "server port is not set"
 )
 
 const (
+	ContentDisposition       = ContentDispositionInline
 	ContentDispositionInline = "inline"
-
-	ServerModeHttp    = "HTTP"
-	ServerModeIdHttp  = 1
-	ServerModeHttps   = "HTTPS"
-	ServerModeIdHttps = 2
 )
 
-// Settings is Server's Settings.
+const (
+	ServerMode_Http  = "HTTP"
+	ServerMode_Https = "HTTPS"
+)
+
+const (
+	ServerModeId_Http  = 1
+	ServerModeId_Https = 2
+)
+
+// Settings type is Server's Settings.
 type Settings struct {
 	// Path to the File with these Settings.
 	File string
@@ -116,10 +122,10 @@ func NewSettingsFromFile(filePath string) (stn *Settings, err error) {
 	// Server Work Mode.
 	stn.ServerModeStr = strings.ToUpper(strings.TrimSpace(string(buf[2])))
 	switch stn.ServerModeStr {
-	case ServerModeHttp:
-		stn.ServerModeId = ServerModeIdHttp
-	case ServerModeHttps:
-		stn.ServerModeId = ServerModeIdHttps
+	case ServerMode_Http:
+		stn.ServerModeId = ServerModeId_Http
+	case ServerMode_Https:
+		stn.ServerModeId = ServerModeId_Https
 	}
 
 	// Certificate and Key for optional TLS.
@@ -164,75 +170,75 @@ func NewSettingsFromFile(filePath string) (stn *Settings, err error) {
 
 func (stn *Settings) Check() (err error) {
 	if len(stn.File) == 0 {
-		return errors.New(ErrFileIsNotSet)
+		return ae.ErrorFromText(Err_FileIsNotSet)
 	}
 
 	if len(stn.ServerHost) == 0 {
-		return errors.New(ErrServerHostIsNotSet)
+		return ae.ErrorFromText(Err_ServerHostIsNotSet)
 	}
 
 	if stn.ServerPort == 0 {
-		return errors.New(ErrServerPortIsNotSet)
+		return ae.ErrorFromText(Err_ServerPortIsNotSet)
 	}
 
 	if len(stn.ServerModeStr) == 0 {
-		return errors.New(ErrServerModeIsNotSet)
+		return ae.ErrorFromText(Err_ServerModeIsNotSet)
 	} else {
-		if (stn.ServerModeStr != ServerModeHttp) &&
-			(stn.ServerModeStr != ServerModeHttps) {
-			return errors.New(ErrServerMode)
+		if (stn.ServerModeStr != ServerMode_Http) &&
+			(stn.ServerModeStr != ServerMode_Https) {
+			return ae.ErrorFromText(Err_ServerMode)
 		}
 	}
 
 	if stn.ServerModeId == 0 {
-		return errors.New(ErrServerModeIsNotSet)
+		return ae.ErrorFromText(Err_ServerModeIsNotSet)
 	} else {
-		if (stn.ServerModeId != ServerModeIdHttp) &&
-			(stn.ServerModeId != ServerModeIdHttps) {
-			return errors.New(ErrServerMode)
+		if (stn.ServerModeId != ServerModeId_Http) &&
+			(stn.ServerModeId != ServerModeId_Https) {
+			return ae.ErrorFromText(Err_ServerMode)
 		}
 	}
 
 	switch stn.ServerModeStr {
-	case ServerModeHttp:
+	case ServerMode_Http:
 		// Keys are not required.
-	case ServerModeHttps:
+	case ServerMode_Https:
 		if len(stn.CertFile) == 0 {
-			return errors.New(ErrCertFileIsNotSet)
+			return ae.ErrorFromText(Err_CertFileIsNotSet)
 		}
 		if len(stn.KeyFile) == 0 {
-			return errors.New(ErrKeyFileIsNotSet)
+			return ae.ErrorFromText(Err_KeyFileIsNotSet)
 		}
 	default:
-		return errors.New(ErrServerMode)
+		return ae.ErrorFromText(Err_ServerMode)
 	}
 
 	if len(stn.DbHost) == 0 {
-		return errors.New(cs.ErrClientHostIsNotSet)
+		return ae.ErrorFromText(cs.Err_ClientHostIsNotSet)
 	}
 
 	if stn.DbPortA == 0 {
-		return errors.New(cs.ErrClientPortIsNotSet)
+		return ae.ErrorFromText(cs.Err_ClientPortIsNotSet)
 	}
 
 	if stn.DbPortB == 0 {
-		return errors.New(cs.ErrClientPortIsNotSet)
+		return ae.ErrorFromText(cs.Err_ClientPortIsNotSet)
 	}
 
 	if stn.DbClientPoolSize == 0 {
-		return errors.New(ErrDbClientPoolSize)
+		return ae.ErrorFromText(Err_DbClientPoolSize)
 	}
 
 	if len(stn.FileExtension) == 0 {
-		return errors.New(ErrFileExtensionIsNotSet)
+		return ae.ErrorFromText(Err_FileExtensionIsNotSet)
 	}
 
 	if len(stn.MimeType) == 0 {
-		return errors.New(ErrMimeTypeIsNotSet)
+		return ae.ErrorFromText(Err_MimeTypeIsNotSet)
 	}
 
 	if stn.HttpCacheControlMaxAge == 0 {
-		return errors.New(ErrHttpCacheControlMaxAge)
+		return ae.ErrorFromText(Err_HttpCacheControlMaxAge)
 	}
 
 	// AllowedOriginForCORS is not checked as it may be empty.

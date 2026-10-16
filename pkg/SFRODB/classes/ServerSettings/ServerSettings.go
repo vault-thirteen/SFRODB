@@ -1,20 +1,20 @@
 package ss
 
 import (
-	"errors"
 	"os"
 	"strings"
 
-	ds "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/DataSettings"
 	ae "github.com/vault-thirteen/auxie/errors"
 	"github.com/vault-thirteen/auxie/number"
 	"github.com/vault-thirteen/auxie/reader"
+
+	ds "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/DataSettings"
 )
 
 const (
-	ErrFileIsNotSet       = "file is not set"
-	ErrServerHostIsNotSet = "server host is not set"
-	ErrServerPortIsNotSet = "server port is not set"
+	Err_FileIsNotSet       = "file is not set"
+	Err_ServerHostIsNotSet = "server host is not set"
+	Err_ServerPortIsNotSet = "server port is not set"
 )
 
 // ServerSettings is Server's Settings.
@@ -89,19 +89,19 @@ func NewSettingsFromFile(filePath string) (stn *ServerSettings, err error) {
 
 func (stn *ServerSettings) Check() (err error) {
 	if len(stn.File) == 0 {
-		return errors.New(ErrFileIsNotSet)
+		return ae.ErrorFromText(Err_FileIsNotSet)
 	}
 
 	if len(stn.Hostname) == 0 {
-		return errors.New(ErrServerHostIsNotSet)
+		return ae.ErrorFromText(Err_ServerHostIsNotSet)
 	}
 
 	if stn.MainPort == 0 {
-		return errors.New(ErrServerPortIsNotSet)
+		return ae.ErrorFromText(Err_ServerPortIsNotSet)
 	}
 
 	if stn.AuxPort == 0 {
-		return errors.New(ErrServerPortIsNotSet)
+		return ae.ErrorFromText(Err_ServerPortIsNotSet)
 	}
 
 	err = stn.Data.Check()

@@ -1,19 +1,19 @@
 package ds
 
 import (
-	"errors"
 	"strings"
 
+	ae "github.com/vault-thirteen/auxie/errors"
 	"github.com/vault-thirteen/auxie/number"
 )
 
 const (
-	ErrSyntax                      = "syntax error"
-	ErrDataFolderIsNotSet          = "data folder is not set"
-	ErrDataFileExtensionIsNotSet   = "data file extension is not set"
-	ErrCacheVolumeMaxIsNotSet      = "cache's maximum volume is not set"
-	ErrCachedItemVolumeMaxIsNotSet = "cached item's maximum volume is not set"
-	ErrCachedItemTTLIsNotSet       = "cached item's TTL is not set"
+	Err_Syntax                      = "syntax error"
+	Err_DataFolderIsNotSet          = "data folder is not set"
+	Err_DataFileExtensionIsNotSet   = "data file extension is not set"
+	Err_CacheVolumeMaxIsNotSet      = "cache's maximum volume is not set"
+	Err_CachedItemVolumeMaxIsNotSet = "cached item's maximum volume is not set"
+	Err_CachedItemTTLIsNotSet       = "cached item's TTL is not set"
 )
 
 type DataSettings struct {
@@ -44,12 +44,12 @@ func ParseDataSettings(line1, line2 string) (ds *DataSettings, err error) {
 
 	parts := strings.Split(strings.TrimSpace(line2), " ")
 	if len(parts) != 4 {
-		return nil, errors.New(ErrSyntax)
+		return nil, ae.ErrorFromText(Err_Syntax)
 	}
 
 	ds.FileExtension = parts[0]
 	if len(ds.FileExtension) == 0 {
-		return nil, errors.New(ErrSyntax)
+		return nil, ae.ErrorFromText(Err_Syntax)
 	}
 	if ds.FileExtension[0] != '.' {
 		ds.FileExtension = `.` + ds.FileExtension
@@ -75,23 +75,23 @@ func ParseDataSettings(line1, line2 string) (ds *DataSettings, err error) {
 
 func (ds *DataSettings) Check() (err error) {
 	if len(ds.Folder) == 0 {
-		return errors.New(ErrDataFolderIsNotSet)
+		return ae.ErrorFromText(Err_DataFolderIsNotSet)
 	}
 
 	if len(ds.FileExtension) == 0 {
-		return errors.New(ErrDataFileExtensionIsNotSet)
+		return ae.ErrorFromText(Err_DataFileExtensionIsNotSet)
 	}
 
 	if ds.CacheVolumeMax == 0 {
-		return errors.New(ErrCacheVolumeMaxIsNotSet)
+		return ae.ErrorFromText(Err_CacheVolumeMaxIsNotSet)
 	}
 
 	if ds.CachedItemVolumeMax == 0 {
-		return errors.New(ErrCachedItemVolumeMaxIsNotSet)
+		return ae.ErrorFromText(Err_CachedItemVolumeMaxIsNotSet)
 	}
 
 	if ds.CachedItemTTL == 0 {
-		return errors.New(ErrCachedItemTTLIsNotSet)
+		return ae.ErrorFromText(Err_CachedItemTTLIsNotSet)
 	}
 
 	return nil

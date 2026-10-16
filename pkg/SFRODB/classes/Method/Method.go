@@ -1,8 +1,9 @@
 package method
 
 import (
-	"fmt"
 	"strings"
+
+	"github.com/vault-thirteen/auxie/errors"
 
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/protocol"
 )
@@ -18,8 +19,8 @@ const (
 )
 
 const (
-	ErrUnknownMethodName = "unknown method name: %v"
-	ErrUnsupportedMethod = "unsupported method: %v"
+	Errf_UnknownMethodName = "unknown method name: %v"
+	Errf_UnsupportedMethod = "unsupported method: %v"
 )
 
 type Method byte
@@ -48,7 +49,7 @@ func NewFromString(str string) (m Method, err error) {
 		return Method_ResetCache, nil
 
 	default:
-		return Method_Unknown, fmt.Errorf(ErrUnknownMethodName, methodStr)
+		return Method_Unknown, errors.ErrorFromFormattedText(Errf_UnknownMethodName, methodStr)
 	}
 }
 
@@ -73,6 +74,6 @@ func (m Method) Bytes() ([]byte, error) {
 		return []byte(protocol.Method_ResetCache), nil
 
 	default:
-		return nil, fmt.Errorf(ErrUnknownMethodName, m)
+		return nil, errors.ErrorFromFormattedText(Errf_UnknownMethodName, m)
 	}
 }

@@ -1,15 +1,15 @@
 package server
 
 import (
-	"log"
 	"net/http"
 	"path/filepath"
 
-	ss "github.com/vault-thirteen/SFRODB/pkg/SFHS/server/Settings"
+	"github.com/vault-thirteen/auxie/errors"
+	hdr "github.com/vault-thirteen/auxie/header"
+
+	"github.com/vault-thirteen/SFRODB/pkg/SFHS/server/Settings"
 	ce "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/CommonError"
 	"github.com/vault-thirteen/SFRODB/pkg/common"
-
-	hdr "github.com/vault-thirteen/auxie/header"
 )
 
 func (srv *Server) httpRouter(rw http.ResponseWriter, req *http.Request) {
@@ -53,7 +53,7 @@ func (srv *Server) respondWithData(
 
 	_, err := rw.Write(data)
 	if err != nil {
-		log.Println(err)
+		errors.LogError(err)
 	}
 }
 
@@ -69,11 +69,10 @@ func (srv *Server) processError(rw http.ResponseWriter, cerr *ce.CommonError) {
 		return
 	}
 
-	log.Println(common.Msg_Anomaly + cerr.Error())
+	errors.LogError(errors.ErrorWithPrefix(cerr, common.Err_Anomaly))
 	rw.WriteHeader(http.StatusInternalServerError)
 }
 
-func (srv *Server) getContentDisposition(uid string) string {
-	return ss.ContentDispositionInline +
-		`; filename="` + filepath.Base(uid) + srv.settings.FileExtension + `"`
+func (srv *Server) formatContentDisposition(uid string) string {
+	return Settings.ContentDisposition + `; filename="` + filepath.Base(uid) + srv.settings.FileExtension + `"`
 }

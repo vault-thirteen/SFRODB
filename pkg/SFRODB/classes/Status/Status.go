@@ -1,8 +1,9 @@
 package status
 
 import (
-	"fmt"
 	"strings"
+
+	"github.com/vault-thirteen/auxie/errors"
 
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/protocol"
 )
@@ -20,7 +21,7 @@ const (
 )
 
 const (
-	ErrUnknownStatusName = "unknown status name: %s"
+	Errf_UnknownStatusName = "unknown status name: %s"
 )
 
 type Status byte
@@ -55,7 +56,7 @@ func NewFromString(str string) (s Status, err error) {
 		return Status_FileDoesNotExist, nil
 
 	default:
-		return Status_Unknown, fmt.Errorf(ErrUnknownStatusName, statusStr)
+		return Status_Unknown, errors.ErrorFromFormattedText(Errf_UnknownStatusName, statusStr)
 	}
 }
 
@@ -86,6 +87,6 @@ func (s Status) Bytes() ([]byte, error) {
 		return []byte(protocol.Status_FileDoesNotExist), nil
 
 	default:
-		return nil, fmt.Errorf(ErrUnknownStatusName, s)
+		return nil, errors.ErrorFromFormattedText(Errf_UnknownStatusName, s)
 	}
 }

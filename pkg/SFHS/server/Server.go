@@ -2,12 +2,12 @@ package server
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"net/http"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/vault-thirteen/auxie/errors"
 
 	ss "github.com/vault-thirteen/SFRODB/pkg/SFHS/server/Settings"
 	client "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Client"
@@ -19,19 +19,6 @@ import (
 
 const (
 	ServerName = "SFHS"
-)
-
-const (
-	HttpHdrCacheControlFormat = "max-age=%d, must-revalidate"
-)
-
-const (
-	Msg_HttpErrorListenerStopped = "HTTP error listener has stopped."
-	Msg_DbErrorListenerStopped   = "DB error listener has stopped."
-)
-
-const (
-	Err_DbError = "DB error: "
 )
 
 type Server struct {
@@ -70,9 +57,9 @@ func NewServer(stn *ss.Settings) (srv *Server, err error) {
 
 	srv = &Server{
 		settings:      stn,
-		listenDsn:     fmt.Sprintf(common.HostPortFormat, stn.ServerHost, stn.ServerPort),
-		dbDsnA:        fmt.Sprintf(common.HostPortFormat, stn.DbHost, stn.DbPortA),
-		dbDsnB:        fmt.Sprintf(common.HostPortFormat, stn.DbHost, stn.DbPortB),
+		listenDsn:     common.FormatHostPort(stn.ServerHost, stn.ServerPort),
+		dbDsnA:        common.FormatHostPort(stn.DbHost, stn.DbPortA),
+		dbDsnB:        common.FormatHostPort(stn.DbHost, stn.DbPortB),
 		dbClientLock:  new(sync.Mutex),
 		mustBeStopped: make(chan bool, 2),
 		subRoutines:   new(sync.WaitGroup),
@@ -80,7 +67,7 @@ func NewServer(stn *ss.Settings) (srv *Server, err error) {
 		httpErrors:    make(chan error, 8),
 		dbErrors:      make(chan *ce.CommonError, 8),
 
-		httpHdrCacheControl: fmt.Sprintf(HttpHdrCacheControlFormat, stn.HttpCacheControlMaxAge),
+		httpHdrCacheControl: common.FormatHttpHeader_CacheControl(stn.HttpCacheControlMaxAge),
 	}
 	srv.mustStop.Store(false)
 
@@ -153,7 +140,7 @@ func (srv *Server) Stop() (cerr *ce.CommonError) {
 	defer cf()
 	err = srv.httpServer.Shutdown(ctx)
 	if err != nil {
-		return ce.NewClientError(err.Error(), 0, 0, client.ClientIdNone)
+		return ce.NewClientError(err.Error(), 0, 0, client.ClientId_None)
 	}
 
 	srv.poolOfClients.Stop()
@@ -170,9 +157,9 @@ func (srv *Server) startHttpServer() {
 	go func() {
 		var listenError error
 		switch srv.settings.ServerModeId {
-		case ss.ServerModeIdHttp:
+		case ss.ServerModeId_Http:
 			listenError = srv.httpServer.ListenAndServe()
-		case ss.ServerModeIdHttps:
+		case ss.ServerModeId_Https:
 			listenError = srv.httpServer.ListenAndServeTLS(srv.settings.CertFile, srv.settings.KeyFile)
 		}
 		if (listenError != nil) && (listenError != http.ErrServerClosed) {
@@ -185,19 +172,19 @@ func (srv *Server) listenForHttpErrors() {
 	defer srv.subRoutines.Done()
 
 	for err := range srv.httpErrors {
-		log.Println(common.Msg_ServerError + err.Error())
+		errors.LogError(errors.ErrorWithPrefix(err, common.Err_ServerError))
 		srv.mustBeStopped <- true
 	}
 
-	log.Println(Msg_HttpErrorListenerStopped)
+	common.LogMessage(common.Msg_HttpErrorListenerStopped)
 }
 
 func (srv *Server) listenForDbErrors() {
 	defer srv.subRoutines.Done()
 
 	for cerr := range srv.dbErrors {
-		log.Println(Err_DbError + cerr.Error())
+		errors.LogError(errors.ErrorWithPrefix(cerr, common.Err_DbError))
 	}
 
-	log.Println(Msg_DbErrorListenerStopped)
+	common.LogMessage(common.Msg_DbErrorListenerStopped)
 }

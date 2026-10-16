@@ -2,7 +2,7 @@ module github.com/vault-thirteen/SFRODB
 
 go 1.26.9
 
-require github.com/vault-thirteen/auxie v0.38.2
+require github.com/vault-thirteen/auxie v0.39.1
 
 require (
 	github.com/kr/pretty v0.3.1 // indirect

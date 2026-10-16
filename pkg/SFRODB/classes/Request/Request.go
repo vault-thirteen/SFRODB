@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	ErrSizeIsTooShort = "request size is too short: %v"
-	ErrSizeIsTooLong  = "request size is too long: %v"
+	Errf_SizeIsTooShort = "request size is too short: %v"
+	Errf_SizeIsTooLong  = "request size is too long: %v"
 )
 
 type Request struct {

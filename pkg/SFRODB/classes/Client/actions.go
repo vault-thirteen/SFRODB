@@ -48,7 +48,7 @@ func (cli *Client) closeConnection_any(useMainConnection bool, normalExit bool) 
 	}
 
 	if resp.Status != status.Status_ClosingConnection {
-		return ce.NewClientError(ErrUnexpectedServerBehaviour, 0, resp.Status, cli.id)
+		return ce.NewClientError(Err_UnexpectedServerBehaviour, 0, resp.Status, cli.id)
 	}
 
 	return nil
@@ -70,10 +70,10 @@ func (cli *Client) ShowData(uid string) (data []byte, cerr *ce.CommonError) {
 
 	if resp.Status != status.Status_ShowingData {
 		if resp.Status == status.Status_ClientError {
-			return nil, ce.NewClientError(ErrClientError, 0, resp.Status, cli.id)
+			return nil, ce.NewClientError(Err_ClientError, 0, resp.Status, cli.id)
 		}
 
-		return nil, ce.NewClientError(ErrUnexpectedServerBehaviour, 0, resp.Status, cli.id)
+		return nil, ce.NewClientError(Err_UnexpectedServerBehaviour, 0, resp.Status, cli.id)
 	}
 
 	return resp.Data, nil
@@ -101,7 +101,7 @@ func (cli *Client) SearchRecord(uid string) (recExists bool, cerr *ce.CommonErro
 		return false, nil
 
 	default:
-		return false, ce.NewClientError(ErrUnexpectedServerBehaviour, 0, resp.Status, cli.id)
+		return false, ce.NewClientError(Err_UnexpectedServerBehaviour, 0, resp.Status, cli.id)
 	}
 }
 
@@ -127,7 +127,7 @@ func (cli *Client) SearchFile(uid string) (fileExists bool, cerr *ce.CommonError
 		return false, nil
 
 	default:
-		return false, ce.NewClientError(ErrUnexpectedServerBehaviour, 0, resp.Status, cli.id)
+		return false, ce.NewClientError(Err_UnexpectedServerBehaviour, 0, resp.Status, cli.id)
 	}
 }
 
@@ -146,7 +146,7 @@ func (cli *Client) ForgetRecord(uid string) (cerr *ce.CommonError) {
 	}
 
 	if resp.Status != status.Status_OK {
-		return ce.NewClientError(ErrUnexpectedServerBehaviour, 0, resp.Status, cli.id)
+		return ce.NewClientError(Err_UnexpectedServerBehaviour, 0, resp.Status, cli.id)
 	}
 
 	return nil
@@ -167,7 +167,7 @@ func (cli *Client) ResetCache() (cerr *ce.CommonError) {
 	}
 
 	if resp.Status != status.Status_OK {
-		return ce.NewClientError(ErrUnexpectedServerBehaviour, 0, resp.Status, cli.id)
+		return ce.NewClientError(Err_UnexpectedServerBehaviour, 0, resp.Status, cli.id)
 	}
 
 	return nil

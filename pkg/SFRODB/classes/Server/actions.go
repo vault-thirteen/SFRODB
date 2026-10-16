@@ -1,20 +1,20 @@
 package server
 
 import (
-	"fmt"
 	"path/filepath"
 
 	ce "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/CommonError"
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Connection"
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Method"
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Request"
+	"github.com/vault-thirteen/SFRODB/pkg/common"
 )
 
 // act_showData shows a data record.
 // Returns a detailed error.
 func (srv *Server) act_showData(con *connection.Connection, req *request.Request) (cerr *ce.CommonError) {
 	if req.Method != method.Method_ShowData {
-		return ce.NewServerError(fmt.Sprintf(method.ErrUnsupportedMethod, req.Method), req.Method, 0, con.ClientId())
+		return ce.NewServerError(common.FormatMessage(method.Errf_UnsupportedMethod, req.Method), req.Method, 0, con.ClientId())
 	}
 
 	var data []byte
@@ -30,7 +30,7 @@ func (srv *Server) act_showData(con *connection.Connection, req *request.Request
 // Returns a detailed error.
 func (srv *Server) act_searchRecord(con *connection.Connection, req *request.Request) (cerr *ce.CommonError) {
 	if req.Method != method.Method_SearchRecord {
-		return ce.NewServerError(fmt.Sprintf(method.ErrUnsupportedMethod, req.Method), req.Method, 0, con.ClientId())
+		return ce.NewServerError(common.FormatMessage(method.Errf_UnsupportedMethod, req.Method), req.Method, 0, con.ClientId())
 	}
 
 	var recExists = srv.cache.RecordExists(req.UID.String())
@@ -45,7 +45,7 @@ func (srv *Server) act_searchRecord(con *connection.Connection, req *request.Req
 // Returns a detailed error.
 func (srv *Server) act_searchFile(con *connection.Connection, req *request.Request) (cerr *ce.CommonError) {
 	if req.Method != method.Method_SearchFile {
-		return ce.NewServerError(fmt.Sprintf(method.ErrUnsupportedMethod, req.Method), req.Method, 0, con.ClientId())
+		return ce.NewServerError(common.FormatMessage(method.Errf_UnsupportedMethod, req.Method), req.Method, 0, con.ClientId())
 	}
 
 	var relPath = filepath.Join(req.UID.String()+srv.settings.Data.FileExtension, "")
@@ -66,7 +66,7 @@ func (srv *Server) act_searchFile(con *connection.Connection, req *request.Reque
 // Returns a detailed error.
 func (srv *Server) act_forgetRecord(con *connection.Connection, req *request.Request) (cerr *ce.CommonError) {
 	if req.Method != method.Method_ForgetRecord {
-		return ce.NewServerError(fmt.Sprintf(method.ErrUnsupportedMethod, req.Method), req.Method, 0, con.ClientId())
+		return ce.NewServerError(common.FormatMessage(method.Errf_UnsupportedMethod, req.Method), req.Method, 0, con.ClientId())
 	}
 
 	srv.cache.RemoveRecord(req.UID.String())
@@ -78,7 +78,7 @@ func (srv *Server) act_forgetRecord(con *connection.Connection, req *request.Req
 // Returns a detailed error.
 func (srv *Server) act_resetCache(con *connection.Connection, req *request.Request) (cerr *ce.CommonError) {
 	if req.Method != method.Method_ResetCache {
-		return ce.NewServerError(fmt.Sprintf(method.ErrUnsupportedMethod, req.Method), req.Method, 0, con.ClientId())
+		return ce.NewServerError(common.FormatMessage(method.Errf_UnsupportedMethod, req.Method), req.Method, 0, con.ClientId())
 	}
 
 	srv.logMessage(Msg_ResettingCache)

@@ -6,7 +6,7 @@ const (
 )
 
 const (
-	ErrEndiannessIsUnknown = "endianness is unknown"
+	Err_EndiannessIsUnknown = "endianness is unknown"
 )
 
 type Endianness byte

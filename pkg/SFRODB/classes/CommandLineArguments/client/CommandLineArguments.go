@@ -1,13 +1,13 @@
-package main
+package clac
 
 import (
-	"errors"
 	"os"
 
+	ae "github.com/vault-thirteen/auxie/errors"
 	"github.com/vault-thirteen/auxie/number"
-)
 
-const ErrSyntax = "syntax error"
+	"github.com/vault-thirteen/SFRODB/pkg/common"
+)
 
 type CommandLineArguments struct {
 	Host     string
@@ -15,9 +15,9 @@ type CommandLineArguments struct {
 	AuxPort  uint16
 }
 
-func readCLA() (cla *CommandLineArguments, err error) {
+func NewCommandLineArgumentsFromOs() (cla *CommandLineArguments, err error) {
 	if len(os.Args) != 4 {
-		return nil, errors.New(ErrSyntax)
+		return nil, ae.ErrorFromText(common.Err_Syntax)
 	}
 
 	cla = &CommandLineArguments{

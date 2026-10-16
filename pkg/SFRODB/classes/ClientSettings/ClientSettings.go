@@ -1,15 +1,15 @@
 package cs
 
 import (
-	"errors"
+	ae "github.com/vault-thirteen/auxie/errors"
 )
 
 const ResponseMessageLengthLimitDefault = 1_000_000 // 1 MB.
 
 const (
-	ErrClientHostIsNotSet         = "client host is not set"
-	ErrClientPortIsNotSet         = "client port is not set"
-	ErrResponseMessageLengthLimit = "response message length limit is not set"
+	Err_ClientHostIsNotSet         = "client host is not set"
+	Err_ClientPortIsNotSet         = "client port is not set"
+	Err_ResponseMessageLengthLimit = "response message length limit is not set"
 )
 
 // ClientSettings is client's Settings.
@@ -50,19 +50,19 @@ func New(
 
 func (stn *ClientSettings) Check() (err error) {
 	if len(stn.Host) == 0 {
-		return errors.New(ErrClientHostIsNotSet)
+		return ae.ErrorFromText(Err_ClientHostIsNotSet)
 	}
 
 	if stn.MainPort == 0 {
-		return errors.New(ErrClientPortIsNotSet)
+		return ae.ErrorFromText(Err_ClientPortIsNotSet)
 	}
 
 	if stn.AuxPort == 0 {
-		return errors.New(ErrClientPortIsNotSet)
+		return ae.ErrorFromText(Err_ClientPortIsNotSet)
 	}
 
 	if stn.ResponseMessageLengthLimit == 0 {
-		return errors.New(ErrResponseMessageLengthLimit)
+		return ae.ErrorFromText(Err_ResponseMessageLengthLimit)
 	}
 
 	return nil

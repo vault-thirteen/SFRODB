@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"time"
+
+	"github.com/vault-thirteen/auxie/errors"
 
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Client"
 	ce "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/CommonError"
@@ -11,17 +11,7 @@ import (
 )
 
 const (
-	HorizontalLine = "------------------------------------------------------------"
-	ItemLenLimit   = 60
-)
-
-const (
-	Msgf_RequestDuration   = "Request Duration: %d µs. Data Size: %d Bytes."
-	Msg_Item               = "Item:"
-	Msg_RecordExists       = "Record exists."
-	Msg_RecordDoesNotExist = "Record does not exist."
-	Msg_FileExists         = "File exists."
-	Msg_FileDoesNotExist   = "File does not exist."
+	ItemLenLimit = 60
 )
 
 func makeSomeActions(cli *client.Client, appMustBeStopped *chan bool) {
@@ -32,9 +22,9 @@ func makeSomeActions(cli *client.Client, appMustBeStopped *chan bool) {
 	var normalExit = false
 
 	for {
-		action, err = getUserInputChar(HintMain)
+		action, err = common.GetInputCharFromStdin(common.Msg_TestClientHintMain)
 		if err != nil {
-			log.Println(err.Error())
+			errors.LogError(err)
 			continue
 		}
 
@@ -46,9 +36,9 @@ func makeSomeActions(cli *client.Client, appMustBeStopped *chan bool) {
 		switch action {
 		case 'r', 'R':
 		case 'g', 'G', 'e', 'E', 's', 'S', 'f', 'F':
-			uid, err = getUserInputString(HintUid)
+			uid, err = common.GetInputStringFromStdin(common.Msg_TestClientHintUid)
 			if err != nil {
-				log.Println(err.Error())
+				errors.LogError(err)
 				continue
 			}
 		default:
@@ -71,13 +61,13 @@ func makeSomeActions(cli *client.Client, appMustBeStopped *chan bool) {
 		}
 		if cerr != nil {
 			if cerr.IsServerError() {
-				log.Println(common.Msg_ServerError + cerr.Error())
+				errors.LogError(errors.ErrorWithPrefix(cerr, common.Err_ServerError))
 				break
 			} else if cerr.IsClientError() {
-				log.Println(common.Msg_ClientError + cerr.Error())
+				errors.LogError(errors.ErrorWithPrefix(cerr, common.Err_ClientError))
 				continue
 			} else {
-				log.Println(common.Msg_Anomaly + cerr.Error())
+				errors.LogError(errors.ErrorWithPrefix(cerr, common.Err_Anomaly))
 				break
 			}
 		}
@@ -86,12 +76,12 @@ func makeSomeActions(cli *client.Client, appMustBeStopped *chan bool) {
 	// Send the 'Close' Request.
 	cerr = cli.CloseConnection_Main(normalExit)
 	if cerr != nil {
-		log.Println(cerr.Error())
+		errors.LogError(cerr)
 	}
 
 	cerr = cli.CloseConnection_Aux(normalExit)
 	if cerr != nil {
-		log.Println(cerr.Error())
+		errors.LogError(cerr)
 	}
 
 	*appMustBeStopped <- true
@@ -109,13 +99,13 @@ func processGKeys(cli *client.Client, uid string) (cerr *ce.CommonError) {
 
 	t1e := time.Now().Sub(t1)
 
-	fmt.Println(fmt.Sprintf(Msgf_RequestDuration, t1e.Microseconds(), itemLen))
+	common.PrintMessage(common.FormatRequestDuration(t1e.Microseconds(), itemLen))
 
 	var mustShowData = false
 	var ch byte
 	var err error
 	if itemLen > ItemLenLimit {
-		ch, err = getUserInputChar(HintDataSize)
+		ch, err = common.GetInputCharFromStdin(common.Msg_TestClientHintDataSize)
 		if err != nil {
 			return ce.NewClientError(err.Error(), 0, 0, cli.GetId())
 		}
@@ -128,10 +118,10 @@ func processGKeys(cli *client.Client, uid string) (cerr *ce.CommonError) {
 	}
 
 	if mustShowData {
-		fmt.Println(Msg_Item)
-		fmt.Println(HorizontalLine)
-		fmt.Println(string(data))
-		fmt.Println(HorizontalLine)
+		common.PrintMessage(common.Msg_Item)
+		common.PrintMessage(common.Msg_HorizontalLine)
+		common.PrintMessage(string(data))
+		common.PrintMessage(common.Msg_HorizontalLine)
 	}
 
 	return nil
@@ -145,9 +135,9 @@ func processEKeys(cli *client.Client, uid string) (cerr *ce.CommonError) {
 	}
 
 	if recExists {
-		fmt.Println(Msg_RecordExists)
+		common.PrintMessage(common.Msg_RecordExists)
 	} else {
-		fmt.Println(Msg_RecordDoesNotExist)
+		common.PrintMessage(common.Msg_RecordDoesNotExist)
 	}
 
 	return nil
@@ -161,9 +151,9 @@ func processSKeys(cli *client.Client, uid string) (cerr *ce.CommonError) {
 	}
 
 	if fileExists {
-		fmt.Println(Msg_FileExists)
+		common.PrintMessage(common.Msg_FileExists)
 	} else {
-		fmt.Println(Msg_FileDoesNotExist)
+		common.PrintMessage(common.Msg_FileDoesNotExist)
 	}
 
 	return nil

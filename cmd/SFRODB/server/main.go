@@ -1,36 +1,25 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	ver "github.com/vault-thirteen/auxie/Versioneer/classes/Versioneer"
+	"github.com/vault-thirteen/auxie/errors"
 
+	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/CommandLineArguments/server"
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Server"
 	ss "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/ServerSettings"
 	"github.com/vault-thirteen/SFRODB/pkg/common"
 )
 
-const (
-	Msg_MainListener      = "Main Listener: "
-	Msg_AuxiliaryListener = "Auxiliary Listener: "
-)
-
-const (
-	App = "Server"
-)
-
 func main() {
 	showIntro()
 
-	cla, err := readCLA()
+	cla, err := clas.NewCommandLineArgumentsFromOs()
 	mustBeNoError(err)
 	if cla.IsDefaultFile() {
-		log.Println(common.Msg_UsingDefaultConfigurationFile)
+		common.LogMessage(common.Msg_UsingDefaultConfigurationFile)
 	}
 
 	var stn *ss.ServerSettings
@@ -43,43 +32,36 @@ func main() {
 
 	cerr := srv.Start()
 	if cerr != nil {
-		log.Fatal(cerr)
+		errors.LogError(cerr)
+		os.Exit(common.ExitCode_StartError)
+		return
 	}
-	fmt.Println(Msg_MainListener + srv.GetMainDsn())
-	fmt.Println(Msg_AuxiliaryListener + srv.GetAuxDsn())
+	common.PrintMessage(common.Msg_ListenerMain + srv.GetMainDsn())
+	common.PrintMessage(common.Msg_ListenerAuxiliary + srv.GetAuxDsn())
 
 	appMustBeStopped := make(chan bool, 1)
-	waitForQuitSignalFromOS(&appMustBeStopped)
+	common.WaitForQuitSignalFromOS(&appMustBeStopped)
 	<-appMustBeStopped
 
 	cerr = srv.Stop()
 	if cerr != nil {
-		log.Println(cerr)
+		errors.LogError(cerr)
 	}
 	time.Sleep(time.Second)
 }
 
 func mustBeNoError(err error) {
 	if err != nil {
-		log.Fatal(err)
+		errors.LogError(err)
+		os.Exit(common.ExitCode_Init)
+		return
 	}
 }
 
 func showIntro() {
 	versioneer, err := ver.New(false)
 	mustBeNoError(err)
-	versioneer.ShowIntroText(App)
+	versioneer.ShowIntroText(common.App_Server)
 	versioneer.ShowComponentsInfoText()
-	fmt.Println()
-}
-
-func waitForQuitSignalFromOS(quitChan *chan bool) {
-	osSignals := make(chan os.Signal, 16)
-	signal.Notify(osSignals, syscall.SIGINT, syscall.SIGTERM)
-
-	go func() {
-		sig := <-osSignals
-		log.Println(common.Msg_OsQuitSignal, sig)
-		*quitChan <- true
-	}()
+	common.PrintMessage()
 }

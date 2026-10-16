@@ -1,17 +1,17 @@
 package poc
 
 import (
-	"errors"
-	"fmt"
-	"log"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
 
+	ae "github.com/vault-thirteen/auxie/errors"
+
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Client"
 	cs "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/ClientSettings"
 	ce "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/CommonError"
+	"github.com/vault-thirteen/SFRODB/pkg/common"
 )
 
 const (
@@ -20,20 +20,22 @@ const (
 )
 
 const (
-	Err_DuplicateClientId       = "duplicate client id: %v"
 	Err_NoIdleClientIsAvailable = "no idle client is available"
-	Err_ClientIsNotBeingUsed    = "client is not being used: %v"
+
+	Errf_DuplicateClientId    = "duplicate client id: %v"
+	Errf_ClientIsNotBeingUsed = "client is not being used: %v"
 )
 
 const (
-	Msgf_ClientsPoolStart           = "A pool of %d clients has been started."
-	Msg_ClientRestarterStopped      = "Client restarter has stopped."
-	Msg_ReconnectingClient          = "Re-connecting the client ..."
 	Msg_BrokenClientReconnected     = "A broken client was successfully reconnected."
-	Msg_StoppingAllClients          = "Stopping all the clients ..."
-	Msgf_ClientStopped              = "Client [%s] was stopped."
-	Msg_WaitingForSubroutinesToStop = "Waiting for subroutines to stop ..."
+	Msg_ClientRestarterStopped      = "Client restarter has stopped."
 	Msg_ClientPoolStopped           = "Client pool has been stopped."
+	Msg_ReconnectingClient          = "Re-connecting the client ..."
+	Msg_StoppingAllClients          = "Stopping all the clients ..."
+	Msg_WaitingForSubroutinesToStop = "Waiting for subroutines to stop ..."
+
+	Msgf_ClientsPoolStart = "A pool of %d clients has been started."
+	Msgf_ClientStopped    = "Client [%s] was stopped."
 )
 
 type PoolOfClients struct {
@@ -125,7 +127,7 @@ func (cp *PoolOfClients) Start() (cerr *ce.CommonError) {
 	cp.subRoutines.Add(1)
 	go cp.clientRestarter()
 
-	log.Println(fmt.Sprintf(Msgf_ClientsPoolStart, cp.size))
+	common.LogMessage(common.FormatMessage(Msgf_ClientsPoolStart, cp.size))
 
 	return nil
 }
@@ -162,7 +164,7 @@ func (cp *PoolOfClients) clientRestarter() {
 		continue
 	}
 
-	log.Println(Msg_ClientRestarterStopped)
+	common.LogMessage(Msg_ClientRestarterStopped)
 }
 
 // clientRestarterCore is a critical part of the client restarter which
@@ -178,7 +180,7 @@ func (cp *PoolOfClients) clientRestarterCore() (success bool) {
 	}
 
 	cli := <-cp.brokenClients
-	log.Println(Msg_ReconnectingClient)
+	common.LogMessage(Msg_ReconnectingClient)
 	_ = cli.Stop()
 	cerr := cli.Start()
 	if cerr != nil {
@@ -186,7 +188,7 @@ func (cp *PoolOfClients) clientRestarterCore() (success bool) {
 		return false
 	}
 
-	log.Println(Msg_BrokenClientReconnected)
+	common.LogMessage(Msg_BrokenClientReconnected)
 	cp.idleClients <- cli
 	return true
 }
@@ -199,32 +201,32 @@ func (cp *PoolOfClients) Stop() {
 
 	// Drain all the channels except the 'stoppedClients' channel and stop all
 	// the clients.
-	log.Println(Msg_StoppingAllClients)
+	common.LogMessage(Msg_StoppingAllClients)
 	var cli *client.Client
 	for len(cp.idleClients) > 0 {
 		cli = <-cp.idleClients
 		_ = cli.Stop()
-		log.Println(fmt.Sprintf(Msgf_ClientStopped, cli.GetId()))
+		common.LogMessage(common.FormatMessage(Msgf_ClientStopped, cli.GetId()))
 		cp.stoppedClients <- cli
 	}
 	for i := range cp.usedClients {
 		cli = cp.usedClients[i]
 		_ = cli.Stop()
-		log.Println(fmt.Sprintf(Msgf_ClientStopped, cli.GetId()))
+		common.LogMessage(common.FormatMessage(Msgf_ClientStopped, cli.GetId()))
 		cp.stoppedClients <- cli
 		delete(cp.usedClients, cli.GetId())
 	}
 	for len(cp.brokenClients) > 0 {
 		cli = <-cp.brokenClients
 		_ = cli.Stop()
-		log.Println(fmt.Sprintf(Msgf_ClientStopped, cli.GetId()))
+		common.LogMessage(common.FormatMessage(Msgf_ClientStopped, cli.GetId()))
 		cp.stoppedClients <- cli
 	}
 
-	log.Println(Msg_WaitingForSubroutinesToStop)
+	common.LogMessage(Msg_WaitingForSubroutinesToStop)
 	cp.subRoutines.Wait()
 
-	log.Println(Msg_ClientPoolStopped)
+	common.LogMessage(Msg_ClientPoolStopped)
 }
 
 // GiveIdleClient provides an idle client. If no clients are idle, an error is
@@ -234,7 +236,7 @@ func (cp *PoolOfClients) GiveIdleClient() (cli *client.Client, err error) {
 	defer cp.clientTransfers.Unlock()
 
 	if len(cp.idleClients) == 0 {
-		return nil, errors.New(Err_NoIdleClientIsAvailable)
+		return nil, ae.ErrorFromText(Err_NoIdleClientIsAvailable)
 	}
 
 	cli = <-cp.idleClients
@@ -242,7 +244,7 @@ func (cp *PoolOfClients) GiveIdleClient() (cli *client.Client, err error) {
 	if idExists {
 		// Clients may not have same IDs !
 		cp.idleClients <- cli
-		return nil, fmt.Errorf(Err_DuplicateClientId, cli.GetId())
+		return nil, ae.ErrorFromFormattedText(Errf_DuplicateClientId, cli.GetId())
 	}
 
 	cp.usedClients[cli.GetId()] = cli
@@ -266,7 +268,7 @@ func (cp *PoolOfClients) TakeIdleClient(clientId string, isBroken bool) (err err
 	cli, idExists := cp.usedClients[clientId]
 	if !idExists {
 		// Client is not being used !
-		return fmt.Errorf(Err_ClientIsNotBeingUsed, cli.GetId())
+		return ae.ErrorFromFormattedText(Errf_ClientIsNotBeingUsed, cli.GetId())
 	}
 
 	if isBroken {

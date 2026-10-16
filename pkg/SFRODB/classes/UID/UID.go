@@ -1,8 +1,9 @@
 package uid
 
 import (
-	"fmt"
 	"strings"
+
+	"github.com/vault-thirteen/auxie/errors"
 
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/protocol"
 )
@@ -12,7 +13,7 @@ const (
 )
 
 const (
-	ErrNotValid = "UID is not valid: %s"
+	Errf_UidNotValid = "UID is not valid: %s"
 )
 
 type UID string
@@ -22,7 +23,7 @@ func New(s string) (u *UID, err error) {
 	*u = UID(strings.TrimSpace(s))
 
 	if !u.isValid() {
-		return nil, fmt.Errorf(ErrNotValid, s)
+		return nil, errors.ErrorFromFormattedText(Errf_UidNotValid, s)
 	}
 
 	return u, nil

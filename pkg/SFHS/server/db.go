@@ -48,7 +48,7 @@ func (srv *Server) getData(uid string) (data []byte, cerr *ce.CommonError) {
 	var err error
 	cli, err = srv.takeClient()
 	if err != nil {
-		cerr = ce.NewClientError(err.Error(), 0, 0, client.ClientIdNone)
+		cerr = ce.NewClientError(err.Error(), 0, 0, client.ClientId_None)
 		return nil, cerr
 	}
 

@@ -3,7 +3,6 @@ package connection
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"math"
 	"net"
 
@@ -15,7 +14,7 @@ import (
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Status"
 	uid "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/UID"
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/protocol"
-	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/std/tcp"
+	"github.com/vault-thirteen/SFRODB/pkg/common"
 )
 
 type Connection struct {
@@ -62,7 +61,7 @@ func (con *Connection) SendRequestMessage(req *request.Request) (cerr *ce.Common
 		if req.Size == 0 {
 			rs := protocol.MethodNameLen + req.UID.Length()
 			if rs > math.MaxUint16 {
-				return ce.NewClientError(fmt.Sprintf(request.ErrSizeIsTooLong, rs), req.Method, 0, con.clientId)
+				return ce.NewClientError(common.FormatMessage(request.Errf_SizeIsTooLong, rs), req.Method, 0, con.clientId)
 			}
 			req.Size = uint16(rs)
 		}
@@ -76,7 +75,7 @@ func (con *Connection) SendRequestMessage(req *request.Request) (cerr *ce.Common
 			binary.LittleEndian.PutUint16(ba, req.Size)
 
 		default:
-			return ce.NewClientError(endianness.ErrEndiannessIsUnknown, req.Method, 0, con.clientId)
+			return ce.NewClientError(endianness.Err_EndiannessIsUnknown, req.Method, 0, con.clientId)
 		}
 
 		_, err = buf.Write(ba)
@@ -126,7 +125,7 @@ func (con *Connection) GetResponseMessage() (resp *response.Response, cerr *ce.C
 
 	// 1. Size.
 	{
-		ba, err = tcp.ReadExactSize(con.netConn, protocol.ResponseSizeLen)
+		ba, err = common.TcpReadExactSize(con.netConn, protocol.ResponseSizeLen)
 		if err != nil {
 			return nil, ce.NewClientError(err.Error(), 0, 0, con.clientId)
 		}
@@ -139,17 +138,17 @@ func (con *Connection) GetResponseMessage() (resp *response.Response, cerr *ce.C
 			resp.Size = binary.LittleEndian.Uint32(ba)
 
 		default:
-			return nil, ce.NewClientError(endianness.ErrEndiannessIsUnknown, 0, 0, con.clientId)
+			return nil, ce.NewClientError(endianness.Err_EndiannessIsUnknown, 0, 0, con.clientId)
 		}
 
 		if resp.Size < protocol.StatusNameLen {
-			return nil, ce.NewClientError(fmt.Sprintf(response.ErrSizeIsTooShort, resp.Size), 0, 0, con.clientId)
+			return nil, ce.NewClientError(common.FormatMessage(response.Errf_SizeIsTooShort, resp.Size), 0, 0, con.clientId)
 		}
 	}
 
 	// 2. Status.
 	{
-		ba, err = tcp.ReadExactSize(con.netConn, protocol.StatusNameLen)
+		ba, err = common.TcpReadExactSize(con.netConn, protocol.StatusNameLen)
 		if err != nil {
 			return nil, ce.NewClientError(err.Error(), 0, 0, con.clientId)
 		}
@@ -164,7 +163,7 @@ func (con *Connection) GetResponseMessage() (resp *response.Response, cerr *ce.C
 	{
 		dataSize := uint(resp.Size) - uint(protocol.StatusNameLen)
 		if dataSize > 0 {
-			resp.Data, err = tcp.ReadExactSize(con.netConn, dataSize)
+			resp.Data, err = common.TcpReadExactSize(con.netConn, dataSize)
 			if err != nil {
 				return nil, ce.NewClientError(err.Error(), 0, resp.Status, con.clientId)
 			}
@@ -183,7 +182,7 @@ func (con *Connection) GetNextRequest() (req *request.Request, cerr *ce.CommonEr
 
 	// 1. Size.
 	{
-		ba, err = tcp.ReadExactSize(con.netConn, protocol.RequestSizeLen)
+		ba, err = common.TcpReadExactSize(con.netConn, protocol.RequestSizeLen)
 		if err != nil {
 			return nil, ce.NewServerError(err.Error(), 0, 0, con.clientId)
 		}
@@ -196,17 +195,17 @@ func (con *Connection) GetNextRequest() (req *request.Request, cerr *ce.CommonEr
 			req.Size = binary.LittleEndian.Uint16(ba)
 
 		default:
-			return nil, ce.NewServerError(endianness.ErrEndiannessIsUnknown, 0, 0, con.clientId)
+			return nil, ce.NewServerError(endianness.Err_EndiannessIsUnknown, 0, 0, con.clientId)
 		}
 
 		if req.Size < protocol.MethodNameLen {
-			return nil, ce.NewServerError(fmt.Sprintf(request.ErrSizeIsTooShort, req.Size), 0, 0, con.clientId)
+			return nil, ce.NewServerError(common.FormatMessage(request.Errf_SizeIsTooShort, req.Size), 0, 0, con.clientId)
 		}
 	}
 
 	// 2. Method.
 	{
-		ba, err = tcp.ReadExactSize(con.netConn, protocol.MethodNameLen)
+		ba, err = common.TcpReadExactSize(con.netConn, protocol.MethodNameLen)
 		if err != nil {
 			return nil, ce.NewServerError(err.Error(), 0, 0, con.clientId)
 		}
@@ -221,7 +220,7 @@ func (con *Connection) GetNextRequest() (req *request.Request, cerr *ce.CommonEr
 	{
 		uidSize := uint(req.Size) - uint(protocol.MethodNameLen)
 		if uidSize > 0 {
-			ba, err = tcp.ReadExactSize(con.netConn, uidSize)
+			ba, err = common.TcpReadExactSize(con.netConn, uidSize)
 			if err != nil {
 				return nil, ce.NewServerError(err.Error(), req.Method, 0, con.clientId)
 			}
@@ -248,7 +247,7 @@ func (con *Connection) SendResponseMessage(resp *response.Response) (cerr *ce.Co
 		if resp.Size == 0 {
 			rs := protocol.StatusNameLen + len(resp.Data)
 			if rs > math.MaxUint32 {
-				return ce.NewServerError(fmt.Sprintf(response.ErrSizeIsTooLong, rs), 0, resp.Status, con.clientId)
+				return ce.NewServerError(common.FormatMessage(response.Errf_SizeIsTooLong, rs), 0, resp.Status, con.clientId)
 			}
 			resp.Size = uint32(rs)
 		}
@@ -262,7 +261,7 @@ func (con *Connection) SendResponseMessage(resp *response.Response) (cerr *ce.Co
 			binary.LittleEndian.PutUint32(ba, resp.Size)
 
 		default:
-			return ce.NewServerError(endianness.ErrEndiannessIsUnknown, 0, resp.Status, con.clientId)
+			return ce.NewServerError(endianness.Err_EndiannessIsUnknown, 0, resp.Status, con.clientId)
 		}
 
 		_, err = buf.Write(ba)

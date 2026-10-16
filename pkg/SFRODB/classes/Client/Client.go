@@ -1,7 +1,6 @@
 package client
 
 import (
-	"fmt"
 	"net"
 	"sync"
 	"sync/atomic"
@@ -10,25 +9,24 @@ import (
 	ce "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/CommonError"
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Connection"
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/protocol"
-	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/std/tcp"
 	"github.com/vault-thirteen/SFRODB/pkg/common"
 
 	ae "github.com/vault-thirteen/auxie/errors"
 )
 
 const (
-	// ClientIdNone is a client ID for a non-network operations.
-	ClientIdNone = ""
+	// ClientId_None is a client ID for a non-network operations.
+	ClientId_None = ""
 
-	// ClientIdIncoming is a client ID for a request incoming to server.
-	ClientIdIncoming = "s"
+	// ClientId_Incoming is a client ID for a request incoming to server.
+	ClientId_Incoming = "s"
 )
 
 const (
-	ErrDoubleStartIsNotPossible  = "double start is not possible"
-	ErrDoubleStopIsNotPossible   = "double stop is not possible"
-	ErrUnexpectedServerBehaviour = "unexpected server behaviour"
-	ErrClientError               = "client error"
+	Err_DoubleStartIsNotPossible  = "double start is not possible"
+	Err_DoubleStopIsNotPossible   = "double stop is not possible"
+	Err_UnexpectedServerBehaviour = "unexpected server behaviour"
+	Err_ClientError               = "client error"
 )
 
 // Client is client.
@@ -61,8 +59,8 @@ func New(stn *cs.ClientSettings, id string) (cli *Client, err error) {
 	cli = &Client{
 		id:            id,
 		settings:      stn,
-		mainDsn:       fmt.Sprintf(common.HostPortFormat, stn.Host, stn.MainPort),
-		auxDsn:        fmt.Sprintf(common.HostPortFormat, stn.Host, stn.AuxPort),
+		mainDsn:       common.FormatHostPort(stn.Host, stn.MainPort),
+		auxDsn:        common.FormatHostPort(stn.Host, stn.AuxPort),
 		startStopLock: new(sync.Mutex),
 		isWorking:     new(atomic.Bool),
 	}
@@ -105,7 +103,7 @@ func (cli *Client) Start() (cerr *ce.CommonError) {
 
 func (cli *Client) start() (cerr *ce.CommonError) {
 	if cli.isWorking.Load() {
-		return ce.NewClientError(ErrDoubleStartIsNotPossible, 0, 0, ClientIdNone)
+		return ce.NewClientError(Err_DoubleStartIsNotPossible, 0, 0, ClientId_None)
 	}
 
 	cerr = cli.startMainConnection()
@@ -129,7 +127,7 @@ func (cli *Client) startMainConnection() (cerr *ce.CommonError) {
 		return ce.NewClientError(err.Error(), 0, 0, cli.id)
 	}
 
-	err = tcp.EnableKeepAlives(mainConn, protocol.TcpKeepAliveIsEnabled, protocol.TcpKeepAlivePeriodSec)
+	err = common.EnableTcpKeepAlives(mainConn, protocol.TcpKeepAliveIsEnabled, protocol.TcpKeepAlivePeriodSec)
 	if err != nil {
 		closeErr := mainConn.Close()
 		if closeErr != nil {
@@ -149,7 +147,7 @@ func (cli *Client) startAuxConnection() (cerr *ce.CommonError) {
 		return ce.NewClientError(err.Error(), 0, 0, cli.id)
 	}
 
-	err = tcp.EnableKeepAlives(auxConn, protocol.TcpKeepAliveIsEnabled, protocol.TcpKeepAlivePeriodSec)
+	err = common.EnableTcpKeepAlives(auxConn, protocol.TcpKeepAliveIsEnabled, protocol.TcpKeepAlivePeriodSec)
 	if err != nil {
 		closeErr := auxConn.Close()
 		if closeErr != nil {
@@ -173,7 +171,7 @@ func (cli *Client) Stop() (cerr *ce.CommonError) {
 
 func (cli *Client) stop() (cerr *ce.CommonError) {
 	if !cli.isWorking.Load() {
-		return ce.NewClientError(ErrDoubleStopIsNotPossible, 0, 0, ClientIdNone)
+		return ce.NewClientError(Err_DoubleStopIsNotPossible, 0, 0, ClientId_None)
 	}
 
 	cerr = cli.mainConnection.Break()

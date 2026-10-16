@@ -1,12 +1,11 @@
 package server
 
 import (
-	"fmt"
-	"log"
 	"net"
 	"sync/atomic"
 
 	"github.com/vault-thirteen/auxie/Cache/VL"
+	"github.com/vault-thirteen/auxie/errors"
 
 	client "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Client"
 	ce "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/CommonError"
@@ -16,12 +15,11 @@ import (
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Request"
 	ss "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/ServerSettings"
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/protocol"
-	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/std/tcp"
 	"github.com/vault-thirteen/SFRODB/pkg/common"
 )
 
 const (
-	Errf_ConnectionAccepting = "error accepting a connection: %w"
+	Err_ConnectionAccepting = "error accepting a connection"
 )
 
 const (
@@ -57,8 +55,8 @@ func New(stn *ss.ServerSettings) (srv *Server, err error) {
 
 	srv = &Server{
 		settings: stn,
-		mainDsn:  fmt.Sprintf(common.HostPortFormat, stn.Hostname, stn.MainPort),
-		auxDsn:   fmt.Sprintf(common.HostPortFormat, stn.Hostname, stn.AuxPort),
+		mainDsn:  common.FormatHostPort(stn.Hostname, stn.MainPort),
+		auxDsn:   common.FormatHostPort(stn.Hostname, stn.AuxPort),
 	}
 
 	srv.mainListenerAddr, err = net.ResolveTCPAddr(protocol.LowLevelProtocol, srv.mainDsn)
@@ -103,12 +101,12 @@ func (srv *Server) Start() (cerr *ce.CommonError) {
 	var err error
 	srv.mainListener, err = net.ListenTCP(protocol.LowLevelProtocol, srv.mainListenerAddr)
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0, 0, client.ClientIdNone)
+		return ce.NewServerError(err.Error(), 0, 0, client.ClientId_None)
 	}
 
 	srv.auxListener, err = net.ListenTCP(protocol.LowLevelProtocol, srv.auxListenerAddr)
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0, 0, client.ClientIdNone)
+		return ce.NewServerError(err.Error(), 0, 0, client.ClientId_None)
 	}
 
 	srv.isRunning.Store(true)
@@ -126,12 +124,12 @@ func (srv *Server) runMainLoop() {
 
 		conn, err := srv.mainListener.AcceptTCP()
 		if err != nil {
-			connErr := fmt.Errorf(Errf_ConnectionAccepting, err)
+			connErr := errors.ErrorWithPrefix(err, Err_ConnectionAccepting)
 			srv.logError(connErr)
 			continue
 		}
 
-		err = tcp.EnableKeepAlives(conn, protocol.TcpKeepAliveIsEnabled, protocol.TcpKeepAlivePeriodSec)
+		err = common.EnableTcpKeepAlives(conn, protocol.TcpKeepAliveIsEnabled, protocol.TcpKeepAlivePeriodSec)
 		if err != nil {
 			srv.logError(err)
 
@@ -157,12 +155,12 @@ func (srv *Server) runAuxLoop() {
 
 		conn, err := srv.auxListener.AcceptTCP()
 		if err != nil {
-			connErr := fmt.Errorf(Errf_ConnectionAccepting, err)
+			connErr := errors.ErrorWithPrefix(err, Err_ConnectionAccepting)
 			srv.logError(connErr)
 			continue
 		}
 
-		err = tcp.EnableKeepAlives(conn, protocol.TcpKeepAliveIsEnabled, protocol.TcpKeepAlivePeriodSec)
+		err = common.EnableTcpKeepAlives(conn, protocol.TcpKeepAliveIsEnabled, protocol.TcpKeepAlivePeriodSec)
 		if err != nil {
 			srv.logError(err)
 
@@ -185,12 +183,12 @@ func (srv *Server) Stop() (cerr *ce.CommonError) {
 	var err error
 	err = srv.mainListener.Close()
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0, 0, client.ClientIdNone)
+		return ce.NewServerError(err.Error(), 0, 0, client.ClientId_None)
 	}
 
 	err = srv.auxListener.Close()
 	if err != nil {
-		return ce.NewServerError(err.Error(), 0, 0, client.ClientIdNone)
+		return ce.NewServerError(err.Error(), 0, 0, client.ClientId_None)
 	}
 
 	srv.isRunning.Store(false)
@@ -200,7 +198,7 @@ func (srv *Server) Stop() (cerr *ce.CommonError) {
 }
 
 func (srv *Server) handleMainConnection(conn *net.TCPConn) {
-	con := connection.New(conn, 0, client.ClientIdIncoming)
+	con := connection.New(conn, 0, client.ClientId_Incoming)
 
 	defer func() {
 		derr := srv.finaliseConnection(con)
@@ -231,7 +229,7 @@ func (srv *Server) handleMainConnection(conn *net.TCPConn) {
 		case method.Method_SearchFile:
 			cerr = srv.act_searchFile(con, req)
 		default:
-			cerr = ce.NewClientError(fmt.Sprintf(method.ErrUnsupportedMethod, req.Method), req.Method, 0, con.ClientId())
+			cerr = ce.NewClientError(common.FormatMessage(method.Errf_UnsupportedMethod, req.Method), req.Method, 0, con.ClientId())
 		}
 		if cerr != nil {
 			if cerr.IsServerError() {
@@ -248,7 +246,7 @@ func (srv *Server) handleMainConnection(conn *net.TCPConn) {
 }
 
 func (srv *Server) handleAuxConnection(conn *net.TCPConn) {
-	con := connection.New(conn, 0, client.ClientIdIncoming)
+	con := connection.New(conn, 0, client.ClientId_Incoming)
 
 	defer func() {
 		derr := srv.finaliseConnection(con)
@@ -277,7 +275,7 @@ func (srv *Server) handleAuxConnection(conn *net.TCPConn) {
 		case method.Method_ResetCache:
 			cerr = srv.act_resetCache(con, req)
 		default:
-			cerr = ce.NewClientError(fmt.Sprintf(method.ErrUnsupportedMethod, req.Method), req.Method, 0, con.ClientId())
+			cerr = ce.NewClientError(common.FormatMessage(method.Errf_UnsupportedMethod, req.Method), req.Method, 0, con.ClientId())
 		}
 		if cerr != nil {
 			if cerr.IsServerError() {
@@ -306,9 +304,9 @@ func (srv *Server) finaliseConnection(con *connection.Connection) (cerr *ce.Comm
 }
 
 func (srv *Server) logError(err error) {
-	log.Println(err.Error())
+	errors.LogError(err)
 }
 
 func (srv *Server) logMessage(msg string) {
-	log.Println(msg)
+	common.LogMessage(msg)
 }

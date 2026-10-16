@@ -1,16 +1,17 @@
 package response
 
 import (
-	"fmt"
+	"github.com/vault-thirteen/auxie/errors"
 
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Status"
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/protocol"
 )
 
 const (
-	ErrContentIsTooLong = "content is too long"
-	ErrSizeIsTooShort   = "response size is too short: %v"
-	ErrSizeIsTooLong    = "response size is too long: %v"
+	Err_ContentIsTooLong = "content is too long"
+
+	Errf_SizeIsTooShort = "response size is too short: %v"
+	Errf_SizeIsTooLong  = "response size is too long: %v"
 )
 
 type Response struct {
@@ -60,7 +61,7 @@ func newSimpleResponse(status status.Status) (resp *Response, err error) {
 
 func newNormalResponse(data []byte, status status.Status) (resp *Response, err error) {
 	if len(data) > protocol.ContentLenMax {
-		return nil, fmt.Errorf(ErrContentIsTooLong)
+		return nil, errors.ErrorFromText(Err_ContentIsTooLong)
 	}
 
 	resp = &Response{

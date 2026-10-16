@@ -1,8 +1,6 @@
 package ff
 
 import (
-	"errors"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -14,9 +12,10 @@ import (
 )
 
 const (
-	ErrFolderIsNotFound  = "folder is not found: %s"
-	ErrFileDoesNotExist  = "file does not exist: %s"
-	ErrRelPathIsNotValid = "relative path is not valid"
+	Err_RelPathIsNotValid = "relative path is not valid"
+
+	Errf_FolderIsNotFound = "folder is not found: %s"
+	Errf_FileDoesNotExist = "file does not exist: %s"
 )
 
 type FilesFolder struct {
@@ -31,7 +30,7 @@ func New(baseFolder string) (ff *FilesFolder, err error) {
 		return nil, err
 	}
 	if !ok {
-		err = fmt.Errorf(ErrFolderIsNotFound, baseFolder)
+		err = ae.ErrorFromFormattedText(Errf_FolderIsNotFound, baseFolder)
 		return nil, err
 	}
 
@@ -45,7 +44,7 @@ func New(baseFolder string) (ff *FilesFolder, err error) {
 
 func (ff *FilesFolder) GetFileContents(relPath string) (fileExists bool, data []byte, err error) {
 	if !isRelPathValid(relPath) {
-		return false, nil, errors.New(ErrRelPathIsNotValid)
+		return false, nil, ae.ErrorFromText(Err_RelPathIsNotValid)
 	}
 
 	filePath := filepath.Join(ff.folder, relPath)
@@ -55,7 +54,7 @@ func (ff *FilesFolder) GetFileContents(relPath string) (fileExists bool, data []
 
 	fileExists, err = file.FileExists(filePath)
 	if !fileExists {
-		return false, nil, fmt.Errorf(ErrFileDoesNotExist, filePath)
+		return false, nil, ae.ErrorFromFormattedText(Errf_FileDoesNotExist, filePath)
 	}
 
 	var f *os.File
@@ -81,7 +80,7 @@ func (ff *FilesFolder) GetFileContents(relPath string) (fileExists bool, data []
 
 func (ff *FilesFolder) FileExists(relPath string) (fileExists bool, err error) {
 	if !isRelPathValid(relPath) {
-		return false, errors.New(ErrRelPathIsNotValid)
+		return false, ae.ErrorFromText(Err_RelPathIsNotValid)
 	}
 
 	filePath := filepath.Join(ff.folder, relPath)
