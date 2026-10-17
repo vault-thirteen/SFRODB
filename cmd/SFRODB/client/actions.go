@@ -1,10 +1,13 @@
 package main
 
 import (
+	"os"
+	"runtime"
 	"time"
 
 	"github.com/vault-thirteen/auxie/cio"
 	"github.com/vault-thirteen/auxie/errors"
+	"golang.org/x/sys/windows"
 
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Client"
 	ce "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/CommonError"
@@ -15,47 +18,82 @@ const (
 	ItemLenLimit = 60
 )
 
+func prepareTerminal() (err error) {
+	if runtime.GOOS == "windows" {
+		stdout := windows.Handle(os.Stdout.Fd())
+		var mode uint32
+
+		err = windows.GetConsoleMode(stdout, &mode)
+		if err != nil {
+			return err
+		}
+
+		mode |= windows.ENABLE_VIRTUAL_TERMINAL_PROCESSING
+
+		err = windows.SetConsoleMode(stdout, mode)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func makeSomeActions(cli *client.Client, appMustBeStopped *chan bool) {
-	var action byte
-	var uid string
 	var err error
+	err = prepareTerminal()
+	if err != nil {
+		return
+	}
+
+	var key cio.Key
+	var uid string
 	var cerr *ce.CommonError
 	var normalExit = false
 
 	for {
-		action, err = common.GetInputCharFromStdin(common.Msg_TestClientHintMain)
+		cio.Print(common.Msg_TestClientHintMain)
+		cio.Print(common.Msg_EraseCurrentLine)
+		key, err = cio.GetInputKey()
 		if err != nil {
 			errors.LogError(err)
 			continue
 		}
 
-		if (action == 'q') || (action == 'Q') {
+		if key.Code() == cio.VK_Q {
 			normalExit = true
 			break
 		}
 
-		switch action {
-		case 'r', 'R':
-		case 'g', 'G', 'e', 'E', 's', 'S', 'f', 'F':
-			uid, err = common.GetInputStringFromStdin(common.Msg_TestClientHintUid)
-			if err != nil {
-				errors.LogError(err)
-				continue
+		switch key.Code() {
+		case cio.VK_R:
+		case cio.VK_G,
+			cio.VK_E,
+			cio.VK_S,
+			cio.VK_F:
+			{
+				cio.Print(common.Msg_TestClientHintUid)
+
+				uid, err = cio.GetInputString(true)
+				if err != nil {
+					errors.LogError(err)
+					continue
+				}
 			}
 		default:
 			continue
 		}
 
-		switch action {
-		case 'g', 'G':
+		switch key.Code() {
+		case cio.VK_G:
 			cerr = processGKeys(cli, uid)
-		case 'e', 'E':
+		case cio.VK_E:
 			cerr = processEKeys(cli, uid)
-		case 's', 'S':
+		case cio.VK_S:
 			cerr = processSKeys(cli, uid)
-		case 'f', 'F':
+		case cio.VK_F:
 			cerr = cli.ForgetRecord(uid)
-		case 'r', 'R':
+		case cio.VK_R:
 			cerr = cli.ResetCache()
 		default:
 			continue
@@ -103,15 +141,16 @@ func processGKeys(cli *client.Client, uid string) (cerr *ce.CommonError) {
 	cio.PrintMessage(common.FormatRequestDuration(t1e.Microseconds(), itemLen))
 
 	var mustShowData = false
-	var ch byte
+	var key cio.Key
 	var err error
 	if itemLen > ItemLenLimit {
-		ch, err = common.GetInputCharFromStdin(common.Msg_TestClientHintDataSize)
+		cio.Print(common.Msg_TestClientHintDataSize)
+		key, err = cio.GetInputKey()
 		if err != nil {
 			return ce.NewClientError(err.Error(), 0, 0, cli.GetId())
 		}
 
-		if (ch == 'Y') || (ch == 'y') {
+		if key.Code() == cio.VK_Y {
 			mustShowData = true
 		}
 	} else {

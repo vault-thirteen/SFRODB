@@ -5,9 +5,10 @@ import (
 )
 
 const (
-	CR   = "\r"
-	CRLF = CR + LF
-	LF   = "\n"
+	CR    = "\r"
+	CRLF  = CR + LF
+	LF    = "\n"
+	Space = " "
 )
 
 const (
@@ -37,16 +38,18 @@ const (
 	Msg_ServerStopping           = "Stopping the server ..."
 	Msg_ServerStopped            = "Server was stopped."
 	Msg_TestClientHintMain       = CRLF +
-		"[G] = Get/Show a Record;" + CRLF +
-		"[E] = Check Record's Existence;" + CRLF +
-		"[S] = Check File's Existence;" + CRLF +
-		"[F] = Forget/Remove a Record from Cache;" + CRLF +
-		"[R] = Reset/Clear the Cache;" + CRLF +
-		"[Q] = Quit/Exit." + CRLF +
-		"> "
+		"[G] = Get a Record" + Space +
+		"[E] = Record Exists ?" + Space +
+		"[S] = File Exists ?" + Space +
+		"[F] = Forget Cache Record" + Space +
+		"[R] = Reset Cache" + Space +
+		"[Q] = Quit" + CRLF
 	Msg_TestClientHintUid             = "Enter the UID > "
 	Msg_TestClientHintDataSize        = "Data is quite large. Do you want to see it ? [Y] = Yes; [N] = No. > "
 	Msg_UsingDefaultConfigurationFile = "Using the default configuration file."
+	Msg_ClearScreen                   = "\033[2J"
+	Msg_MoveCursorTopLeft             = "\033[H"
+	Msg_EraseCurrentLine              = "\033[2K\r"
 
 	Msgf_RequestDuration = "Request Duration: %d µs. Data Size: %d Bytes."
 )
