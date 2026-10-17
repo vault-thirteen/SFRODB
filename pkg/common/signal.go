@@ -4,6 +4,8 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/vault-thirteen/auxie/cio"
 )
 
 func WaitForQuitSignalFromOS(appMustBeStopped *chan bool) {
@@ -15,7 +17,7 @@ func WaitForQuitSignalFromOS(appMustBeStopped *chan bool) {
 			switch sig {
 			case syscall.SIGINT,
 				syscall.SIGTERM:
-				LogMessage(Msg_OsQuitSignal, sig)
+				cio.LogMessage(Msg_OsQuitSignal, sig)
 				*appMustBeStopped <- true
 			}
 		}

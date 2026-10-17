@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/vault-thirteen/auxie/cio"
 	"github.com/vault-thirteen/auxie/errors"
 
 	ss "github.com/vault-thirteen/SFRODB/pkg/SFHS/server/Settings"
@@ -176,7 +177,7 @@ func (srv *Server) listenForHttpErrors() {
 		srv.mustBeStopped <- true
 	}
 
-	common.LogMessage(common.Msg_HttpErrorListenerStopped)
+	cio.LogMessage(common.Msg_HttpErrorListenerStopped)
 }
 
 func (srv *Server) listenForDbErrors() {
@@ -186,5 +187,5 @@ func (srv *Server) listenForDbErrors() {
 		errors.LogError(errors.ErrorWithPrefix(cerr, common.Err_DbError))
 	}
 
-	common.LogMessage(common.Msg_DbErrorListenerStopped)
+	cio.LogMessage(common.Msg_DbErrorListenerStopped)
 }

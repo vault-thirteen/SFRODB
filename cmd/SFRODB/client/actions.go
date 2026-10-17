@@ -3,6 +3,7 @@ package main
 import (
 	"time"
 
+	"github.com/vault-thirteen/auxie/cio"
 	"github.com/vault-thirteen/auxie/errors"
 
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Client"
@@ -99,7 +100,7 @@ func processGKeys(cli *client.Client, uid string) (cerr *ce.CommonError) {
 
 	t1e := time.Now().Sub(t1)
 
-	common.PrintMessage(common.FormatRequestDuration(t1e.Microseconds(), itemLen))
+	cio.PrintMessage(common.FormatRequestDuration(t1e.Microseconds(), itemLen))
 
 	var mustShowData = false
 	var ch byte
@@ -118,10 +119,10 @@ func processGKeys(cli *client.Client, uid string) (cerr *ce.CommonError) {
 	}
 
 	if mustShowData {
-		common.PrintMessage(common.Msg_Item)
-		common.PrintMessage(common.Msg_HorizontalLine)
-		common.PrintMessage(string(data))
-		common.PrintMessage(common.Msg_HorizontalLine)
+		cio.PrintMessage(common.Msg_Item)
+		cio.PrintMessage(common.Msg_HorizontalLine)
+		cio.PrintMessage(string(data))
+		cio.PrintMessage(common.Msg_HorizontalLine)
 	}
 
 	return nil
@@ -135,9 +136,9 @@ func processEKeys(cli *client.Client, uid string) (cerr *ce.CommonError) {
 	}
 
 	if recExists {
-		common.PrintMessage(common.Msg_RecordExists)
+		cio.PrintMessage(common.Msg_RecordExists)
 	} else {
-		common.PrintMessage(common.Msg_RecordDoesNotExist)
+		cio.PrintMessage(common.Msg_RecordDoesNotExist)
 	}
 
 	return nil
@@ -151,9 +152,9 @@ func processSKeys(cli *client.Client, uid string) (cerr *ce.CommonError) {
 	}
 
 	if fileExists {
-		common.PrintMessage(common.Msg_FileExists)
+		cio.PrintMessage(common.Msg_FileExists)
 	} else {
-		common.PrintMessage(common.Msg_FileDoesNotExist)
+		cio.PrintMessage(common.Msg_FileDoesNotExist)
 	}
 
 	return nil

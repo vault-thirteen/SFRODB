@@ -6,12 +6,12 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/vault-thirteen/auxie/cio"
 	ae "github.com/vault-thirteen/auxie/errors"
 
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Client"
 	cs "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/ClientSettings"
 	ce "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/CommonError"
-	"github.com/vault-thirteen/SFRODB/pkg/common"
 )
 
 const (
@@ -127,7 +127,7 @@ func (cp *PoolOfClients) Start() (cerr *ce.CommonError) {
 	cp.subRoutines.Add(1)
 	go cp.clientRestarter()
 
-	common.LogMessage(common.FormatMessage(Msgf_ClientsPoolStart, cp.size))
+	cio.LogMessage(cio.FormatMessage(Msgf_ClientsPoolStart, cp.size))
 
 	return nil
 }
@@ -164,7 +164,7 @@ func (cp *PoolOfClients) clientRestarter() {
 		continue
 	}
 
-	common.LogMessage(Msg_ClientRestarterStopped)
+	cio.LogMessage(Msg_ClientRestarterStopped)
 }
 
 // clientRestarterCore is a critical part of the client restarter which
@@ -180,7 +180,7 @@ func (cp *PoolOfClients) clientRestarterCore() (success bool) {
 	}
 
 	cli := <-cp.brokenClients
-	common.LogMessage(Msg_ReconnectingClient)
+	cio.LogMessage(Msg_ReconnectingClient)
 	_ = cli.Stop()
 	cerr := cli.Start()
 	if cerr != nil {
@@ -188,7 +188,7 @@ func (cp *PoolOfClients) clientRestarterCore() (success bool) {
 		return false
 	}
 
-	common.LogMessage(Msg_BrokenClientReconnected)
+	cio.LogMessage(Msg_BrokenClientReconnected)
 	cp.idleClients <- cli
 	return true
 }
@@ -201,32 +201,32 @@ func (cp *PoolOfClients) Stop() {
 
 	// Drain all the channels except the 'stoppedClients' channel and stop all
 	// the clients.
-	common.LogMessage(Msg_StoppingAllClients)
+	cio.LogMessage(Msg_StoppingAllClients)
 	var cli *client.Client
 	for len(cp.idleClients) > 0 {
 		cli = <-cp.idleClients
 		_ = cli.Stop()
-		common.LogMessage(common.FormatMessage(Msgf_ClientStopped, cli.GetId()))
+		cio.LogMessage(cio.FormatMessage(Msgf_ClientStopped, cli.GetId()))
 		cp.stoppedClients <- cli
 	}
 	for i := range cp.usedClients {
 		cli = cp.usedClients[i]
 		_ = cli.Stop()
-		common.LogMessage(common.FormatMessage(Msgf_ClientStopped, cli.GetId()))
+		cio.LogMessage(cio.FormatMessage(Msgf_ClientStopped, cli.GetId()))
 		cp.stoppedClients <- cli
 		delete(cp.usedClients, cli.GetId())
 	}
 	for len(cp.brokenClients) > 0 {
 		cli = <-cp.brokenClients
 		_ = cli.Stop()
-		common.LogMessage(common.FormatMessage(Msgf_ClientStopped, cli.GetId()))
+		cio.LogMessage(cio.FormatMessage(Msgf_ClientStopped, cli.GetId()))
 		cp.stoppedClients <- cli
 	}
 
-	common.LogMessage(Msg_WaitingForSubroutinesToStop)
+	cio.LogMessage(Msg_WaitingForSubroutinesToStop)
 	cp.subRoutines.Wait()
 
-	common.LogMessage(Msg_ClientPoolStopped)
+	cio.LogMessage(Msg_ClientPoolStopped)
 }
 
 // GiveIdleClient provides an idle client. If no clients are idle, an error is

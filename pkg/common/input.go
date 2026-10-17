@@ -4,11 +4,13 @@ import (
 	"bufio"
 	"os"
 	"strings"
+
+	"github.com/vault-thirteen/auxie/cio"
 )
 
 func GetInputCharFromStdin(hint string) (char byte, err error) {
 	if len(hint) > 0 {
-		PrintMessage(hint)
+		cio.PrintMessage(hint)
 	}
 
 	reader := bufio.NewReader(os.Stdin)
@@ -17,7 +19,7 @@ func GetInputCharFromStdin(hint string) (char byte, err error) {
 
 func GetInputStringFromStdin(hint string) (s string, err error) {
 	if len(hint) > 0 {
-		PrintMessage(hint)
+		cio.PrintMessage(hint)
 	}
 
 	reader := bufio.NewReader(os.Stdin)

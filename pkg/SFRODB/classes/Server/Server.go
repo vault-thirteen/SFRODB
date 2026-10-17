@@ -5,6 +5,7 @@ import (
 	"sync/atomic"
 
 	"github.com/vault-thirteen/auxie/Cache/VL"
+	"github.com/vault-thirteen/auxie/cio"
 	"github.com/vault-thirteen/auxie/errors"
 
 	client "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Client"
@@ -229,7 +230,7 @@ func (srv *Server) handleMainConnection(conn *net.TCPConn) {
 		case method.Method_SearchFile:
 			cerr = srv.act_searchFile(con, req)
 		default:
-			cerr = ce.NewClientError(common.FormatMessage(method.Errf_UnsupportedMethod, req.Method), req.Method, 0, con.ClientId())
+			cerr = ce.NewClientError(cio.FormatMessage(method.Errf_UnsupportedMethod, req.Method), req.Method, 0, con.ClientId())
 		}
 		if cerr != nil {
 			if cerr.IsServerError() {
@@ -275,7 +276,7 @@ func (srv *Server) handleAuxConnection(conn *net.TCPConn) {
 		case method.Method_ResetCache:
 			cerr = srv.act_resetCache(con, req)
 		default:
-			cerr = ce.NewClientError(common.FormatMessage(method.Errf_UnsupportedMethod, req.Method), req.Method, 0, con.ClientId())
+			cerr = ce.NewClientError(cio.FormatMessage(method.Errf_UnsupportedMethod, req.Method), req.Method, 0, con.ClientId())
 		}
 		if cerr != nil {
 			if cerr.IsServerError() {
@@ -308,5 +309,5 @@ func (srv *Server) logError(err error) {
 }
 
 func (srv *Server) logMessage(msg string) {
-	common.LogMessage(msg)
+	cio.LogMessage(msg)
 }

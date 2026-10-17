@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	ver "github.com/vault-thirteen/auxie/Versioneer/classes/Versioneer"
+	"github.com/vault-thirteen/auxie/cio"
 	"github.com/vault-thirteen/auxie/errors"
 	"github.com/vault-thirteen/auxie/random"
 
@@ -24,7 +25,7 @@ func main() {
 	var stn *cs.ClientSettings
 	stn, err = cs.New(clargs.Host, clargs.MainPort, clargs.AuxPort, 0)
 	mustBeNoError(err)
-	common.LogMessage(common.Msg_Settings, stn)
+	cio.LogMessage(common.Msg_Settings, stn)
 
 	var clientId uint
 	clientId, err = random.Uint(1, math.MaxUint32)
@@ -40,8 +41,8 @@ func main() {
 		os.Exit(common.ExitCode_StartError)
 		return
 	}
-	common.PrintMessage(common.Msg_ConnectedTo + cli.GetMainDsn())
-	common.PrintMessage(common.Msg_ConnectedTo + cli.GetAuxDsn())
+	cio.PrintMessage(common.Msg_ConnectedTo + cli.GetMainDsn())
+	cio.PrintMessage(common.Msg_ConnectedTo + cli.GetAuxDsn())
 
 	appMustBeStopped := make(chan bool, 1)
 	go makeSomeActions(cli, &appMustBeStopped)
@@ -67,5 +68,5 @@ func showIntro() {
 	mustBeNoError(err)
 	versioneer.ShowIntroText(common.App_TestClient)
 	versioneer.ShowComponentsInfoText()
-	common.PrintMessage()
+	cio.PrintMessage()
 }

@@ -7,6 +7,8 @@ import (
 	ver "github.com/vault-thirteen/auxie/Versioneer/classes/Versioneer"
 	"github.com/vault-thirteen/auxie/errors"
 
+	"github.com/vault-thirteen/auxie/cio"
+
 	"github.com/vault-thirteen/SFRODB/pkg/SFHS/server"
 	"github.com/vault-thirteen/SFRODB/pkg/SFHS/server/CommandLineArguments"
 	"github.com/vault-thirteen/SFRODB/pkg/SFHS/server/Settings"
@@ -19,14 +21,14 @@ func main() {
 	clargs, err := cla.NewCommandLineArgumentsFromOs()
 	mustBeNoError(err)
 	if clargs.IsDefaultFile() {
-		common.LogMessage(common.Msg_UsingDefaultConfigurationFile)
+		cio.LogMessage(common.Msg_UsingDefaultConfigurationFile)
 	}
 
 	var stn *Settings.Settings
 	stn, err = Settings.NewSettingsFromFile(clargs.ConfigurationFilePath)
 	mustBeNoError(err)
 
-	common.LogMessage(common.Msg_ServerStarting)
+	cio.LogMessage(common.Msg_ServerStarting)
 	var srv *server.Server
 	srv, err = server.NewServer(stn)
 	mustBeNoError(err)
@@ -39,23 +41,23 @@ func main() {
 	}
 	switch srv.GetWorkMode() {
 	case Settings.ServerModeId_Http:
-		common.PrintMessage(common.Msg_HttpServer + srv.GetListenDsn())
+		cio.PrintMessage(common.Msg_HttpServer + srv.GetListenDsn())
 	case Settings.ServerModeId_Https:
-		common.PrintMessage(common.Msg_HttpsServer + srv.GetListenDsn())
+		cio.PrintMessage(common.Msg_HttpsServer + srv.GetListenDsn())
 	}
-	common.PrintMessage(common.Msg_DbClientA + srv.GetDbDsnA())
-	common.PrintMessage(common.Msg_DbClientB + srv.GetDbDsnB())
+	cio.PrintMessage(common.Msg_DbClientA + srv.GetDbDsnA())
+	cio.PrintMessage(common.Msg_DbClientB + srv.GetDbDsnB())
 
 	serverMustBeStopped := srv.GetStopChannel()
 	common.WaitForQuitSignalFromOS(serverMustBeStopped)
 	<-*serverMustBeStopped
 
-	common.LogMessage(common.Msg_ServerStopping)
+	cio.LogMessage(common.Msg_ServerStopping)
 	cerr = srv.Stop()
 	if cerr != nil {
 		errors.LogError(cerr)
 	}
-	common.LogMessage(common.Msg_ServerStopped)
+	cio.LogMessage(common.Msg_ServerStopped)
 	time.Sleep(time.Second)
 }
 
@@ -72,5 +74,5 @@ func showIntro() {
 	mustBeNoError(err)
 	versioneer.ShowIntroText(common.App_Server)
 	versioneer.ShowComponentsInfoText()
-	common.PrintMessage()
+	cio.PrintMessage()
 }

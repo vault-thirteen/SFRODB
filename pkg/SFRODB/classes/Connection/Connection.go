@@ -6,6 +6,8 @@ import (
 	"math"
 	"net"
 
+	"github.com/vault-thirteen/auxie/cio"
+
 	ce "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/CommonError"
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Endianness"
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Method"
@@ -61,7 +63,7 @@ func (con *Connection) SendRequestMessage(req *request.Request) (cerr *ce.Common
 		if req.Size == 0 {
 			rs := protocol.MethodNameLen + req.UID.Length()
 			if rs > math.MaxUint16 {
-				return ce.NewClientError(common.FormatMessage(request.Errf_SizeIsTooLong, rs), req.Method, 0, con.clientId)
+				return ce.NewClientError(cio.FormatMessage(request.Errf_SizeIsTooLong, rs), req.Method, 0, con.clientId)
 			}
 			req.Size = uint16(rs)
 		}
@@ -142,7 +144,7 @@ func (con *Connection) GetResponseMessage() (resp *response.Response, cerr *ce.C
 		}
 
 		if resp.Size < protocol.StatusNameLen {
-			return nil, ce.NewClientError(common.FormatMessage(response.Errf_SizeIsTooShort, resp.Size), 0, 0, con.clientId)
+			return nil, ce.NewClientError(cio.FormatMessage(response.Errf_SizeIsTooShort, resp.Size), 0, 0, con.clientId)
 		}
 	}
 
@@ -199,7 +201,7 @@ func (con *Connection) GetNextRequest() (req *request.Request, cerr *ce.CommonEr
 		}
 
 		if req.Size < protocol.MethodNameLen {
-			return nil, ce.NewServerError(common.FormatMessage(request.Errf_SizeIsTooShort, req.Size), 0, 0, con.clientId)
+			return nil, ce.NewServerError(cio.FormatMessage(request.Errf_SizeIsTooShort, req.Size), 0, 0, con.clientId)
 		}
 	}
 
@@ -247,7 +249,7 @@ func (con *Connection) SendResponseMessage(resp *response.Response) (cerr *ce.Co
 		if resp.Size == 0 {
 			rs := protocol.StatusNameLen + len(resp.Data)
 			if rs > math.MaxUint32 {
-				return ce.NewServerError(common.FormatMessage(response.Errf_SizeIsTooLong, rs), 0, resp.Status, con.clientId)
+				return ce.NewServerError(cio.FormatMessage(response.Errf_SizeIsTooLong, rs), 0, resp.Status, con.clientId)
 			}
 			resp.Size = uint32(rs)
 		}

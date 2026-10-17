@@ -2,7 +2,6 @@ package common
 
 import (
 	"fmt"
-	"log"
 )
 
 const (
@@ -52,18 +51,6 @@ const (
 	Msgf_RequestDuration = "Request Duration: %d µs. Data Size: %d Bytes."
 )
 
-func FormatMessage(format string, args ...any) string {
-	return fmt.Sprintf(format, args...)
-}
-
 func FormatRequestDuration(durationMks int64, dataSize int) string {
 	return fmt.Sprintf(Msgf_RequestDuration, durationMks, dataSize)
-}
-
-func LogMessage(args ...any) {
-	log.Println(args...)
-}
-
-func PrintMessage(args ...any) {
-	fmt.Println(args...)
 }
