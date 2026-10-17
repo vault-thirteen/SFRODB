@@ -1,13 +1,10 @@
 package main
 
 import (
-	"os"
-	"runtime"
 	"time"
 
 	"github.com/vault-thirteen/auxie/cio"
 	"github.com/vault-thirteen/auxie/errors"
-	"golang.org/x/sys/windows"
 
 	"github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/Client"
 	ce "github.com/vault-thirteen/SFRODB/pkg/SFRODB/classes/CommonError"
@@ -18,30 +15,9 @@ const (
 	ItemLenLimit = 60
 )
 
-func prepareTerminal() (err error) {
-	if runtime.GOOS == "windows" {
-		stdout := windows.Handle(os.Stdout.Fd())
-		var mode uint32
-
-		err = windows.GetConsoleMode(stdout, &mode)
-		if err != nil {
-			return err
-		}
-
-		mode |= windows.ENABLE_VIRTUAL_TERMINAL_PROCESSING
-
-		err = windows.SetConsoleMode(stdout, mode)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 func makeSomeActions(cli *client.Client, appMustBeStopped *chan bool) {
 	var err error
-	err = prepareTerminal()
+	err = cio.EnableAnsiSymbolsInTerminal()
 	if err != nil {
 		return
 	}
